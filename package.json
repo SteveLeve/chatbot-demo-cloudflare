@@ -1,0 +1,49 @@
+{
+  "name": "cloudflare-rag-portfolio",
+  "version": "0.1.0",
+  "description": "Professional portfolio demonstrating RAG patterns on Cloudflare Workers AI",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:production": "wrangler deploy --env production",
+    "cf-typegen": "wrangler types",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "db:migrate": "wrangler d1 migrations apply wikipedia-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply wikipedia-db --remote",
+    "db:create-migration": "wrangler d1 migrations create wikipedia-db",
+    "vectorize:create": "wrangler vectorize create wikipedia-vectors --preset @cf/baai/bge-base-en-v1.5",
+    "r2:create": "wrangler r2 bucket create wikipedia-articles",
+    "ui:dev": "cd ui && npm run dev",
+    "ui:build": "cd ui && npm run build",
+    "ingest": "node --loader ts-node/esm scripts/ingest-wikipedia.ts"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "ai",
+    "rag",
+    "retrieval-augmented-generation",
+    "vectorize",
+    "d1",
+    "r2",
+    "portfolio"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.5.29",
+    "@cloudflare/workers-types": "^4.20250101.0",
+    "@types/node": "^22.10.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.103.2"
+  },
+  "dependencies": {
+    "@langchain/textsplitters": "^0.1.0",
+    "hono": "^4.6.14"
+  }
+}

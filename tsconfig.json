@@ -1,0 +1,64 @@
+{
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+
+    /* Type Checking */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": false,
+
+    /* Interop Constraints */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+
+    /* Emit */
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": false,
+    "importHelpers": false,
+
+    /* Skip Lib Check */
+    "skipLibCheck": true,
+
+    /* Path Mapping */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/types": ["src/types"],
+      "@/utils/*": ["src/utils/*"],
+      "@/patterns/*": ["src/patterns/*"]
+    },
+
+    /* JSX */
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+
+    /* Cloudflare Workers Types */
+    "types": [
+      "@cloudflare/workers-types/2023-07-01",
+      "@types/node"
+    ]
+  },
+  "include": [
+    "src/**/*",
+    "scripts/**/*",
+    ".wrangler/types/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "ui"
+  ]
+}
