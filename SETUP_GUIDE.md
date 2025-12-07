@@ -120,10 +120,10 @@ wrangler r2 bucket create wikipedia-articles
 # → Bucket created
 
 # KV Namespaces
-wrangler kv:namespace create EMBEDDINGS_CACHE
+wrangler kv namespace create EMBEDDINGS_CACHE
 # → Note the id
 
-wrangler kv:namespace create RAG_CACHE
+wrangler kv namespace create RAG_CACHE
 # → Note the id
 ```
 

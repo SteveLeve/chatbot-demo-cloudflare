@@ -121,8 +121,8 @@ wrangler vectorize create wikipedia-vectors --preset @cf/baai/bge-base-en-v1.5
 wrangler r2 bucket create wikipedia-articles
 
 # KV Namespaces
-wrangler kv:namespace create EMBEDDINGS_CACHE
-wrangler kv:namespace create RAG_CACHE
+wrangler kv namespace create EMBEDDINGS_CACHE
+wrangler kv namespace create RAG_CACHE
 ```
 
 4. **Update `wrangler.jsonc`** with the IDs from the commands above:
