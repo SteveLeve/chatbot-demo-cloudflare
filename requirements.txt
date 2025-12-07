@@ -1,0 +1,8 @@
+# Python dependencies for data fetching scripts
+# Install with: pip install -r requirements.txt
+
+# Hugging Face datasets library for fetching Wikipedia data
+datasets>=2.14.0
+
+# Required by datasets
+requests>=2.31.0

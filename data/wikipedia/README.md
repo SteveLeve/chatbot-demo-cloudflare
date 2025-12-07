@@ -1,6 +1,26 @@
 # Wikipedia Dataset
 
-Place your Wikipedia articles in JSON format in this directory.
+This directory contains Wikipedia articles in JSON format for the RAG system.
+
+## Quick Start: Fetch Wikipedia Data
+
+The easiest way to populate this directory is using our fetch script:
+
+```bash
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Fetch ~10MB of Wikipedia articles (recommended for demos)
+python scripts/fetch-wikipedia.py --size-mb 10
+
+# Or fetch a specific number of articles
+python scripts/fetch-wikipedia.py --articles 2000
+
+# Use English Wikipedia instead of Simple English
+python scripts/fetch-wikipedia.py --size-mb 10 --lang en
+```
+
+This will automatically download articles from the `wikimedia/wikipedia` dataset and convert them to the required format.
 
 ## Expected Format
 
@@ -13,7 +33,7 @@ Each file should contain a Wikipedia article in the following JSON format:
   "metadata": {
     "categories": ["Computer Science", "Technology"],
     "url": "https://en.wikipedia.org/wiki/Artificial_intelligence",
-    "lastModified": "2025-01-06"
+    "id": "12345"
   }
 }
 ```
@@ -28,23 +48,54 @@ Each file should contain a Wikipedia article in the following JSON format:
 - `metadata` (object): Additional metadata
   - `categories` (array): Article categories
   - `url` (string): Wikipedia URL
-  - `lastModified` (string): Last modification date
+  - `id` (string): Wikipedia article ID
+
+## Manual Data Preparation
+
+If you want to create articles manually, place JSON files in this directory following the format above.
 
 ## Ingestion
 
-To ingest the articles into your RAG system:
+Once you have articles in this directory, ingest them into your RAG system:
 
 ```bash
 # Install dependencies first
 npm install
 
-# Start your local Worker
+# Start your local Worker (Terminal 1)
 npm run dev
 
-# In another terminal, run the ingestion script
+# In another terminal, run the ingestion script (Terminal 2)
 npm run ingest ./data/wikipedia
 ```
 
-## Dataset Size
+## Dataset Size Recommendations
 
-For optimal demo performance, keep the dataset between 10-20MB total (approximately 20-50 articles depending on length).
+- **Quick demo**: 5-10 MB (~1000-2000 articles)
+- **Full demo**: 10-20 MB (~2000-4000 articles)
+- **Extended testing**: 20-50 MB (~4000-10000 articles)
+
+The fetch script will skip very short articles (< 500 characters) to ensure quality content.
+
+## Fetch Script Options
+
+```bash
+# See all options
+python scripts/fetch-wikipedia.py --help
+
+# Examples:
+python scripts/fetch-wikipedia.py --size-mb 5      # Smaller dataset
+python scripts/fetch-wikipedia.py --articles 1000  # Exact article count
+python scripts/fetch-wikipedia.py --size-mb 10 --output custom/path  # Custom output directory
+```
+
+## What Gets Downloaded?
+
+The fetch script uses the `wikimedia/wikipedia` dataset from Hugging Face:
+- **Simple English** (default): Simpler language, good for demos
+- **English** (--lang en): Full English Wikipedia, more comprehensive
+
+Articles are filtered to exclude:
+- Very short articles (< 500 characters)
+- Empty or stub articles
+- Articles with insufficient content

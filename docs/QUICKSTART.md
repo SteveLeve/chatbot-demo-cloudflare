@@ -97,19 +97,37 @@ You should see:
 ✅ Successfully applied 3 migrations.
 ```
 
-### 6. Prepare Sample Data
+### 6. Fetch Wikipedia Data
 
-Create a sample Wikipedia article in `data/wikipedia/sample.json`:
+Use the included fetch script to download Wikipedia articles:
 
-```json
-{
-  "title": "Artificial Intelligence",
-  "content": "Artificial intelligence (AI) is the simulation of human intelligence processes by machines, especially computer systems. These processes include learning (the acquisition of information and rules for using the information), reasoning (using rules to reach approximate or definite conclusions), and self-correction. Particular applications of AI include expert systems, natural language processing, speech recognition, and machine vision.\n\nAI was founded as an academic discipline in 1956, and in the years since has experienced several waves of optimism, followed by disappointment and the loss of funding (known as an 'AI winter'), followed by new approaches, success, and renewed funding. For most of its history, AI research has been divided into subfields that often fail to communicate with each other.",
-  "metadata": {
-    "categories": ["Computer Science", "Technology", "Artificial Intelligence"],
-    "url": "https://en.wikipedia.org/wiki/Artificial_intelligence"
-  }
-}
+```bash
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Fetch ~10MB of Wikipedia articles (recommended for demos)
+python scripts/fetch-wikipedia.py --size-mb 10
+```
+
+This will download ~2000 articles from the Simple English Wikipedia and save them to `data/wikipedia/`.
+
+**What happens:**
+- Downloads articles from `wikimedia/wikipedia` dataset
+- Filters out very short articles (< 500 chars)
+- Converts to required JSON format
+- Saves individual files for each article
+- Creates `_fetch_metadata.json` with statistics
+
+**Alternative options:**
+```bash
+# Fetch specific number of articles
+python scripts/fetch-wikipedia.py --articles 1500
+
+# Fetch from full English Wikipedia
+python scripts/fetch-wikipedia.py --size-mb 10 --lang en
+
+# Smaller dataset for quick testing
+python scripts/fetch-wikipedia.py --size-mb 5
 ```
 
 ### 7. Start Development Servers

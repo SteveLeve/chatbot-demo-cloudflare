@@ -18,6 +18,9 @@
     "r2:create": "wrangler r2 bucket create wikipedia-articles",
     "ui:dev": "cd ui && npm run dev",
     "ui:build": "cd ui && npm run build",
+    "fetch-data": "python scripts/fetch-wikipedia.py --size-mb 10",
+    "fetch-data:quick": "python scripts/fetch-wikipedia.py --size-mb 5",
+    "fetch-data:large": "python scripts/fetch-wikipedia.py --size-mb 20",
     "ingest": "node --loader ts-node/esm scripts/ingest-wikipedia.ts"
   },
   "keywords": [

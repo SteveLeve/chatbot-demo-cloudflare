@@ -96,7 +96,19 @@ npm install
 cd ui && npm install && cd ..
 ```
 
-2. **Create Cloudflare resources**:
+2. **Fetch Wikipedia data**:
+
+```bash
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Fetch ~10MB of Wikipedia articles
+python scripts/fetch-wikipedia.py --size-mb 10
+```
+
+This will download articles from the `wikimedia/wikipedia` dataset and save them to `data/wikipedia/`.
+
+3. **Create Cloudflare resources**:
 
 ```bash
 # D1 Database
@@ -113,7 +125,7 @@ wrangler kv:namespace create EMBEDDINGS_CACHE
 wrangler kv:namespace create RAG_CACHE
 ```
 
-3. **Update `wrangler.jsonc`** with the IDs from the commands above:
+4. **Update `wrangler.jsonc`** with the IDs from the commands above:
 
 ```jsonc
 {
@@ -136,15 +148,11 @@ wrangler kv:namespace create RAG_CACHE
 }
 ```
 
-4. **Run database migrations**:
+5. **Run database migrations**:
 
 ```bash
 wrangler d1 migrations apply wikipedia-db --local
 ```
-
-5. **Prepare Wikipedia data**:
-
-Place your Wikipedia articles in JSON format in `data/wikipedia/`. See `data/wikipedia/README.md` for the expected format.
 
 6. **Start local development**:
 
@@ -158,6 +166,8 @@ npm run ui:dev
 # Terminal 3: Ingest data (once Worker is running)
 npm run ingest ./data/wikipedia
 ```
+
+The ingestion process will upload articles to your local Worker using the Workflow API.
 
 7. **Open the demo**:
 
