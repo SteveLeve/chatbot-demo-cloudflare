@@ -58,35 +58,51 @@ docs/                          # Architecture + guides
 
 ## Next Steps: Cloudflare Setup
 
-### 1. Fetch Wikipedia Data (10 min)
+### 1. Setup Python Environment (5 min)
+
+**Best Practice**: Use a virtual environment to isolate Python dependencies.
 
 ```bash
+# Create a virtual environment
+python3 -m venv .venv
+
+# Activate the virtual environment
+source .venv/bin/activate  # On Linux/macOS
+# .venv\Scripts\activate   # On Windows
+
 # Install Python dependencies
 pip install -r requirements.txt
+```
 
+**Note**: Your terminal prompt should show `(.venv)` when the virtual environment is active. To deactivate later, run `deactivate`.
+
+### 2. Fetch Wikipedia Data (10 min)
+
+```bash
+# Ensure virtual environment is active (you should see (venv) in prompt)
 # Download ~10MB of Wikipedia articles (~2000 articles)
 python scripts/fetch-wikipedia.py --size-mb 10
 
-# Alternative: Use npm shortcut
+# Alternative: Use npm shortcut (automatically uses venv if available)
 npm run fetch-data
 ```
 
 **Output**: ~2000 JSON files in `data/wikipedia/` + `_fetch_metadata.json`
 
-### 2. Install Node Dependencies (2 min)
+### 3. Install Node Dependencies (2 min)
 
 ```bash
 npm install
 cd ui && npm install && cd ..
 ```
 
-### 3. Authenticate with Cloudflare (1 min)
+### 4. Authenticate with Cloudflare (1 min)
 
 ```bash
 wrangler login
 ```
 
-### 4. Create Cloudflare Resources (5 min)
+### 5. Create Cloudflare Resources (5 min)
 
 Run these commands and **save the IDs returned**:
 
@@ -111,7 +127,7 @@ wrangler kv:namespace create RAG_CACHE
 # → Note the id
 ```
 
-### 5. Update Configuration (3 min)
+### 6. Update Configuration (3 min)
 
 Edit `wrangler.jsonc` and replace placeholders:
 
@@ -137,7 +153,7 @@ Edit `wrangler.jsonc` and replace placeholders:
 }
 ```
 
-### 6. Run Database Migrations (1 min)
+### 7. Run Database Migrations (1 min)
 
 ```bash
 # Local database (for development)
@@ -149,7 +165,7 @@ wrangler d1 migrations apply wikipedia-db --remote
 
 Expected output: `✅ Successfully applied 3 migrations.`
 
-### 7. Start Development (2 min)
+### 8. Start Development (2 min)
 
 Open 3 terminals:
 
@@ -167,7 +183,7 @@ npm run ingest ./data/wikipedia
 # Watch for: ✓ Ingested: [Article Title] (Workflow: ...)
 ```
 
-### 8. Test the System (2 min)
+### 9. Test the System (2 min)
 
 1. Open http://localhost:3000
 2. Ask: "What is artificial intelligence?"
