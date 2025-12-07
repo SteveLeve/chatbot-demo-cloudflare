@@ -1,112 +1,75 @@
 {
-	"name": "cloudflare-rag-portfolio",
-	"main": "src/index.ts",
-	"compatibility_date": "2025-01-01",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
-	// Environment variables (non-secret configuration)
-	"vars": {
-		"ENVIRONMENT": "development",
-		"LOG_LEVEL": "INFO",
-		"ENABLE_TEXT_SPLITTING": true,
-		"DEFAULT_CHUNK_SIZE": 500,
-		"DEFAULT_CHUNK_OVERLAP": 100,
-		"DEFAULT_TOP_K": 3,
-		"MAX_QUERY_LENGTH": 500
-	},
-	// AI binding
-	"ai": {
-		"binding": "AI"
-	},
-	// D1 Database binding
-	"d1_databases": [
-		{
-			"binding": "DATABASE",
-			"database_name": "wikipedia-db",
-			"database_id": "TO_BE_CREATED",
-			"migrations_dir": "migrations"
-		},
-		{
-			"binding": "wikipedia_db",
-			"database_name": "wikipedia-db",
-			"database_id": "4f4f2210-e5a5-4c61-b0cf-8c1ab45c3333",
-			"remote": true
-		}
-	],
-	// Vectorize binding
-	"vectorize": [
-		{
-			"binding": "VECTOR_INDEX",
-			"index_name": "wikipedia-vectors"
-		},
-		{
-			"binding": "VECTORIZE",
-			"index_name": "wikipedia-vectors",
-			"remote": true
-		}
-	],
-	// R2 bucket bindings
-	"r2_buckets": [
-		{
-			"binding": "ARTICLES_BUCKET",
-			"bucket_name": "wikipedia-articles"
-		},
-		{
-			"bucket_name": "wikipedia-articles",
-			"binding": "wikipedia_articles",
-			"remote": true
-		}
-	],
-	// Workflows binding (for data ingestion)
-	"workflows": [
-		{
-			"binding": "INGESTION_WORKFLOW",
-			"name": "wikipedia-ingestion",
-			"class_name": "IngestionWorkflow"
-		}
-	],
-	// KV namespace for caching (optional but recommended)
-	"kv_namespaces": [
-		{
-			"binding": "EMBEDDINGS_CACHE",
-			"id": "TO_BE_CREATED"
-		},
-		{
-			"binding": "RAG_CACHE",
-			"id": "TO_BE_CREATED"
-		}
-	],
-	// Production environment
-	"env": {
-		"production": {
-			"vars": {
-				"ENVIRONMENT": "production",
-				"LOG_LEVEL": "WARN"
-			},
-			"d1_databases": [
-				{
-					"binding": "DATABASE",
-					"database_name": "wikipedia-db-prod",
-					"database_id": "TO_BE_CREATED"
-				}
-			],
-			"vectorize": [
-				{
-					"binding": "VECTOR_INDEX",
-					"index_name": "wikipedia-vectors-prod"
-				}
-			],
-			"r2_buckets": [
-				{
-					"binding": "ARTICLES_BUCKET",
-					"bucket_name": "wikipedia-articles-prod"
-				}
-			]
-		}
-	},
-	// Observability
-	"observability": {
-		"enabled": true
-	}
+  "name": "cloudflare-rag-portfolio",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+
+  // Environment variables (non-secret configuration)
+  "vars": {
+    "ENVIRONMENT": "development",
+    "LOG_LEVEL": "INFO",
+    "ENABLE_TEXT_SPLITTING": true,
+    "DEFAULT_CHUNK_SIZE": 500,
+    "DEFAULT_CHUNK_OVERLAP": 100,
+    "DEFAULT_TOP_K": 3,
+    "MAX_QUERY_LENGTH": 500
+  },
+
+  // AI binding (free tier, no ID needed)
+  "ai": {
+    "binding": "AI"
+  },
+
+  // D1 Database (remote only, Vectorize requires remote connection)
+  "d1_databases": [
+    {
+      "binding": "DATABASE",
+      "database_name": "wikipedia-db",
+      "database_id": "4f4f2210-e5a5-4c61-b0cf-8c1ab45c3333"
+    }
+  ],
+
+  // Vectorize (remote only)
+  "vectorize": [
+    {
+      "binding": "VECTOR_INDEX",
+      "index_name": "wikipedia-vectors"
+    }
+  ],
+
+  // R2 bucket (remote)
+  "r2_buckets": [
+    {
+      "binding": "ARTICLES_BUCKET",
+      "bucket_name": "wikipedia-articles"
+    }
+  ],
+
+  // Workflows binding (for data ingestion)
+  "workflows": [
+    {
+      "binding": "INGESTION_WORKFLOW",
+      "name": "wikipedia-ingestion",
+      "class_name": "IngestionWorkflow"
+    }
+  ],
+
+  // KV namespaces for caching (remote)
+  "kv_namespaces": [
+    {
+      "binding": "EMBEDDINGS_CACHE",
+      "id": "2cb07ca928b4488d96c5b126e89e019c"
+    },
+    {
+      "binding": "RAG_CACHE",
+      "id": "a9016ba7dd794651b1a5d085e297c83d"
+    }
+  ],
+
+  // Observability
+  "observability": {
+    "enabled": true
+  }
 }
