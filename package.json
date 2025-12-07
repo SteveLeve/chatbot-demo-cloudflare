@@ -21,7 +21,7 @@
     "fetch-data": "python scripts/fetch-wikipedia.py --size-mb 10",
     "fetch-data:quick": "python scripts/fetch-wikipedia.py --size-mb 5",
     "fetch-data:large": "python scripts/fetch-wikipedia.py --size-mb 20",
-    "ingest": "node --loader ts-node/esm scripts/ingest-wikipedia.ts"
+    "ingest": "node scripts/ingest-wikipedia.js"
   },
   "keywords": [
     "cloudflare",
