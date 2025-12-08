@@ -23,11 +23,13 @@
   },
 
   // D1 Database (remote only, Vectorize requires remote connection)
+  // preview_id tells wrangler dev to use the remote database instead of creating a local copy
   "d1_databases": [
     {
       "binding": "DATABASE",
       "database_name": "wikipedia-db",
-      "database_id": "4f4f2210-e5a5-4c61-b0cf-8c1ab45c3333"
+      "database_id": "4f4f2210-e5a5-4c61-b0cf-8c1ab45c3333",
+      "preview_id": "4f4f2210-e5a5-4c61-b0cf-8c1ab45c3333"
     }
   ],
 
