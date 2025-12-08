@@ -6,7 +6,7 @@
 
   // Environment variables (non-secret configuration)
   "vars": {
-    "ENVIRONMENT": "development",
+    "ENVIRONMENT": "production",
     "LOG_LEVEL": "INFO",
     "ENABLE_TEXT_SPLITTING": true,
     "DEFAULT_CHUNK_SIZE": 500,
@@ -21,14 +21,11 @@
   },
 
   // D1 Database (remote only, Vectorize requires remote connection)
-  // preview_id tells wrangler dev to use the remote database instead of creating a local copy
   "d1_databases": [
     {
       "binding": "DATABASE",
       "database_name": "wikipedia-db",
-      "database_id": "4f4f2210-e5a5-4c61-b0cf-8c1ab45c3333",
-      "preview_id": "4f4f2210-e5a5-4c61-b0cf-8c1ab45c3333",
-      "remote": true
+      "database_id": "4f4f2210-e5a5-4c61-b0cf-8c1ab45c3333"
     }
   ],
 
@@ -36,8 +33,7 @@
   "vectorize": [
     {
       "binding": "VECTOR_INDEX",
-      "index_name": "wikipedia-vectors",
-      "remote": true
+      "index_name": "wikipedia-vectors"
     }
   ],
 
@@ -45,8 +41,7 @@
   "r2_buckets": [
     {
       "binding": "ARTICLES_BUCKET",
-      "bucket_name": "wikipedia-articles",
-      "remote": true
+      "bucket_name": "wikipedia-articles"
     }
   ],
 
@@ -63,13 +58,11 @@
   "kv_namespaces": [
     {
       "binding": "EMBEDDINGS_CACHE",
-      "id": "2cb07ca928b4488d96c5b126e89e019c",
-      "remote": true
+      "id": "2cb07ca928b4488d96c5b126e89e019c"
     },
     {
       "binding": "RAG_CACHE",
-      "id": "a9016ba7dd794651b1a5d085e297c83d",
-      "remote": true
+      "id": "a9016ba7dd794651b1a5d085e297c83d"
     }
   ],
 
