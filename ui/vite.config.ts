@@ -13,7 +13,8 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist',
+    // Build to Worker's public/ directory for static asset serving
+    outDir: '../public',
     sourcemap: true,
   },
 });

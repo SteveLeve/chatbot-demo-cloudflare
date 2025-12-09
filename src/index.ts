@@ -1,6 +1,11 @@
 /**
  * Cloudflare RAG Portfolio - Main Application
  * Professional demonstration of RAG patterns on Cloudflare Workers
+ *
+ * Architecture: Full-stack Workers application
+ * - Static assets (React UI) served from public/ directory
+ * - API routes (/api/*) handled by Hono
+ * - Both components deployed together via single `wrangler deploy`
  */
 
 import { Hono } from 'hono';
@@ -16,7 +21,9 @@ export { IngestionWorkflow };
 // Create Hono application
 const app = new Hono<{ Bindings: Env }>();
 
-// Enable CORS for frontend
+// Enable CORS for external API access
+// Note: Frontend is served from same Worker origin, so no CORS needed for frontend->API
+// CORS enabled for external clients and integrations
 app.use('/*', cors());
 
 // ============================================================================

@@ -4,6 +4,13 @@
   "compatibility_date": "2025-01-01",
   "compatibility_flags": ["nodejs_compat"],
 
+  // Static assets configuration
+  // Serves built React app from public/ directory
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+
   // Environment variables (non-secret configuration)
   "vars": {
     "ENVIRONMENT": "production",
@@ -14,6 +21,13 @@
     "DEFAULT_TOP_K": 3,
     "MAX_QUERY_LENGTH": 500
   },
+
+  "routes": [
+    {
+      "pattern": "cloudflare-rag-demo.stevenleve.com",
+      "custom_domain": true
+    }
+  ],
 
   // AI binding (free tier, no ID needed)
   "ai": {

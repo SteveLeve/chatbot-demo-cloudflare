@@ -1,19 +1,17 @@
 /**
  * Application Configuration
  *
- * Uses environment variables to configure the API endpoint.
- * In development: Uses Vite proxy to localhost:8787
- * In production: Uses deployed Worker URL
+ * Full-stack architecture: Frontend and API are served from same Worker origin
+ *
+ * - Development: Vite proxy at localhost:3000 proxies /api/* to localhost:8787
+ * - Production: Both served from same origin, no CORS needed
  */
 
-// Get API base URL from environment variable, fallback to relative path for dev
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '';
-
-// Helper function to construct API URLs
+/**
+ * Get the API URL for a given path
+ * Always uses relative paths since frontend and API share the same origin
+ */
 export function getApiUrl(path: string): string {
   // Ensure path starts with /
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-
-  // If API_BASE_URL is set, use it; otherwise use relative path
-  return API_BASE_URL ? `${API_BASE_URL}${normalizedPath}` : normalizedPath;
+  return path.startsWith('/') ? path : `/${path}`;
 }

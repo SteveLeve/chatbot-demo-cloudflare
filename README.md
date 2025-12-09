@@ -24,12 +24,61 @@ This project showcases a production-grade RAG implementation using Cloudflare's 
 - **Streaming Responses**: Real-time token delivery for better UX
 - **Performance Optimizations**: Caching, batching, adaptive top-K selection
 
+## Quick Reference
+
+| Task | Command | Notes |
+|------|---------|-------|
+| **Local development** | `npm run dev` + `npm run ui:dev` | Two terminal windows |
+| **Build frontend** | `npm run build` | Creates `./public/` |
+| **Deploy to production** | `npm run deploy` | Single command, full deployment |
+| **Run tests** | `npm test` | Backend tests |
+| **Type checking** | `npm run cf-typegen` | Generate Cloudflare types |
+| **Database migrations** | `wrangler d1 migrations create wikipedia-db <name>` | Then edit SQL file |
+| **Apply migrations** | `wrangler d1 migrations apply wikipedia-db --local` | Or `--remote` for prod |
+| **View Worker logs** | `wrangler tail --env production` | Real-time logs |
+
 ## Architecture
+
+### Full-Stack Workers Deployment Model
+
+```
+┌────────────────────────────────────────────────┐
+│   Cloudflare Workers (Single Deployment)       │
+├────────────────────────────────────────────────┤
+│  Static Assets Layer                           │
+│  ├─ React SPA (built to ./public)              │
+│  ├─ CSS, JavaScript, images                    │
+│  └─ Served with smart caching                  │
+├────────────────────────────────────────────────┤
+│  Application Layer                             │
+│  ├─ Hono API Framework                         │
+│  ├─ RAG Logic & Vector Search                  │
+│  ├─ Workflow Engine (Data Ingestion)           │
+│  └─ Structured Logging & Error Handling        │
+├────────────────────────────────────────────────┤
+│  Bindings Layer                                │
+│  ├─ D1: SQL Database (chunks, metadata)        │
+│  ├─ Vectorize: Vector Search (embeddings)      │
+│  ├─ R2: Object Storage (articles)              │
+│  ├─ KV: Cache Layer (results)                  │
+│  └─ AI: Workers AI (embedding & generation)    │
+└────────────────────────────────────────────────┘
+```
+
+**Why Single Worker?**
+- ✅ Single `wrangler deploy` command
+- ✅ No CORS (same origin for frontend + API)
+- ✅ Shared bindings (frontend can access D1, KV, R2 if needed)
+- ✅ Better observability (Workers Logs, Tail Workers)
+- ✅ Gradual rollouts & canary deployments
+- ✅ Lower latency (everything on edge)
 
 ### Technology Stack
 
 - **Runtime**: Cloudflare Workers (edge computing)
 - **Framework**: Hono (lightweight web framework)
+- **Frontend**: React 18 + Vite + Tailwind CSS
+- **Build Target**: Static assets served from Workers
 - **AI Models**:
   - Embeddings: `@cf/baai/bge-base-en-v1.5` (768 dimensions)
   - Generation: `@cf/meta/llama-3.1-8b-instruct`
@@ -38,7 +87,6 @@ This project showcases a production-grade RAG implementation using Cloudflare's 
   - D1 (SQLite): Document metadata and text chunks
   - Vectorize: Semantic embeddings
   - KV: Caching (embeddings and query results)
-- **UI**: React 18 + Vite + Tailwind CSS
 - **Language**: TypeScript (strict mode)
 
 ### Data Flow
@@ -78,6 +126,27 @@ Wikipedia Article
     ↓
 Complete
 ```
+
+## Understanding This Project
+
+### What Makes It Different?
+
+This is a **full-stack Cloudflare Workers project** - everything (frontend + backend) runs on the edge in a single Worker:
+
+- **Traditional approach**: Separate frontend and backend services (Cloudflare Pages + Worker = two deployments, CORS issues)
+- **Modern approach** (this project): Single Worker serves both React UI and API (one deployment, no CORS, shared bindings)
+
+### How It Works
+
+1. **Local Development**: Two dev servers coordinate
+   - Wrangler dev server (port 8787): Runs your Worker code
+   - Vite dev server (port 3000): Runs React with proxy to Worker
+   - They talk via proxy - transparent to you
+
+2. **Production Deployment**: One unified deployment
+   - `npm run build`: Builds React to `./public`
+   - `npm run deploy`: Deploys Worker + static assets as one unit
+   - Both frontend and API live at same URL
 
 ## Quick Start
 
@@ -177,39 +246,53 @@ Visit http://localhost:3000 to interact with the RAG system.
 
 ```
 .
-├── src/
-│   ├── index.ts                 # Main application (Hono routes)
-│   ├── ingestion-workflow.ts   # Durable workflow for data ingestion
+├── src/                                 # Worker code
+│   ├── index.ts                         # Main application (Hono routes)
+│   ├── ingestion-workflow.ts           # Durable workflow for data ingestion
 │   ├── patterns/
-│   │   └── basic-rag.ts         # Basic RAG implementation
+│   │   └── basic-rag.ts                 # Basic RAG implementation
 │   ├── utils/
-│   │   ├── logger.ts            # Structured logging
-│   │   ├── document-store.ts    # R2/D1/Vectorize abstraction
-│   │   └── chunking.ts          # Text chunking utilities
+│   │   ├── logger.ts                    # Structured logging
+│   │   ├── document-store.ts            # R2/D1/Vectorize abstraction
+│   │   └── chunking.ts                  # Text chunking utilities
 │   └── types/
-│       └── index.ts             # TypeScript definitions
-├── migrations/
-│   ├── 0001_create_documents_table.sql
-│   ├── 0002_create_chunks_table.sql
-│   └── 0003_create_fts_table.sql
-├── ui/
+│       └── index.ts                     # TypeScript definitions
+├── ui/                                  # Frontend (React SPA)
 │   ├── src/
 │   │   ├── components/
 │   │   │   └── QueryInterface.tsx
 │   │   ├── App.tsx
+│   │   ├── config.ts                    # Frontend config (API URL handling)
 │   │   └── main.tsx
+│   ├── vite.config.ts                   # Builds to ../public
 │   └── package.json
+├── public/                              # Built React app (generated by npm run build)
+│   ├── index.html                       # Served by Workers
+│   ├── assets/                          # CSS, JS bundles
+│   └── ...                              # Other static assets
+├── migrations/
+│   ├── 0001_create_documents_table.sql
+│   ├── 0002_create_chunks_table.sql
+│   └── 0003_create_fts_table.sql
 ├── scripts/
-│   └── ingest-wikipedia.ts      # Data ingestion script
+│   └── ingest-wikipedia.ts              # Data ingestion script
 ├── data/
-│   └── wikipedia/               # Wikipedia articles (JSON)
+│   └── wikipedia/                       # Wikipedia articles (JSON)
 ├── docs/
-│   ├── ARCHITECTURE.md          # System architecture
-│   └── spec/                    # Specifications
-├── wrangler.jsonc               # Cloudflare Workers config
+│   ├── DEPLOYMENT.md                    # Deployment guide
+│   ├── ARCHITECTURE.md                  # System architecture
+│   └── spec/                            # Specifications
+├── wrangler.jsonc                       # Cloudflare Workers config (includes assets)
 ├── package.json
+├── tsconfig.json                        # TypeScript config
 └── README.md
 ```
+
+**Key Files:**
+- `wrangler.jsonc`: Configures Worker to serve React app from `./public`
+- `ui/vite.config.ts`: Builds React to `../public` (Worker's assets directory)
+- `npm run build`: Builds React app to `./public`
+- `npm run deploy`: Builds + applies migrations + deploys everything
 
 ## API Endpoints
 
@@ -261,27 +344,62 @@ Check ingestion workflow status.
 
 ### Local Development Setup
 
-This project uses **two separate dev servers** that run in parallel:
+This project uses **two coordinated dev servers** during development:
 
-**Backend (Port 8787)** - Hono API Server via Wrangler:
+```
+┌─────────────────────────────────────────────┐
+│  Browser: http://localhost:3000             │
+│  (Vite React dev server with HMR)           │
+└──────────────────┬──────────────────────────┘
+                   │
+         ┌─────────▼──────────┐
+         │ /api/* requests    │
+         │ (Proxied via Vite) │
+         └──────────┬─────────┘
+                    │
+         ┌──────────▼──────────┐
+         │ http://localhost:8787
+         │ (Wrangler Dev Server)
+         │
+         │ - Worker + bindings
+         │ - Static assets
+         │ - Hono routes
+         └────────────────────┘
+```
+
+**Backend (Port 8787)** - Worker + API:
 ```bash
 npm run dev
 ```
-Starts the Cloudflare Worker development server with live reload. API endpoints available at `http://localhost:8787`.
+Starts the Cloudflare Worker development environment with:
+- Live reload on code changes
+- API endpoints at `http://localhost:8787`
+- All bindings (D1, Vectorize, R2, KV) configured locally
+- Static asset serving (from `/public` if built)
 
-**Frontend (Port 3000)** - React App via Vite:
+**Frontend (Port 3000)** - React App:
 ```bash
 npm run ui:dev
 ```
-Starts the React development server with hot module reloading. Automatically proxies `/api/*` requests to the backend on port 8787.
+Starts the React Vite dev server with:
+- Hot module reloading (HMR) for instant UI updates
+- Automatic proxy to `http://localhost:8787` for `/api/*` requests
+- Vite's dev server magic for fast development
 
-**Usage**:
-1. Open two terminal windows
-2. In Terminal 1: `npm run dev` (backend)
-3. In Terminal 2: `npm run ui:dev` (frontend)
-4. Open `http://localhost:3000` in your browser
+**Setup**:
+```bash
+# Terminal 1: Start the Worker (serves API + static assets)
+npm run dev
 
-For more details, see [docs/QUICKSTART.md](docs/QUICKSTART.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#development-setup-architecture).
+# Terminal 2: Start the UI dev server (with proxy to Worker)
+npm run ui:dev
+
+# Open http://localhost:3000 in your browser
+```
+
+The frontend automatically proxies API calls to the backend via Vite's `proxy` configuration in `ui/vite.config.ts`.
+
+For more details, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ### Running Tests
 
@@ -303,20 +421,34 @@ cd ui && npm run lint
 
 ## Deployment
 
-This project requires deploying **two separate components**:
-1. **Backend** (Cloudflare Worker) - API server
-2. **Frontend** (React SPA) - Static site on Cloudflare Pages
+This project uses a **modern full-stack Workers architecture**. Both the frontend and backend are deployed together as a single Worker, eliminating separate deployments, CORS issues, and complexity.
 
 ### Quick Deploy
 
-```bash
-# Deploy everything (backend + frontend)
-npm run deploy
+Deploy your full-stack app with a single command:
 
-# Or deploy separately:
-npm run deploy:backend   # Worker + migrations
-npm run deploy:frontend  # React app to Pages
+```bash
+npm run deploy
 ```
+
+This command:
+1. Builds the React frontend to `./public`
+2. Applies database migrations
+3. Deploys both frontend + API to Cloudflare Workers
+
+Your app will be live at: `https://cloudflare-rag-portfolio.your-subdomain.workers.dev`
+
+### Why This Architecture?
+
+**Single-Worker deployment** is modern best practice because:
+- ✅ One deployment instead of managing multiple services
+- ✅ No CORS issues (frontend and API share the same origin)
+- ✅ Access to all Cloudflare features (Durable Objects, Email, etc.)
+- ✅ Better observability with Workers Logs and Tail
+- ✅ Gradual deployments and canary rollouts built-in
+- ✅ This is Cloudflare's recommended approach moving forward
+
+See: [Pages → Workers Migration Guide](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/)
 
 ### Detailed Instructions
 
@@ -357,10 +489,23 @@ For a 10-20MB Wikipedia dataset with 1000 queries/day:
 
 ## Learning Resources
 
+### Official Cloudflare Documentation
 - [Cloudflare Workers AI Docs](https://developers.cloudflare.com/workers-ai/)
 - [Vectorize Documentation](https://developers.cloudflare.com/vectorize/)
 - [D1 Documentation](https://developers.cloudflare.com/d1/)
-- [RAG Architecture Guide](./docs/ARCHITECTURE.md)
+- [R2 Documentation](https://developers.cloudflare.com/r2/)
+- [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/)
+
+### Architecture & Best Practices
+- [Pages → Workers Migration Guide](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/) - Why we chose Workers
+- [Full-Stack Development on Cloudflare Workers](https://blog.cloudflare.com/full-stack-development-on-cloudflare-workers/) - Cloudflare's recommendation
+- [RAG Architecture Guide](./docs/ARCHITECTURE.md) - This project's design
+- [Deployment Guide](./docs/DEPLOYMENT.md) - Comprehensive deployment reference
+
+### RAG & AI Concepts
+- [Retrieval-Augmented Generation (RAG) Overview](https://en.wikipedia.org/wiki/Prompt_engineering#Retrieval-augmented_generation)
+- [Vector Search Best Practices](https://developers.cloudflare.com/vectorize/)
+- [Semantic Search with Embeddings](https://developers.cloudflare.com/workers-ai/)
 
 ## Contributing
 

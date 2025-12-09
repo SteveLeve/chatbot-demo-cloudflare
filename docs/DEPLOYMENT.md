@@ -1,205 +1,238 @@
 # Deployment Guide
 
-This guide covers deploying the RAG Portfolio to production, including both the backend (Worker) and frontend (React SPA).
+This guide covers deploying the RAG Portfolio, which uses a modern full-stack Workers architecture where both frontend and backend are deployed together as a single Worker.
 
 ## Architecture Overview
 
-This project uses a **two-tier deployment architecture**:
+This project uses **Cloudflare Workers for full-stack deployment**:
 
-1. **Backend**: Cloudflare Worker (Hono API) - Deployed via Wrangler
-2. **Frontend**: React SPA - Deployed to Cloudflare Pages (or any static host)
+```
+┌─────────────────────────────────────────┐
+│     Cloudflare Worker (Single Origin)   │
+├─────────────────────────────────────────┤
+│ Static Assets (React SPA from /public)  │
+│ ├─ index.html                            │
+│ ├─ /assets/*                             │
+│ └─ Served with 304/cache headers        │
+├─────────────────────────────────────────┤
+│ API Routes (Hono from /src)             │
+│ ├─ /api/v1/query                         │
+│ ├─ /api/v1/ingest                        │
+│ └─ /health, /api/v1/docs, etc.          │
+└─────────────────────────────────────────┘
+                     ↓
+    Deployed with: `npm run deploy`
+```
 
-The frontend and backend are deployed **separately** and communicate via HTTP API calls.
+**Why this approach?**
+- ✅ Single deployment (`wrangler deploy`)
+- ✅ Same origin (no CORS issues)
+- ✅ Shared bindings (D1, Vectorize, R2, KV all available to both frontend and API)
+- ✅ Better observability (Workers Logs, Tail Workers)
+- ✅ Gradual deployments (canary rollouts)
+- ✅ All new Cloudflare features available
+- ✅ Lower latency (everything is edge-native)
 
-## Pre-Deployment Checklist
+## Prerequisites
 
 Before deploying, ensure:
 
-- [ ] All Cloudflare resources are created (D1, Vectorize, R2, KV)
-- [ ] Database migrations are written and tested locally
-- [ ] Environment variables are configured in `wrangler.jsonc`
-- [ ] Secrets are ready (if using external APIs)
-- [ ] Tests are passing (`npm test`)
-- [ ] Code is committed to git
+- [ ] Node.js 18+ installed
+- [ ] Cloudflare account
+- [ ] Wrangler CLI installed (`npm install -g wrangler`)
+- [ ] All Cloudflare resources created (D1, Vectorize, R2, KV)
+- [ ] Environment variables configured in `wrangler.jsonc`
+- [ ] Tests passing (`npm test`)
+- [ ] Changes committed to git
 
-## Step 1: Deploy Backend (Worker)
-
-### 1.1 Apply Database Migrations
-
-Apply migrations to your production database:
+## Quick Deploy (3 Commands)
 
 ```bash
-# Apply D1 migrations to remote database
+# 1. Apply database migrations
+wrangler d1 migrations apply wikipedia-db --remote
+
+# 2. Build frontend (outputs to ./public)
+npm run build
+
+# 3. Deploy everything
+wrangler deploy --env production
+```
+
+Or use the convenience script:
+
+```bash
+npm run deploy
+```
+
+That's it! Your full-stack app is now live.
+
+## Step-by-Step Deployment
+
+### Step 1: Prepare for Deployment
+
+```bash
+# Run tests
+npm test
+
+# Verify configuration
+wrangler deployments list
+```
+
+### Step 2: Build Frontend
+
+The React app builds to the `./public` directory, which Workers serves as static assets.
+
+```bash
+npm run build
+
+# Verify build output
+ls -la public/
+# Should contain: index.html, assets/, etc.
+```
+
+### Step 3: Apply Database Migrations
+
+Apply migrations to your production database **before** deploying code that depends on them:
+
+```bash
 wrangler d1 migrations apply wikipedia-db --remote
 
 # Verify migrations
 wrangler d1 migrations list wikipedia-db --remote
 ```
 
-**Important**: Always apply migrations **before** deploying Worker code that depends on them.
-
-### 1.2 Set Production Secrets (Optional)
-
-If you're using external APIs (e.g., Anthropic Claude):
+### Step 4: Deploy to Production
 
 ```bash
-# Set secrets for production
-wrangler secret put ANTHROPIC_API_KEY --env production
-```
-
-### 1.3 Deploy Worker
-
-```bash
-# Deploy to production
+# Using convenience script
 npm run deploy:production
 
-# Or use wrangler directly
+# Or manually
 wrangler deploy --env production
 ```
 
-After deployment, your Worker will be available at:
+Your Worker will be available at:
 ```
 https://cloudflare-rag-portfolio.<your-subdomain>.workers.dev
 ```
 
-**Save this URL** - you'll need it to configure the frontend.
-
-### 1.4 Verify Deployment
+### Step 5: Verify Deployment
 
 ```bash
-# Check deployment status
-wrangler deployments list
-
-# Test the API
+# Test health endpoint
 curl https://cloudflare-rag-portfolio.YOUR-SUBDOMAIN.workers.dev/health
 
-# Monitor logs
-wrangler tail --env production
-```
-
-## Step 2: Deploy Frontend (React App)
-
-### 2.1 Configure Production API URL
-
-Create a production environment file:
-
-```bash
-cd ui
-cp .env.production.example .env.production
-```
-
-Edit `ui/.env.production`:
-
-```env
-# Replace with your actual Worker URL
-VITE_API_BASE_URL=https://cloudflare-rag-portfolio.YOUR-SUBDOMAIN.workers.dev
-```
-
-### 2.2 Build the Frontend
-
-```bash
-cd ui
-npm run build
-```
-
-This creates a production build in `ui/dist/`.
-
-### 2.3 Deploy to Cloudflare Pages
-
-**Option A: Deploy via Wrangler (One-time)**
-
-```bash
-# From ui/ directory
-wrangler pages deploy dist --project-name=rag-portfolio-ui
-```
-
-The first deployment creates the project. Subsequent deployments update it.
-
-**Option B: Continuous Deployment via Git (Recommended)**
-
-1. Push your code to GitHub
-2. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → **Pages**
-3. Click **Create a project** → **Connect to Git**
-4. Select your repository
-5. Configure build settings:
-   - **Build command**: `cd ui && npm install && npm run build`
-   - **Build output directory**: `ui/dist`
-   - **Root directory**: `/` (leave default)
-   - **Environment variables**: Add `VITE_API_BASE_URL` with your Worker URL
-
-6. Click **Save and Deploy**
-
-### 2.4 Configure Custom Domain (Optional)
-
-1. Go to your Pages project → **Custom domains**
-2. Click **Set up a custom domain**
-3. Enter your domain (e.g., `rag-demo.example.com`)
-4. Follow DNS configuration instructions
-
-## Step 3: Post-Deployment Verification
-
-### 3.1 Test the Full Stack
-
-1. Visit your deployed frontend URL
-2. Try asking a question
-3. Verify the answer appears with sources
-4. Check browser console for errors
-
-### 3.2 Monitor Logs
-
-```bash
-# Watch Worker logs
+# View live logs
 wrangler tail --env production
 
-# Filter for errors
-wrangler tail --env production --status error
-
-# Search for specific requests
-wrangler tail --env production --search "query"
+# Check deployment history
+wrangler deployments list
 ```
 
-### 3.3 Check Analytics
+## Local Development
 
-- Go to Cloudflare Dashboard → **Workers & Pages**
-- Select your Worker
-- View metrics: requests, errors, CPU time, duration
+Development workflow is unchanged:
 
-## Environment Variables Reference
+```bash
+# Terminal 1: Start Worker (serves /api/* routes)
+npm run dev
 
-### Backend (wrangler.jsonc)
+# Terminal 2: Start UI dev server with proxy
+npm run ui:dev
+```
+
+The UI dev server (port 3000) automatically proxies `/api/*` requests to the Worker (port 8787) via Vite's proxy configuration.
+
+## Configuration
+
+### wrangler.jsonc
+
+Key settings for full-stack deployment:
 
 ```jsonc
 {
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  }
+}
+```
+
+This tells Workers to:
+1. Serve files from `./public` directory as static assets
+2. Bind the assets to the `ASSETS` variable (for programmatic access if needed)
+3. Automatically handle routing: static files served, `/api/*` routes go to your Worker code
+
+### Build Output
+
+The React app builds to `./public`:
+
+```typescript
+// ui/vite.config.ts
+export default defineConfig({
+  build: {
+    outDir: '../public', // Outputs to project root /public
+  },
+});
+```
+
+**Important**: The `public` directory should NOT be committed to git. It's generated during the build and deployed with the Worker.
+
+Add to `.gitignore`:
+```
+public/
+.wrangler/
+.env
+```
+
+## Environment Variables
+
+### Development
+
+```bash
+# Define in wrangler.jsonc
+{
   "vars": {
     "ENVIRONMENT": "production",
-    "LOG_LEVEL": "INFO",
-    "ENABLE_TEXT_SPLITTING": true,
-    "DEFAULT_CHUNK_SIZE": 500,
-    "DEFAULT_CHUNK_OVERLAP": 100,
-    "DEFAULT_TOP_K": 3,
-    "MAX_QUERY_LENGTH": 500
+    "LOG_LEVEL": "INFO"
   }
 }
 ```
 
-### Frontend (ui/.env.production)
+### Production Secrets
 
-```env
-VITE_API_BASE_URL=https://your-worker.workers.dev
+Set secrets per environment:
+
+```bash
+# Production secrets
+wrangler secret put ANTHROPIC_API_KEY --env production
+
+# List secrets
+wrangler secret list --env production
 ```
 
-## Deployment Scripts
+## Staging Environment
 
-Add these npm scripts to your root `package.json`:
+Create a staging environment to test before production:
 
-```json
+```jsonc
 {
-  "scripts": {
-    "deploy": "npm run deploy:backend && npm run deploy:frontend",
-    "deploy:backend": "wrangler d1 migrations apply wikipedia-db --remote && wrangler deploy --env production",
-    "deploy:frontend": "cd ui && npm run build && wrangler pages deploy dist --project-name=rag-portfolio-ui"
+  "env": {
+    "staging": {
+      "vars": { "ENVIRONMENT": "staging" },
+      "kv_namespaces": [
+        { "binding": "EMBEDDINGS_CACHE", "id": "staging-kv-id" }
+      ]
+    }
   }
 }
+```
+
+Deploy to staging:
+
+```bash
+npm run build
+wrangler deploy --env staging
 ```
 
 ## CI/CD with GitHub Actions
@@ -232,35 +265,70 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Apply D1 migrations
+      - name: Build frontend
+        run: npm run build
+
+      - name: Apply migrations
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: d1 migrations apply wikipedia-db --remote
 
-      - name: Deploy Worker
+      - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: deploy --env production
-
-      - name: Build frontend
-        run: cd ui && npm run build
-        env:
-          VITE_API_BASE_URL: ${{ secrets.WORKER_URL }}
-
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: pages deploy ui/dist --project-name=rag-portfolio-ui
 ```
 
 **Setup**:
 1. Go to GitHub repository → **Settings** → **Secrets and variables** → **Actions**
-2. Add secrets:
-   - `CLOUDFLARE_API_TOKEN`: Your Cloudflare API token
-   - `WORKER_URL`: Your deployed Worker URL
+2. Add `CLOUDFLARE_API_TOKEN`:
+   - Go to Cloudflare Dashboard → **My Profile** → **API Tokens**
+   - Create token with "Edit Cloudflare Workers" permissions
+
+## Monitoring & Observability
+
+### Real-Time Logs
+
+```bash
+# Watch all logs
+wrangler tail --env production
+
+# Errors only
+wrangler tail --env production --status error
+
+# Search logs
+wrangler tail --env production --search "user-query"
+
+# Follow specific method
+wrangler tail --env production --method GET
+```
+
+### Health Checks
+
+The API includes a health endpoint:
+
+```bash
+curl https://cloudflare-rag-portfolio.YOUR-SUBDOMAIN.workers.dev/health
+
+# Response:
+{
+  "status": "healthy",
+  "timestamp": "2025-01-15T10:30:00Z",
+  "environment": "production"
+}
+```
+
+### Deployment History
+
+```bash
+# List recent deployments
+wrangler deployments list
+
+# Deployment details
+wrangler deployments list --limit 10
+```
 
 ## Rollback
 
@@ -273,76 +341,139 @@ wrangler deployments list
 # Rollback to specific deployment
 wrangler rollback <deployment-id>
 
-# Verify
+# Verify rollback
 wrangler deployments list
 ```
 
+## Database Migrations
+
+### Migration Workflow
+
+```bash
+# 1. Create migration
+wrangler d1 migrations create wikipedia-db add_new_column
+
+# 2. Write SQL in migrations/0xxx_add_new_column.sql
+# Example:
+# ALTER TABLE chunks ADD COLUMN tags TEXT;
+
+# 3. Apply locally
+wrangler d1 migrations apply wikipedia-db
+
+# 4. Test locally
+npm run dev
+
+# 5. Apply to staging (if available)
+wrangler d1 migrations apply wikipedia-db --remote --env staging
+
+# 6. Apply to production
+wrangler d1 migrations apply wikipedia-db --remote
+
+# 7. Deploy code
+wrangler deploy --env production
+```
+
+**Important**: Always apply migrations **before** deploying code that depends on them.
+
 ## Troubleshooting
 
-### Issue: Frontend can't reach backend
+### Issue: "Cannot find public directory"
 
-**Symptoms**: Network errors, CORS errors in browser console
+**Symptoms**: Build fails, `public/` directory doesn't exist
+
+**Solution**:
+```bash
+# Ensure frontend is built
+npm run build
+
+# Verify output
+ls -la public/
+```
+
+### Issue: "Static assets not serving"
+
+**Symptoms**: Visiting worker URL shows 404, `/api/*` works but static files don't
 
 **Solutions**:
-1. Verify `VITE_API_BASE_URL` is set correctly in `.env.production`
-2. Check Worker CORS is enabled (it is by default in `src/index.ts`)
-3. Verify Worker is deployed and accessible
-4. Check browser network tab for the actual URL being called
+1. Check `wrangler.jsonc` has `assets` configuration
+2. Verify `npm run build` ran successfully
+3. Check `public/index.html` exists
+4. Inspect: `wrangler publish --dry-run` to see asset list
 
-### Issue: Database not found
+### Issue: "Database not found"
 
 **Symptoms**: "binding DATABASE not found"
 
 **Solutions**:
-1. Ensure D1 database is created: `wrangler d1 list`
-2. Verify `database_id` in `wrangler.jsonc` matches your D1 database
-3. Check migrations are applied: `wrangler d1 migrations list wikipedia-db --remote`
+1. Verify D1 exists: `wrangler d1 list`
+2. Check `database_id` in `wrangler.jsonc` matches your D1
+3. Apply migrations: `wrangler d1 migrations apply wikipedia-db --remote`
 
-### Issue: Vectorize index not found
+### Issue: "Migrations won't apply"
 
-**Symptoms**: "binding VECTOR_INDEX not found"
-
-**Solutions**:
-1. Create Vectorize index: `wrangler vectorize create wikipedia-vectors --preset @cf/baai/bge-base-en-v1.5`
-2. Verify index exists: `wrangler vectorize list`
-3. Update `wrangler.jsonc` with correct index name
-
-### Issue: Build fails on Pages
-
-**Symptoms**: Build command fails in Pages deployment
+**Symptoms**: "Migration error" or "SQL syntax error"
 
 **Solutions**:
-1. Ensure build command is correct: `cd ui && npm install && npm run build`
-2. Check build output directory: `ui/dist`
-3. Verify all dependencies are in `package.json` (not devDependencies if needed at build time)
-4. Add `VITE_API_BASE_URL` environment variable in Pages settings
+1. Check SQL syntax in migration files
+2. Verify migrations run in order (names start with 0001_, 0002_, etc.)
+3. Try applying locally first: `wrangler d1 migrations apply wikipedia-db --local`
+4. Check database is accessible: `wrangler d1 info wikipedia-db --remote`
+
+### Issue: "Changes not live"
+
+**Symptoms**: Updated code not reflecting on live site
+
+**Solutions**:
+1. Ensure build succeeded: `npm run build`
+2. Verify files in `public/` updated: `ls -l public/`
+3. Clear browser cache (Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows)
+4. Check deployment: `wrangler deployments list`
+5. Monitor logs: `wrangler tail --env production --status error`
 
 ## Cost Estimation
 
 For a production deployment with moderate usage (1000 queries/day):
 
-- **Workers**: Free tier (100k requests/day)
-- **D1**: Free (under 5GB)
-- **Vectorize**: Free tier (5M vectors)
-- **R2**: ~$0.015/GB-month
-- **KV**: Free tier
-- **Pages**: Free (500 builds/month)
+| Service | Cost | Notes |
+|---------|------|-------|
+| **Workers** | Free | 100k requests/day free tier |
+| **D1** | Free | < 5GB included |
+| **Vectorize** | Free | 5M vectors free tier |
+| **R2** | $0.015/GB/month | ~$0.30/month for 20MB |
+| **KV** | Free | Free tier adequate |
 
 **Estimated monthly cost**: < $1
 
+## Best Practices
+
+1. ✅ Test in staging before production
+2. ✅ Always apply migrations before deploying code
+3. ✅ Use `npm run deploy` instead of manual steps
+4. ✅ Monitor logs after each deployment
+5. ✅ Keep `public/` directory out of git
+6. ✅ Use secrets for sensitive values
+7. ✅ Tag releases for tracking
+8. ✅ Set up gradual deployments for critical updates
+9. ✅ Use Worker Observability tools (Logs, Tail, Source Maps)
+10. ✅ Test frontend + API integration locally before deploying
+
 ## Next Steps
 
-1. Set up custom domain for frontend
-2. Configure analytics and monitoring
-3. Set up error tracking (e.g., Sentry)
-4. Enable Cloudflare Web Analytics for frontend
-5. Implement deployment previews for pull requests
-6. Set up staging environment
+After initial deployment:
+
+1. Set up a custom domain (optional)
+2. Enable Cloudflare Web Analytics
+3. Configure error tracking (e.g., Sentry)
+4. Set up automated testing (GitHub Actions)
+5. Implement gradual deployments for rollouts
+6. Monitor performance with Workers Analytics
+7. Set up alerts for errors
 
 ## Resources
 
 - [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
-- [Cloudflare Pages Documentation](https://developers.cloudflare.com/pages/)
+- [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/)
 - [Wrangler CLI Reference](https://developers.cloudflare.com/workers/wrangler/)
 - [D1 Documentation](https://developers.cloudflare.com/d1/)
 - [Vectorize Documentation](https://developers.cloudflare.com/vectorize/)
+- [Migration Guide: Pages → Workers](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/)
