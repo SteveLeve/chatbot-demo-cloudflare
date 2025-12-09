@@ -6,7 +6,9 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "deploy": "npm run deploy:backend && npm run deploy:frontend",
+    "deploy:backend": "npm run db:migrate:remote && wrangler deploy --env production",
+    "deploy:frontend": "cd ui && npm run build && wrangler pages deploy dist --project-name=rag-portfolio-ui",
     "deploy:production": "wrangler deploy --env production",
     "cf-typegen": "wrangler types",
     "test": "vitest",
@@ -18,6 +20,7 @@
     "r2:create": "wrangler r2 bucket create wikipedia-articles",
     "ui:dev": "cd ui && npm run dev",
     "ui:build": "cd ui && npm run build",
+    "ui:preview": "cd ui && npm run preview",
     "fetch-data": "python scripts/fetch-wikipedia.py --size-mb 10",
     "fetch-data:quick": "python scripts/fetch-wikipedia.py --size-mb 5",
     "fetch-data:large": "python scripts/fetch-wikipedia.py --size-mb 20",

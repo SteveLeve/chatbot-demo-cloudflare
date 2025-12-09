@@ -303,15 +303,26 @@ cd ui && npm run lint
 
 ## Deployment
 
-### Deploy to Production
+This project requires deploying **two separate components**:
+1. **Backend** (Cloudflare Worker) - API server
+2. **Frontend** (React SPA) - Static site on Cloudflare Pages
+
+### Quick Deploy
 
 ```bash
-# Deploy Worker
-npm run deploy:production
+# Deploy everything (backend + frontend)
+npm run deploy
 
-# Build and deploy UI (to Cloudflare Pages or your hosting provider)
-npm run ui:build
+# Or deploy separately:
+npm run deploy:backend   # Worker + migrations
+npm run deploy:frontend  # React app to Pages
 ```
+
+### Detailed Instructions
+
+For comprehensive deployment instructions, environment configuration, CI/CD setup, and troubleshooting, see:
+
+**[📘 Complete Deployment Guide](docs/DEPLOYMENT.md)**
 
 ### Environment Variables
 

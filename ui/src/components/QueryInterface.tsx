@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { RAGQueryResponse, ApiResponse } from '../types';
+import { getApiUrl } from '../config';
 
 export function QueryInterface() {
   const [question, setQuestion] = useState('');
@@ -16,7 +17,7 @@ export function QueryInterface() {
     setResult(null);
 
     try {
-      const response = await fetch(`/api/v1/query?q=${encodeURIComponent(question)}`);
+      const response = await fetch(getApiUrl(`/api/v1/query?q=${encodeURIComponent(question)}`));
       const data: ApiResponse<RAGQueryResponse> = await response.json();
 
       if (data.success && data.data) {
