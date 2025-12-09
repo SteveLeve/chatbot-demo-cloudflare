@@ -25,7 +25,8 @@
     {
       "binding": "DATABASE",
       "database_name": "wikipedia-db",
-      "database_id": "4f4f2210-e5a5-4c61-b0cf-8c1ab45c3333"
+      "database_id": "4f4f2210-e5a5-4c61-b0cf-8c1ab45c3333",
+      "remote": true
     }
   ],
 
@@ -33,7 +34,8 @@
   "vectorize": [
     {
       "binding": "VECTOR_INDEX",
-      "index_name": "wikipedia-vectors"
+      "index_name": "wikipedia-vectors",
+      "remote": true
     }
   ],
 
@@ -41,7 +43,8 @@
   "r2_buckets": [
     {
       "binding": "ARTICLES_BUCKET",
-      "bucket_name": "wikipedia-articles"
+      "bucket_name": "wikipedia-articles",
+      "remote": true
     }
   ],
 
@@ -58,11 +61,13 @@
   "kv_namespaces": [
     {
       "binding": "EMBEDDINGS_CACHE",
-      "id": "2cb07ca928b4488d96c5b126e89e019c"
+      "id": "2cb07ca928b4488d96c5b126e89e019c",
+      "remote": true
     },
     {
       "binding": "RAG_CACHE",
-      "id": "a9016ba7dd794651b1a5d085e297c83d"
+      "id": "a9016ba7dd794651b1a5d085e297c83d",
+      "remote": true
     }
   ],
 
