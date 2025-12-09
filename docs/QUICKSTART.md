@@ -132,30 +132,47 @@ python scripts/fetch-wikipedia.py --size-mb 5
 
 ### 7. Start Development Servers
 
-**Terminal 1 - Start Worker:**
+You need **two separate terminal windows** to run both the backend API and frontend UI:
+
+**Terminal 1 - Start Backend (Hono API Worker):**
 
 ```bash
 npm run dev
 ```
 
-Wait for:
+This starts the Wrangler development server. You should see:
 ```
 ⎔ Starting local server...
 [wrangler:inf] Ready on http://localhost:8787
 ```
 
-**Terminal 2 - Start UI:**
+The backend provides REST API endpoints:
+- `GET /` - API info
+- `GET /health` - Health check
+- `GET /api/v1/query?q=...` - Query the RAG system
+- `POST /api/v1/query` - Query with POST body
+- `POST /api/v1/ingest` - Ingest new articles
+- `GET /api/v1/docs` - API documentation
+
+**Terminal 2 - Start Frontend (React UI):**
 
 ```bash
 npm run ui:dev
 ```
 
-Wait for:
+This starts the Vite development server. You should see:
 ```
-  VITE v6.0.7  ready in 500 ms
+VITE v6.4.1  ready in 308 ms
 
   ➜  Local:   http://localhost:3000/
 ```
+
+The frontend:
+- Serves HTML on `http://localhost:3000`
+- Automatically proxies API calls from `/api/*` to the backend on port 8787
+- Provides hot module reloading during development
+
+**Open your browser to http://localhost:3000/**
 
 **Terminal 3 - Ingest Sample Data:**
 
@@ -188,6 +205,48 @@ You should see:
 
 ## Troubleshooting
 
+### Backend server not starting
+
+If `npm run dev` fails with binding errors:
+
+```bash
+# Error: "In development, you should use a separate kv namespace..."
+```
+
+This usually means KV namespaces need to be configured for local mode. Check your `wrangler.jsonc`:
+
+```jsonc
+"kv_namespaces": [
+  {
+    "binding": "EMBEDDINGS_CACHE",
+    "id": "YOUR_ID_HERE"
+    // Note: Remove "remote": true for local development
+  }
+]
+```
+
+KV uses local simulation in dev mode, but retains the IDs for production.
+
+### Frontend won't connect to backend
+
+1. Verify both servers are running:
+   - Backend: `curl http://localhost:8787/health` (should return JSON)
+   - Frontend: Open browser to `http://localhost:3000` (should show HTML)
+
+2. Check Vite proxy configuration in `ui/vite.config.ts`:
+   ```typescript
+   server: {
+     proxy: {
+       '/api': {
+         target: 'http://localhost:8787',
+         changeOrigin: true,
+       },
+     },
+   }
+   ```
+
+3. Check browser console for errors (F12 → Console tab)
+
 ### "Database not found"
 
 Make sure you ran migrations:
@@ -216,9 +275,19 @@ Check the Worker logs in Terminal 1. Common issues:
 - Invalid JSON in data files
 - Missing required fields (title, content)
 
-### CORS errors in browser
+### Port already in use
 
-Make sure both the Worker (port 8787) and UI (port 3000) are running.
+If port 3000 or 8787 is already in use:
+
+```bash
+# Change Vite port in ui/vite.config.ts
+npm run ui:dev -- --port 3001
+
+# Change Wrangler port
+wrangler dev --port 8788
+```
+
+Then update the proxy configuration in `ui/vite.config.ts` to match the new port.
 
 ## Next Steps
 

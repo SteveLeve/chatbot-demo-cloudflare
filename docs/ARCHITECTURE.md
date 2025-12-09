@@ -4,6 +4,43 @@
 
 This RAG system is built on Cloudflare's edge computing platform, leveraging Workers AI, Vectorize, D1, and R2 to create a production-grade question-answering system.
 
+## Development Setup Architecture
+
+The project uses **two separate dev servers** running in parallel:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                       Your Local Machine                            │
+│                                                                     │
+│  ┌───────────────────────┐              ┌───────────────────────┐  │
+│  │  Frontend (Vite)      │              │  Backend (Wrangler)   │  │
+│  │  Terminal 2           │              │  Terminal 1           │  │
+│  │  localhost:3000       │──────────────│  localhost:8787       │  │
+│  │                       │   /api/*     │                       │  │
+│  │  • React App          │  proxy       │  • Hono API Server    │  │
+│  │  • HTML/CSS/JS        │              │  • TypeScript         │  │
+│  │  • Hot reload         │              │  • Bindings (local)   │  │
+│  │  • Tailwind CSS       │              │                       │  │
+│  └───────────────────────┘              └───────────────────────┘  │
+│           │                                        │                │
+│           │                                        ├─ KV (local)   │
+│           │                                        ├─ D1 (remote)  │
+│           │                                        ├─ Vectorize    │
+│           │                                        ├─ R2 (remote)  │
+│           │                                        └─ AI (remote)  │
+│           ▼                                        ▼                │
+│   Browser                              Cloudflare Remote Resources │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Points**:
+- **Port 3000 (Frontend)**: React dev server with Vite hot reload
+- **Port 8787 (Backend)**: Wrangler dev server simulating a Cloudflare Worker
+- **API Proxy**: Vite automatically forwards `/api/*` requests to port 8787
+- **Local vs Remote Bindings**: KV runs locally, D1/Vectorize/R2/AI use remote Cloudflare resources
+- **Independent**: Each server can restart without affecting the other (but you'll lose network connectivity temporarily)
+
 ## Core Components
 
 ### 1. Workers (Compute Layer)

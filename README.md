@@ -259,6 +259,30 @@ Check ingestion workflow status.
 
 ## Development
 
+### Local Development Setup
+
+This project uses **two separate dev servers** that run in parallel:
+
+**Backend (Port 8787)** - Hono API Server via Wrangler:
+```bash
+npm run dev
+```
+Starts the Cloudflare Worker development server with live reload. API endpoints available at `http://localhost:8787`.
+
+**Frontend (Port 3000)** - React App via Vite:
+```bash
+npm run ui:dev
+```
+Starts the React development server with hot module reloading. Automatically proxies `/api/*` requests to the backend on port 8787.
+
+**Usage**:
+1. Open two terminal windows
+2. In Terminal 1: `npm run dev` (backend)
+3. In Terminal 2: `npm run ui:dev` (frontend)
+4. Open `http://localhost:3000` in your browser
+
+For more details, see [docs/QUICKSTART.md](docs/QUICKSTART.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#development-setup-architecture).
+
 ### Running Tests
 
 ```bash
