@@ -11,15 +11,15 @@ export function SourcesCard({ sources }: SourcesCardProps) {
   if (!sources || sources.length === 0) return null;
 
   return (
-    <div className="mt-3 border-t border-gray-200 pt-3">
+    <div className="mt-3 border-t border-gray-200 dark:border-gray-700 pt-3">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between w-full text-left mb-2"
       >
-        <h3 className="text-sm font-semibold text-gray-700">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
           Sources ({sources.length})
         </h3>
-        <span className="text-gray-500">{isOpen ? '▼' : '▶'}</span>
+        <span className="text-gray-500 dark:text-gray-400">{isOpen ? '▼' : '▶'}</span>
       </button>
 
       {isOpen && (
@@ -27,20 +27,20 @@ export function SourcesCard({ sources }: SourcesCardProps) {
           {sources.map((source, idx) => (
             <div
               key={source.chunkId}
-              className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors text-sm"
+              className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
             >
               <div className="flex items-start justify-between mb-1">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-800 text-xs font-medium">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-medium">
                     {idx + 1}
                   </span>
-                  <span className="font-medium text-gray-900">{source.title}</span>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">{source.title}</span>
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-500 dark:text-gray-400">
                   {(source.similarity * 100).toFixed(1)}% match
                 </div>
               </div>
-              <p className="text-gray-700 text-xs line-clamp-3">
+              <p className="text-gray-700 dark:text-gray-300 text-xs line-clamp-3">
                 {source.chunkText}
               </p>
             </div>
