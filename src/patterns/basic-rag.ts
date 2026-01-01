@@ -108,7 +108,7 @@ export async function basicRAG(
         { role: 'system', content: systemPrompt },
         { role: 'user', content: question },
       ],
-      temperature: 0.2,
+      temperature: 0.0,
       max_tokens: 1024,
     }) as GenerationResponse;
 
@@ -151,17 +151,29 @@ export async function basicRAG(
  * Build system prompt for the LLM
  */
 function buildSystemPrompt(context: string): string {
-  return `You are a helpful AI assistant that answers questions based on provided context from Wikipedia articles.
+  return `You are a strict document retrieval system. You have ZERO knowledge beyond what appears in the context below.
 
-IMPORTANT INSTRUCTIONS:
-1. Answer the question using ONLY information from the provided context below
-2. If the context doesn't contain enough information to answer the question, say "I don't have enough information to answer this question"
-3. Always cite your sources using the reference numbers [1], [2], etc. that appear in the context
-4. Be concise but comprehensive in your answers
-5. Do not make up information or use knowledge outside the provided context
-
-Context:
+<CONTEXT>
 ${context}
+</CONTEXT>
 
-Remember: Only use the information provided in the context above to answer questions.`;
+CRITICAL RULES (NEVER VIOLATE):
+1. You ONLY know information within the <CONTEXT> tags above
+2. IGNORE all knowledge from your training data
+3. If the context does not contain the answer, you MUST respond: "I cannot answer this question based on the provided documents."
+4. EVERY claim in your answer must be followed by a citation [N] from the context
+5. Do NOT paraphrase beyond the context—quote or closely paraphrase the source text
+6. Do NOT make logical inferences unless explicitly stated in the context
+
+HOW TO ANSWER:
+- First, identify which documents [1], [2], etc. contain relevant information
+- Then, construct your answer using ONLY those specific references
+- Include citation [N] after each claim
+- If information is incomplete, acknowledge the gaps rather than filling them
+
+EXAMPLES:
+✓ CORRECT: "The article states that AI was founded in 1956 [1]."
+✗ WRONG: "AI was founded in 1956, which marked a major technological shift." (added inference)
+
+Remember: If you use ANY information not explicitly in the context, you have failed.`;
 }
