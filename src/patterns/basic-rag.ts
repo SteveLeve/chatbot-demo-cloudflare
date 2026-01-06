@@ -20,10 +20,13 @@ import type {
 } from '../types';
 import { createLogger } from '../utils/logger';
 import { createDocumentStore } from '../utils/document-store';
+import { ChatLogger } from '../utils/chat-logger';
+import type { Context } from 'hono';
 
 export async function basicRAG(
   request: RAGQueryRequest,
-  env: Env
+  env: Env,
+  context?: Context<{ Bindings: Env }>
 ): Promise<RAGQueryResponse> {
   const logger = createLogger(
     { pattern: 'basic', question: request.question },
@@ -33,6 +36,23 @@ export async function basicRAG(
   logger.info('Starting basic RAG query');
 
   const { question, topK = env.DEFAULT_TOP_K, minSimilarity } = request;
+
+  // Initialize chat logger if context is provided
+  let chatLogger: ChatLogger | null = null;
+  let messageIndex = 0;
+
+  if (context) {
+    chatLogger = new ChatLogger(env, context);
+    await chatLogger.initializeSession();
+
+    // Log user message
+    messageIndex = 0;
+    await chatLogger.logMessage({
+      role: 'user',
+      content: question,
+      messageIndex,
+    });
+  }
 
   try {
     // Validate question length
@@ -70,10 +90,23 @@ export async function basicRAG(
     if (vectorMatches.length === 0) {
       logger.warn('No relevant chunks found');
       const latency = logger.endTimer('basicRAG');
+      const answer = "I don't have enough information to answer this question based on the available documents.";
+
+      // Log assistant response
+      if (chatLogger) {
+        await chatLogger.logMessage({
+          role: 'assistant',
+          content: answer,
+          messageIndex: messageIndex + 1,
+          modelName: '@cf/meta/llama-3.1-8b-instruct',
+          latencyMs: latency,
+          sources: [],
+        });
+      }
 
       return {
         question,
-        answer: "I don't have enough information to answer this question based on the available documents.",
+        answer,
         sources: [],
         metadata: {
           pattern: 'basic',
@@ -131,6 +164,18 @@ export async function basicRAG(
     const latency = logger.endTimer('basicRAG');
     logger.info('Basic RAG query completed', { latencyMs: latency });
 
+    // Log assistant response with sources
+    if (chatLogger) {
+      await chatLogger.logMessage({
+        role: 'assistant',
+        content: answer,
+        messageIndex: messageIndex + 1,
+        modelName: '@cf/meta/llama-3.1-8b-instruct',
+        latencyMs: latency,
+        sources,
+      });
+    }
+
     return {
       question,
       answer,
@@ -143,6 +188,19 @@ export async function basicRAG(
     };
   } catch (error) {
     logger.error('Basic RAG query failed', error);
+
+    // Log error if chat logger is available
+    if (chatLogger) {
+      await chatLogger.logMessage({
+        role: 'assistant',
+        content: '',
+        messageIndex: messageIndex + 1,
+        modelName: '@cf/meta/llama-3.1-8b-instruct',
+        hasError: true,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+
     throw error;
   }
 }

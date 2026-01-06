@@ -34,6 +34,12 @@ export interface Env {
   DEFAULT_CHUNK_OVERLAP: number;
   DEFAULT_TOP_K: number;
   MAX_QUERY_LENGTH: number;
+
+  // Chat logging
+  vars?: {
+    CHAT_LOGGING_ENABLED?: boolean;
+    CHAT_LOG_IP_SALT?: string;
+  };
 }
 
 // ============================================================================
@@ -285,4 +291,47 @@ export interface ApiResponse<T = any> {
     timestamp: string;
     requestId?: string;
   };
+}
+
+// ============================================================================
+// Chat Logging Types
+// ============================================================================
+
+/**
+ * Parameters for logging a chat message
+ */
+export interface LogChatMessageParams {
+  role: 'user' | 'assistant';
+  content: string;
+  messageIndex: number;
+
+  // Assistant-specific metadata
+  modelName?: string;
+  temperature?: number;
+  latencyMs?: number;
+  tokenCount?: number;
+  promptTokens?: number;
+  completionTokens?: number;
+
+  // RAG sources (for assistant messages)
+  sources?: DocumentSource[];
+
+  // Error tracking
+  hasError?: boolean;
+  errorMessage?: string;
+}
+
+/**
+ * Cloudflare metadata extracted from request context
+ */
+export interface CloudflareMetadata {
+  userAgent: string;
+  country: string | null;
+  region: string | null;
+  city: string | null;
+  lat: number | null;
+  lng: number | null;
+  timezone: string | null;
+  colo: string | null;
+  asn: number | null;
 }

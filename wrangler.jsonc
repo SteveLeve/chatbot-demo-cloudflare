@@ -19,7 +19,14 @@
     "DEFAULT_CHUNK_SIZE": 500,
     "DEFAULT_CHUNK_OVERLAP": 100,
     "DEFAULT_TOP_K": 3,
-    "MAX_QUERY_LENGTH": 500
+    "MAX_QUERY_LENGTH": 500,
+    "CHAT_LOGGING_ENABLED": true,
+    "CHAT_LOG_IP_SALT": "change-in-production"
+  },
+
+  // Cron triggers for scheduled tasks
+  "triggers": {
+    "crons": ["0 2 * * *"]
   },
 
   "routes": [
