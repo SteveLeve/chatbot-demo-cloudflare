@@ -7,7 +7,7 @@ import type { Context } from 'hono';
 import type { Env, DocumentSource } from '../types';
 import { hashIpAddress } from './privacy';
 import { extractCloudflareMetadata, extractIpAddress } from './metadata';
-import { getOrCreateSessionId, createSessionCookie } from './session-manager';
+import { createLogger, Logger } from './logger';
 
 // Enable/disable logging via environment variable
 const LOGGING_ENABLED_DEFAULT = true;
@@ -39,6 +39,7 @@ export class ChatLogger {
   private env: Env;
   private context: Context<{ Bindings: Env }>;
   private loggingEnabled: boolean;
+  private logger: Logger;
 
   constructor(env: Env, context: Context<{ Bindings: Env }>) {
     this.env = env;
@@ -47,11 +48,14 @@ export class ChatLogger {
     // Check if logging is enabled (default: true if not specified)
     const vars = (env as any).vars || {};
     this.loggingEnabled = vars.CHAT_LOGGING_ENABLED !== false;
+
+    const logLevel = (env as any).LOG_LEVEL;
+    this.logger = createLogger({ component: 'ChatLogger' }, logLevel);
   }
 
   /**
    * Initialize session for the request
-   * Creates or retrieves existing session from database
+   * Always creates a new session; logs reuse attempts for visibility
    * Logs errors but does not throw (logging should not break chat)
    */
   async initializeSession(): Promise<void> {
@@ -60,42 +64,35 @@ export class ChatLogger {
     }
 
     try {
-      this.sessionId = getOrCreateSessionId(this.context.req.raw);
+      const incomingSessionId = this.extractIncomingSessionId();
 
-      // Check if session already exists in DB
-      const existingSessionResult = await this.env.DATABASE.prepare(
-        'SELECT id FROM chat_sessions WHERE session_id = ?'
-      )
-        .bind(this.sessionId)
-        .first();
-
-      if (existingSessionResult) {
-        const id = existingSessionResult.id;
-        if (!id || typeof id !== 'string') {
-          console.warn('[ChatLogger] Existing session query returned invalid ID format', {
-            id,
-            type: typeof id,
-          });
-          this.sessionDbId = null;
-          return;
-        }
-        this.sessionDbId = id;
-
-        // Update last_message_at
-        await this.env.DATABASE.prepare(
-          'UPDATE chat_sessions SET last_message_at = ?, updated_at = ? WHERE id = ?'
+      if (incomingSessionId) {
+        const reuseResult = await this.env.DATABASE.prepare(
+          'SELECT id FROM chat_sessions WHERE session_id = ?'
         )
-          .bind(new Date().getTime(), new Date().getTime(), this.sessionDbId)
-          .run();
-      } else {
-        // Create new session (this will validate the result)
-        this.sessionDbId = await this.createSession();
+          .bind(incomingSessionId)
+          .first();
+
+        if (reuseResult) {
+          const metadata = extractCloudflareMetadata(this.context);
+          this.logger.warn('Reused session ID detected; creating new session instead', {
+            incomingSessionId,
+            ip: extractIpAddress(this.context),
+            userAgent: metadata.userAgent,
+          });
+        }
       }
+
+      this.sessionId = crypto.randomUUID();
+      this.sessionDbId = await this.createSession();
     } catch (error) {
-      console.error('[ChatLogger] Failed to initialize session:', error instanceof Error ? error.message : String(error), {
-        error: error instanceof Error ? { message: error.message, stack: error.stack } : error,
-        sessionId: this.sessionId,
-      });
+      this.logger.error(
+        'Failed to initialize session',
+        error,
+        {
+          sessionId: this.sessionId,
+        }
+      );
       // Don't throw - logging failures shouldn't break chat functionality
       this.sessionDbId = null;
     }
@@ -212,8 +209,7 @@ export class ChatLogger {
 
       messageId = id;
     } catch (error) {
-      console.error('[ChatLogger] CRITICAL: Failed to log chat message', error instanceof Error ? error.message : String(error), {
-        error: error instanceof Error ? { message: error.message, stack: error.stack } : error,
+      this.logger.error('CRITICAL: Failed to log chat message', error, {
         sessionId: this.sessionDbId,
         role: params.role,
         messageIndex: params.messageIndex,
@@ -228,7 +224,7 @@ export class ChatLogger {
       try {
         await this.logMessageChunks(messageId, params.sources);
       } catch (error) {
-        console.warn('[ChatLogger] Failed to log RAG chunks (non-critical)', error instanceof Error ? error.message : String(error), {
+        this.logger.warn('Failed to log RAG chunks (non-critical)', {
           error: error instanceof Error ? { message: error.message, stack: error.stack } : error,
           messageId,
           chunkCount: params.sources.length,
@@ -249,8 +245,7 @@ export class ChatLogger {
         .bind(new Date().getTime(), new Date().getTime(), this.sessionDbId)
         .run();
     } catch (error) {
-      console.error('[ChatLogger] Failed to update session message count', error instanceof Error ? error.message : String(error), {
-        error: error instanceof Error ? { message: error.message, stack: error.stack } : error,
+      this.logger.error('Failed to update session message count', error, {
         sessionId: this.sessionDbId,
         messageId,
       });
@@ -315,7 +310,7 @@ export class ChatLogger {
         throw new Error(`${summary} - all RAG chunks failed to log`);
       } else {
         // Partial failure
-        console.warn('[ChatLogger] Partial chunk logging failure', {
+        this.logger.warn('Partial chunk logging failure', {
           messageId,
           summary,
           successCount: successfulChunks.length,
@@ -328,19 +323,29 @@ export class ChatLogger {
   }
 
   /**
-   * Get session ID (for returning to client if needed)
+   * Extract any incoming session ID from headers/cookies (for reuse detection only)
    */
-  getSessionId(): string | null {
-    return this.sessionId;
-  }
+  private extractIncomingSessionId(): string | null {
+    const req = this.context.req.raw;
 
-  /**
-   * Get session cookie string for Set-Cookie header
-   */
-  getSessionCookie(): string {
-    if (!this.sessionId) {
-      return '';
+    const headerSessionId = req.headers.get('x-chat-session-id');
+    if (headerSessionId && headerSessionId.length > 0) {
+      return headerSessionId;
     }
-    return createSessionCookie(this.sessionId);
+
+    const cookieHeader = req.headers.get('cookie');
+    if (!cookieHeader) {
+      return null;
+    }
+
+    const cookies = cookieHeader.split(';').map((c) => c.trim());
+    for (const cookie of cookies) {
+      const [name, value] = cookie.split('=');
+      if (name === 'chat-session-id' && value) {
+        return decodeURIComponent(value);
+      }
+    }
+
+    return null;
   }
 }
