@@ -14,6 +14,7 @@ import type { Env, RAGQueryRequest, ApiResponse, IngestionWorkflowParams } from 
 import { basicRAG } from './patterns/basic-rag';
 import { createLogger } from './utils/logger';
 import { IngestionWorkflow } from './ingestion-workflow';
+import type { ExecutionContext, ScheduledEvent, ExportedHandler } from 'cloudflare:workers';
 
 // Export the ingestion workflow
 export { IngestionWorkflow };
@@ -91,16 +92,19 @@ app.get('/api/v1/query', async (c) => {
       minSimilarity: minSimilarityStr ? parseFloat(minSimilarityStr) : undefined,
     };
 
-    // Execute basic RAG
-    const result = await basicRAG(request, c.env);
+    // Execute basic RAG with context for logging
+    const result = await basicRAG(request, c.env, c);
 
-    return c.json<ApiResponse>({
+    // Add session cookie to response if logging is enabled
+    const response = c.json<ApiResponse>({
       success: true,
       data: result,
       metadata: {
         timestamp: new Date().toISOString(),
       },
     });
+
+    return response;
   } catch (error) {
     logger.error('Query failed', error);
 
@@ -143,16 +147,19 @@ app.post('/api/v1/query', async (c) => {
       );
     }
 
-    // Execute basic RAG
-    const result = await basicRAG(body, c.env);
+    // Execute basic RAG with context for logging
+    const result = await basicRAG(body, c.env, c);
 
-    return c.json<ApiResponse>({
+    // Add session cookie to response if logging is enabled
+    const response = c.json<ApiResponse>({
       success: true,
       data: result,
       metadata: {
         timestamp: new Date().toISOString(),
       },
     });
+
+    return response;
   } catch (error) {
     logger.error('Query failed', error);
 
@@ -388,7 +395,47 @@ app.notFound((c) => {
 });
 
 // ============================================================================
+// Scheduled Events (Cron Jobs)
+// ============================================================================
+
+/**
+ * Cleanup expired chat sessions (runs daily at 2 AM UTC)
+ * Marks sessions as inactive if they've expired
+ */
+async function handleScheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+  const logger = createLogger({ event: 'scheduled-cleanup' }, env.LOG_LEVEL);
+
+  try {
+    logger.info('Starting scheduled cleanup of expired sessions');
+
+    if (!env.DATABASE) {
+      logger.warn('Database not available for cleanup');
+      return;
+    }
+
+    // Mark expired sessions as inactive
+    const now = new Date().getTime();
+    const result = await env.DATABASE.prepare(
+      'UPDATE chat_sessions SET is_active = 0 WHERE expires_at < ? AND is_active = 1'
+    )
+      .bind(now)
+      .run();
+
+    logger.info('Cleanup completed', {
+      changedRows: (result as any).meta?.changes || 0,
+    });
+  } catch (error) {
+    logger.error('Scheduled cleanup failed', error);
+  }
+}
+
+// ============================================================================
 // Export
 // ============================================================================
 
-export default app;
+export default {
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    await handleScheduled(event, env, ctx);
+  },
+  fetch: app.fetch,
+} satisfies ExportedHandler<Env>;
