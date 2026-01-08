@@ -55,7 +55,7 @@ wrangler d1 migrations apply wikipedia-db --remote
 npm run build
 
 # 3. Deploy everything
-wrangler deploy --env production
+wrangler deploy
 ```
 
 Or use the convenience script:
@@ -105,25 +105,26 @@ wrangler d1 migrations list wikipedia-db --remote
 
 ```bash
 # Using convenience script
-npm run deploy:production
+npm run deploy
 
 # Or manually
-wrangler deploy --env production
+wrangler deploy
 ```
 
 Your Worker will be available at:
 ```
 https://cloudflare-rag-portfolio.<your-subdomain>.workers.dev
+https://cloudflare-rag-demo.stevenleve.com (custom domain)
 ```
 
 ### Step 5: Verify Deployment
 
 ```bash
 # Test health endpoint
-curl https://cloudflare-rag-portfolio.YOUR-SUBDOMAIN.workers.dev/health
+curl https://cloudflare-rag-demo.stevenleve.com/health
 
 # View live logs
-wrangler tail --env production
+wrangler tail
 
 # Check deployment history
 wrangler deployments list
@@ -131,15 +132,17 @@ wrangler deployments list
 
 ## Local Development
 
-Development workflow is unchanged:
+Development uses `wrangler dev` which runs locally but connects to remote resources (since Vectorize has no local mode):
 
 ```bash
-# Terminal 1: Start Worker (serves /api/* routes)
+# Terminal 1: Start Worker (serves /api/* routes + static assets)
 npm run dev
 
-# Terminal 2: Start UI dev server with proxy
+# Terminal 2: Start UI dev server with proxy (optional, for HMR during development)
 npm run ui:dev
 ```
+
+**Note**: Since Vectorize doesn't support local development, `wrangler dev` connects to remote D1, Vectorize, R2, and KV resources. This means local development uses production data.
 
 The UI dev server (port 3000) automatically proxies `/api/*` requests to the Worker (port 8787) via Vite's proxy configuration.
 
@@ -201,39 +204,44 @@ public/
 
 ### Production Secrets
 
-Set secrets per environment:
+Set secrets for production:
 
 ```bash
-# Production secrets
-wrangler secret put ANTHROPIC_API_KEY --env production
+# Add production secret
+wrangler secret put ANTHROPIC_API_KEY
 
 # List secrets
-wrangler secret list --env production
+wrangler secret list
 ```
 
-## Staging Environment
+## Environment Configuration
 
-Create a staging environment to test before production:
+This project uses a single production environment. The root configuration in `wrangler.jsonc` is used for production deployments.
+
+**Current setup:**
+- **Local development**: `wrangler dev` (uses remote resources)
+- **Production**: `wrangler deploy` (deploys to `cloudflare-rag-portfolio` worker)
+
+If you need a staging environment in the future, you can add it to `wrangler.jsonc`:
 
 ```jsonc
 {
   "env": {
     "staging": {
+      "name": "cloudflare-rag-portfolio-staging",
       "vars": { "ENVIRONMENT": "staging" },
-      "kv_namespaces": [
-        { "binding": "EMBEDDINGS_CACHE", "id": "staging-kv-id" }
+      "routes": [
+        {
+          "pattern": "staging-cloudflare-rag-demo.stevenleve.com",
+          "custom_domain": true
+        }
       ]
     }
   }
 }
 ```
 
-Deploy to staging:
-
-```bash
-npm run build
-wrangler deploy --env staging
-```
+Then deploy to staging with: `wrangler deploy --env staging`
 
 ## CI/CD with GitHub Actions
 
@@ -278,7 +286,7 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: deploy --env production
+          command: deploy
 ```
 
 **Setup**:
@@ -293,16 +301,16 @@ jobs:
 
 ```bash
 # Watch all logs
-wrangler tail --env production
+wrangler tail
 
 # Errors only
-wrangler tail --env production --status error
+wrangler tail --status error
 
 # Search logs
-wrangler tail --env production --search "user-query"
+wrangler tail --search "user-query"
 
 # Follow specific method
-wrangler tail --env production --method GET
+wrangler tail --method GET
 ```
 
 ### Health Checks
@@ -310,7 +318,7 @@ wrangler tail --env production --method GET
 The API includes a health endpoint:
 
 ```bash
-curl https://cloudflare-rag-portfolio.YOUR-SUBDOMAIN.workers.dev/health
+curl https://cloudflare-rag-demo.stevenleve.com/health
 
 # Response:
 {
@@ -363,14 +371,11 @@ wrangler d1 migrations apply wikipedia-db
 # 4. Test locally
 npm run dev
 
-# 5. Apply to staging (if available)
-wrangler d1 migrations apply wikipedia-db --remote --env staging
-
-# 6. Apply to production
+# 5. Apply to production
 wrangler d1 migrations apply wikipedia-db --remote
 
-# 7. Deploy code
-wrangler deploy --env production
+# 6. Deploy code
+wrangler deploy
 ```
 
 **Important**: Always apply migrations **before** deploying code that depends on them.
@@ -428,7 +433,7 @@ ls -la public/
 2. Verify files in `public/` updated: `ls -l public/`
 3. Clear browser cache (Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows)
 4. Check deployment: `wrangler deployments list`
-5. Monitor logs: `wrangler tail --env production --status error`
+5. Monitor logs: `wrangler tail --status error`
 
 ## Cost Estimation
 
@@ -446,16 +451,16 @@ For a production deployment with moderate usage (1000 queries/day):
 
 ## Best Practices
 
-1. ✅ Test in staging before production
-2. ✅ Always apply migrations before deploying code
-3. ✅ Use `npm run deploy` instead of manual steps
-4. ✅ Monitor logs after each deployment
-5. ✅ Keep `public/` directory out of git
-6. ✅ Use secrets for sensitive values
-7. ✅ Tag releases for tracking
-8. ✅ Set up gradual deployments for critical updates
-9. ✅ Use Worker Observability tools (Logs, Tail, Source Maps)
-10. ✅ Test frontend + API integration locally before deploying
+1. ✅ Always apply migrations before deploying code
+2. ✅ Use `npm run deploy` instead of manual steps
+3. ✅ Monitor logs after each deployment
+4. ✅ Keep `public/` directory out of git
+5. ✅ Use secrets for sensitive values
+6. ✅ Tag releases for tracking
+7. ✅ Set up gradual deployments for critical updates
+8. ✅ Use Worker Observability tools (Logs, Tail, Source Maps)
+9. ✅ Test frontend + API integration locally before deploying
+10. ✅ Since local dev uses remote resources, be cautious with data modifications
 
 ## Next Steps
 

@@ -7,8 +7,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "build": "cd ui && npm run build",
-    "deploy": "npm run build && npm run db:migrate:remote && wrangler deploy --env production",
-    "deploy:production": "npm run build && npm run db:migrate:remote && wrangler deploy --env production",
+    "deploy": "npm run build && npm run db:migrate:remote && wrangler deploy",
+    "deploy:production": "npm run build && npm run db:migrate:remote && wrangler deploy",
     "cf-typegen": "wrangler types",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
@@ -46,7 +46,7 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2",
     "vitest": "^3.2.4",
-    "wrangler": "^4.53.0"
+    "wrangler": "^4.57.0"
   },
   "dependencies": {
     "@langchain/textsplitters": "^1.0.1",
