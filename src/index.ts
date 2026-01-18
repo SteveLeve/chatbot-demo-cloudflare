@@ -13,6 +13,7 @@ import { cors } from 'hono/cors';
 import type { Env, RAGQueryRequest, ApiResponse, IngestionWorkflowParams } from './types';
 import { basicRAG } from './patterns/basic-rag';
 import { createLogger } from './utils/logger';
+import { checkRateLimit } from './utils/rate-limiter';
 import { IngestionWorkflow } from './ingestion-workflow';
 import type { ExecutionContext, ScheduledEvent, ExportedHandler } from 'cloudflare:workers';
 
@@ -64,6 +65,16 @@ app.get('/health', (c) => {
 app.get('/api/v1/query', async (c) => {
   const logger = createLogger({ endpoint: 'query' }, c.env.LOG_LEVEL);
   logger.info('Received RAG query request');
+
+  // Apply rate limiting
+  const rateLimitResponse = await checkRateLimit(c, c.env.QUERY_RATE_LIMITER, {
+    limit: 100,
+    window: 60,
+    keyPrefix: 'query',
+  });
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
 
   try {
     // Parse query parameters
@@ -130,6 +141,16 @@ app.post('/api/v1/query', async (c) => {
   const logger = createLogger({ endpoint: 'query-post' }, c.env.LOG_LEVEL);
   logger.info('Received RAG query POST request');
 
+  // Apply rate limiting
+  const rateLimitResponse = await checkRateLimit(c, c.env.QUERY_RATE_LIMITER, {
+    limit: 100,
+    window: 60,
+    keyPrefix: 'query',
+  });
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const body = await c.req.json<RAGQueryRequest>();
 
@@ -188,6 +209,16 @@ app.post('/api/v1/query', async (c) => {
 app.post('/api/v1/ingest', async (c) => {
   const logger = createLogger({ endpoint: 'ingest' }, c.env.LOG_LEVEL);
   logger.info('Received ingestion request');
+
+  // Apply rate limiting (stricter for expensive operations)
+  const rateLimitResponse = await checkRateLimit(c, c.env.INGEST_RATE_LIMITER, {
+    limit: 10,
+    window: 60,
+    keyPrefix: 'ingest',
+  });
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
 
   try {
     const body = await c.req.json<{

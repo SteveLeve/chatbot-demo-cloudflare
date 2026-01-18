@@ -104,7 +104,14 @@ export class ChatLogger {
    */
   private async createSession(): Promise<string> {
     const ip = extractIpAddress(this.context);
-    const ipSalt = ((this.env as any).vars?.CHAT_LOG_IP_SALT as string) || 'default-salt';
+    const ipSalt = (this.env as any).CHAT_LOG_IP_SALT as string;
+
+    // Validate salt is properly configured
+    if (!ipSalt || ipSalt === 'default-salt' || ipSalt === 'change-in-production') {
+      this.logger.error('SECURITY: IP salt not configured or using placeholder value');
+      throw new Error('CHAT_LOG_IP_SALT secret is not configured. Set via: wrangler secret put CHAT_LOG_IP_SALT');
+    }
+
     const ipHash = await hashIpAddress(ip, ipSalt);
     const metadata = extractCloudflareMetadata(this.context);
 
