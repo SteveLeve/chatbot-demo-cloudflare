@@ -26,6 +26,13 @@ export interface Env {
   // Workflows
   INGESTION_WORKFLOW: Workflow;
 
+  // Rate limiting
+  QUERY_RATE_LIMITER: RateLimit;
+  INGEST_RATE_LIMITER: RateLimit;
+
+  // Secrets (not in vars)
+  CHAT_LOG_IP_SALT: string;
+
   // Environment variables
   ENVIRONMENT: string;
   LOG_LEVEL: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
@@ -38,7 +45,6 @@ export interface Env {
   // Chat logging
   vars?: {
     CHAT_LOGGING_ENABLED?: boolean;
-    CHAT_LOG_IP_SALT?: string;
   };
 }
 
