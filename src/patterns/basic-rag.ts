@@ -22,6 +22,7 @@ import { createLogger } from '../utils/logger';
 import { createDocumentStore } from '../utils/document-store';
 import { ChatLogger } from '../utils/chat-logger';
 import type { Context } from 'hono';
+import { validateTopK, validateMinSimilarity, sanitizeQuestion } from '../utils/validation';
 
 export async function basicRAG(
   request: RAGQueryRequest,
@@ -55,17 +56,36 @@ export async function basicRAG(
   }
 
   try {
+    // Defense-in-depth validation: Validate topK (should already be validated at API boundary)
+    if (topK !== env.DEFAULT_TOP_K) {
+      const validation = validateTopK(topK);
+      if (!validation.valid) {
+        throw new Error(validation.error?.message || 'Invalid topK parameter');
+      }
+    }
+
+    // Defense-in-depth validation: Validate minSimilarity if provided
+    if (minSimilarity !== undefined) {
+      const validation = validateMinSimilarity(minSimilarity);
+      if (!validation.valid) {
+        throw new Error(validation.error?.message || 'Invalid minSimilarity parameter');
+      }
+    }
+
     // Validate question length
     if (question.length > env.MAX_QUERY_LENGTH) {
       throw new Error(`Question exceeds maximum length of ${env.MAX_QUERY_LENGTH} characters`);
     }
 
-    // Step 1: Generate query embedding
+    // Defense-in-depth: Sanitize question (already sanitized at API boundary, but check again)
+    const sanitizedQuestion = sanitizeQuestion(question);
+
+    // Step 1: Generate query embedding (use sanitized question)
     logger.startTimer('generateEmbedding');
     logger.debug('Generating query embedding');
 
     const embeddingResult = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
-      text: [question],
+      text: [sanitizedQuestion],
     }) as EmbeddingResponse;
 
     const queryEmbedding = embeddingResult.data[0];
