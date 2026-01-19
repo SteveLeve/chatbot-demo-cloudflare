@@ -45,8 +45,20 @@ export function validateTopK(value: unknown): ValidationResult {
 		};
 	}
 
-	// Range validation
+	// Check for special float values (NaN, Infinity, -Infinity)
 	const numValue = value as number;
+	if (!Number.isFinite(numValue)) {
+		return {
+			valid: false,
+			error: {
+				code: 'INVALID_TOP_K',
+				message: 'topK must be a finite number',
+				field: 'topK',
+			},
+		};
+	}
+
+	// Range validation
 	if (numValue < 1 || numValue > 20) {
 		return {
 			valid: false,
@@ -94,8 +106,20 @@ export function validateMinSimilarity(value: unknown): ValidationResult {
 		};
 	}
 
-	// Range validation
+	// Check for special float values (NaN, Infinity, -Infinity)
 	const numValue = value as number;
+	if (!Number.isFinite(numValue)) {
+		return {
+			valid: false,
+			error: {
+				code: 'INVALID_MIN_SIMILARITY',
+				message: 'minSimilarity must be a finite number',
+				field: 'minSimilarity',
+			},
+		};
+	}
+
+	// Range validation
 	if (numValue < 0 || numValue > 1) {
 		return {
 			valid: false,
@@ -256,9 +280,18 @@ export function validateMetadata(metadata: unknown): ValidationResult {
  * Removes control characters and detects dangerous patterns
  */
 export function sanitizeQuestion(question: string): string {
+	// Normalize to NFC form to prevent homoglyph attacks (e.g., Cyrillic lookalikes)
+	// This converts visually similar characters to their canonical form
+	let sanitized = question.normalize('NFC');
+
+	// Remove zero-width characters that can break pattern matching
+	// U+200B: Zero Width Space, U+200C: Zero Width Non-Joiner
+	// U+200D: Zero Width Joiner, U+FEFF: Zero Width No-Break Space
+	sanitized = sanitized.replace(/[\u200B-\u200D\uFEFF]/g, '');
+
 	// Remove control characters (except newline and tab)
 	// eslint-disable-next-line no-control-regex
-	let sanitized = question.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
+	sanitized = sanitized.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
 
 	// Detect and neutralize prompt injection patterns
 	const dangerousPatterns = [
