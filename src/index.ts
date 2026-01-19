@@ -16,6 +16,15 @@ import { createLogger } from './utils/logger';
 import { checkRateLimit } from './utils/rate-limiter';
 import { IngestionWorkflow } from './ingestion-workflow';
 import type { ExecutionContext, ScheduledEvent, ExportedHandler } from 'cloudflare:workers';
+import { getCorsConfig, securityHeaders, sanitizeError } from './utils/security';
+import {
+	validateTopK,
+	validateMinSimilarity,
+	sanitizeQuestion,
+	validateTitle,
+	validateContent,
+	validateMetadata,
+} from './utils/validation';
 
 // Export the ingestion workflow
 export { IngestionWorkflow };
@@ -23,10 +32,16 @@ export { IngestionWorkflow };
 // Create Hono application
 const app = new Hono<{ Bindings: Env }>();
 
-// Enable CORS for external API access
-// Note: Frontend is served from same Worker origin, so no CORS needed for frontend->API
-// CORS enabled for external clients and integrations
-app.use('/*', cors());
+// Apply security headers globally (Issue #10)
+app.use('/*', securityHeaders());
+
+// Apply environment-aware CORS (Issue #8)
+// In development: allows localhost origins
+// In production: restricts to specific domain
+app.use('/*', async (c, next) => {
+	const corsConfig = getCorsConfig(c.env);
+	return cors(corsConfig)(c, next);
+});
 
 // ============================================================================
 // Health & Info Routes
@@ -96,9 +111,40 @@ app.get('/api/v1/query', async (c) => {
       );
     }
 
-    // Build request
+    // Sanitize question (Issue #9: prompt injection prevention)
+    const sanitizedQuestion = sanitizeQuestion(question);
+
+    // Validate topK if provided
+    if (topKStr) {
+      const validation = validateTopK(parseInt(topKStr, 10));
+      if (!validation.valid) {
+        return c.json<ApiResponse>(
+          {
+            success: false,
+            error: validation.error,
+          },
+          400
+        );
+      }
+    }
+
+    // Validate minSimilarity if provided
+    if (minSimilarityStr) {
+      const validation = validateMinSimilarity(parseFloat(minSimilarityStr));
+      if (!validation.valid) {
+        return c.json<ApiResponse>(
+          {
+            success: false,
+            error: validation.error,
+          },
+          400
+        );
+      }
+    }
+
+    // Build request with sanitized question
     const request: RAGQueryRequest = {
-      question,
+      question: sanitizedQuestion,
       topK: topKStr ? parseInt(topKStr, 10) : undefined,
       minSimilarity: minSimilarityStr ? parseFloat(minSimilarityStr) : undefined,
     };
@@ -119,13 +165,13 @@ app.get('/api/v1/query', async (c) => {
   } catch (error) {
     logger.error('Query failed', error);
 
+    // Sanitize error for client (Issue #11)
+    const sanitizedError = sanitizeError(error, c.env);
+
     return c.json<ApiResponse>(
       {
         success: false,
-        error: {
-          code: 'QUERY_FAILED',
-          message: error instanceof Error ? error.message : 'Unknown error',
-        },
+        error: sanitizedError,
       },
       500
     );
@@ -168,8 +214,46 @@ app.post('/api/v1/query', async (c) => {
       );
     }
 
+    // Sanitize question (Issue #9: prompt injection prevention)
+    const sanitizedQuestion = sanitizeQuestion(body.question);
+
+    // Validate topK if provided
+    if (body.topK !== undefined) {
+      const validation = validateTopK(body.topK);
+      if (!validation.valid) {
+        return c.json<ApiResponse>(
+          {
+            success: false,
+            error: validation.error,
+          },
+          400
+        );
+      }
+    }
+
+    // Validate minSimilarity if provided
+    if (body.minSimilarity !== undefined) {
+      const validation = validateMinSimilarity(body.minSimilarity);
+      if (!validation.valid) {
+        return c.json<ApiResponse>(
+          {
+            success: false,
+            error: validation.error,
+          },
+          400
+        );
+      }
+    }
+
+    // Build sanitized request
+    const sanitizedBody: RAGQueryRequest = {
+      question: sanitizedQuestion,
+      topK: body.topK,
+      minSimilarity: body.minSimilarity,
+    };
+
     // Execute basic RAG with context for logging
-    const result = await basicRAG(body, c.env, c);
+    const result = await basicRAG(sanitizedBody, c.env, c);
 
     // Add session cookie to response if logging is enabled
     const response = c.json<ApiResponse>({
@@ -184,13 +268,13 @@ app.post('/api/v1/query', async (c) => {
   } catch (error) {
     logger.error('Query failed', error);
 
+    // Sanitize error for client (Issue #11)
+    const sanitizedError = sanitizeError(error, c.env);
+
     return c.json<ApiResponse>(
       {
         success: false,
-        error: {
-          code: 'QUERY_FAILED',
-          message: error instanceof Error ? error.message : 'Unknown error',
-        },
+        error: sanitizedError,
       },
       500
     );
@@ -241,6 +325,44 @@ app.post('/api/v1/ingest', async (c) => {
       );
     }
 
+    // Validate title (Issue #9: length and character validation)
+    const titleValidation = validateTitle(body.title);
+    if (!titleValidation.valid) {
+      return c.json<ApiResponse>(
+        {
+          success: false,
+          error: titleValidation.error,
+        },
+        400
+      );
+    }
+
+    // Validate content (Issue #9: size validation)
+    const contentValidation = validateContent(body.content);
+    if (!contentValidation.valid) {
+      return c.json<ApiResponse>(
+        {
+          success: false,
+          error: contentValidation.error,
+        },
+        400
+      );
+    }
+
+    // Validate metadata if provided (Issue #9: size and security validation)
+    if (body.metadata) {
+      const metadataValidation = validateMetadata(body.metadata);
+      if (!metadataValidation.valid) {
+        return c.json<ApiResponse>(
+          {
+            success: false,
+            error: metadataValidation.error,
+          },
+          400
+        );
+      }
+    }
+
     // Create workflow params
     const params: IngestionWorkflowParams = {
       articleId: crypto.randomUUID(),
@@ -270,13 +392,13 @@ app.post('/api/v1/ingest', async (c) => {
   } catch (error) {
     logger.error('Ingestion failed', error);
 
+    // Sanitize error for client (Issue #11)
+    const sanitizedError = sanitizeError(error, c.env);
+
     return c.json<ApiResponse>(
       {
         success: false,
-        error: {
-          code: 'INGESTION_FAILED',
-          message: error instanceof Error ? error.message : 'Unknown error',
-        },
+        error: sanitizedError,
       },
       500
     );
@@ -323,13 +445,13 @@ app.get('/api/v1/ingest/:workflowId', async (c) => {
   } catch (error) {
     logger.error('Failed to get workflow status', error);
 
+    // Sanitize error for client (Issue #11)
+    const sanitizedError = sanitizeError(error, c.env);
+
     return c.json<ApiResponse>(
       {
         success: false,
-        error: {
-          code: 'STATUS_CHECK_FAILED',
-          message: error instanceof Error ? error.message : 'Unknown error',
-        },
+        error: sanitizedError,
       },
       500
     );
@@ -400,13 +522,13 @@ app.onError((err, c) => {
   const logger = createLogger({ error: true }, c.env.LOG_LEVEL);
   logger.error('Unhandled error', err);
 
+  // Sanitize error for client (Issue #11)
+  const sanitizedError = sanitizeError(err, c.env);
+
   return c.json<ApiResponse>(
     {
       success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: err.message || 'An unexpected error occurred',
-      },
+      error: sanitizedError,
     },
     500
   );

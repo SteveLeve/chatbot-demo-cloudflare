@@ -278,6 +278,20 @@ export class AppError extends Error {
   }
 }
 
+/**
+ * Validation error
+ */
+export class ValidationError extends Error {
+  constructor(
+    message: string,
+    public field: string,
+    public code: string = 'VALIDATION_ERROR'
+  ) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
 // ============================================================================
 // Utility Types
 // ============================================================================
