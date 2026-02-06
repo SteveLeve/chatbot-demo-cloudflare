@@ -18,6 +18,7 @@ Provide consistent, lightweight documentation that captures current state and ne
 - Guides/how-tos → `docs/guides/`
 - Historical full-text → `docs/archive/`
 - Templates → `docs/templates/`
+- Codex skills (specialist playbooks) → `docs/skills/` (one folder per skill with `SKILL.md`)
 
 ## When to Create Each Doc Type
 - **ADR**: choose when an architectural trade-off is made or reversed. Name `adr-YYYYMMDD-title.md`. One decision per file. Link to the driving issue/PR.

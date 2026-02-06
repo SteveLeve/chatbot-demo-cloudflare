@@ -94,6 +94,16 @@
     "enabled": true
   },
 
+  // AI Gateway (config-ready, disabled by default)
+  "ai_gateway": {
+    "id": "<set-gateway-id>",
+    "enabled": false,
+    "cache": {
+      "enabled": true,
+      "ttl": 3600
+    }
+  },
+
   // Rate limiting
   "ratelimits": [
     {
