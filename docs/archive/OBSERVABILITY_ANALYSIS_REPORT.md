@@ -1,4 +1,5 @@
-# Cloudflare Worker Production Observability Analysis Report
+# Cloudflare Worker Production Observability Analysis Report (Archived)
+*Archived snapshot (moved 2026-02-06). See `../roadmaps/observability.md` and issue #18 for current plan.*
 ## Worker: cloudflare-rag-portfolio (cloudflare-rag-demo.stevenleve.com)
 
 **Generated**: 2026-01-17

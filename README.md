@@ -6,6 +6,12 @@ Professional demonstration of Retrieval-Augmented Generation (RAG) patterns on C
 
 This project showcases a production-grade RAG implementation using Cloudflare's edge computing platform, demonstrating how to build intelligent Q&A systems that combine semantic search with generative AI.
 
+## Documentation
+
+- Living docs are under `docs/` (see `docs/README.md` for the map).
+- Current status and near-term work: `docs/status/now-next.md`.
+- Decisions: `docs/decisions/` (ADRs).
+
 ### Current Features (Phase 1)
 
 - **Basic Single-Turn RAG**: Query Wikipedia articles with AI-powered answers and source citations

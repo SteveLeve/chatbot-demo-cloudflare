@@ -1,4 +1,5 @@
-# Performance Optimization Roadmap
+# Performance Optimization Roadmap (Archived)
+*Archived snapshot (moved 2026-02-06). See `../roadmaps/performance.md` for current summary and related issues/PRs.*
 
 **Goal**: Reduce costs by 41% and improve latency by 82% for cached queries
 **Target Completion**: 2-3 weeks
