@@ -41,6 +41,8 @@ export interface Env {
   DEFAULT_CHUNK_OVERLAP: number;
   DEFAULT_TOP_K: number;
   MAX_QUERY_LENGTH: number;
+  USE_AI_GATEWAY?: boolean;
+  AI_GATEWAY_ID?: string;
 
   // Chat logging
   vars?: {

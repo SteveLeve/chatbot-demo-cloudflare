@@ -20,7 +20,9 @@
     "DEFAULT_CHUNK_OVERLAP": 100,
     "DEFAULT_TOP_K": 3,
     "MAX_QUERY_LENGTH": 500,
-    "CHAT_LOGGING_ENABLED": true
+    "CHAT_LOGGING_ENABLED": true,
+    "USE_AI_GATEWAY": true,
+    "AI_GATEWAY_ID": "rag-demo"
   },
 
   // Cron triggers for scheduled tasks
@@ -94,15 +96,6 @@
     "enabled": true
   },
 
-  // AI Gateway (config-ready, disabled by default)
-  "ai_gateway": {
-    "id": "<set-gateway-id>",
-    "enabled": false,
-    "cache": {
-      "enabled": true,
-      "ttl": 3600
-    }
-  },
 
   // Rate limiting
   "ratelimits": [

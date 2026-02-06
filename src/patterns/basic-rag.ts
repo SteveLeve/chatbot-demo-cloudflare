@@ -97,7 +97,9 @@ export async function basicRAG(
     if (!queryEmbedding) {
       const embeddingResult = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
         text: [sanitizedQuestion],
-      }) as EmbeddingResponse;
+      }, env.USE_AI_GATEWAY && env.AI_GATEWAY_ID ? {
+        gateway: { id: env.AI_GATEWAY_ID },
+      } : undefined) as EmbeddingResponse;
 
       queryEmbedding = embeddingResult.data[0];
 
@@ -184,7 +186,9 @@ export async function basicRAG(
       ],
       temperature: 0.0,
       max_tokens: 1024,
-    }) as GenerationResponse;
+    }, env.USE_AI_GATEWAY && env.AI_GATEWAY_ID ? {
+      gateway: { id: env.AI_GATEWAY_ID },
+    } : undefined) as GenerationResponse;
 
     const answer = generationResult.response || 'Unable to generate answer';
     logger.endTimer('generateAnswer', { answerLength: answer.length });

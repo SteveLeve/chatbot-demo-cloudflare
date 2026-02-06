@@ -130,9 +130,11 @@ export class IngestionWorkflow extends WorkflowEntrypoint<Env, IngestionWorkflow
 
         for (let i = 0; i < texts.length; i += batchSize) {
           const batch = texts.slice(i, i + batchSize);
-          const result = await this.env.AI.run('@cf/baai/bge-base-en-v1.5', {
-            text: batch,
-          }) as EmbeddingResponse;
+        const result = await this.env.AI.run('@cf/baai/bge-base-en-v1.5', {
+          text: batch,
+        }, this.env.USE_AI_GATEWAY && this.env.AI_GATEWAY_ID ? {
+          gateway: { id: this.env.AI_GATEWAY_ID },
+        } : undefined) as EmbeddingResponse;
 
           allEmbeddings.push(...result.data);
         }
