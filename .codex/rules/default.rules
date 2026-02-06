@@ -1,0 +1,46 @@
+# ------------------------------------------------------------
+# GitHub CLI (gh) — READ-ONLY operations (auto-allow)
+# ------------------------------------------------------------
+
+# Issues (read/list/view)
+prefix_rule(
+  name = "gh-issues-read",
+  command = "gh",
+  args_prefix = ["issue", "list"]
+)
+
+prefix_rule(
+  name = "gh-issues-view",
+  command = "gh",
+  args_prefix = ["issue", "view"]
+)
+
+# Pull Requests (read/list/view)
+prefix_rule(
+  name = "gh-prs-read",
+  command = "gh",
+  args_prefix = ["pr", "list"]
+)
+
+prefix_rule(
+  name = "gh-prs-view",
+  command = "gh",
+  args_prefix = ["pr", "view"]
+)
+
+# ------------------------------------------------------------
+# EXPLICITLY DO NOT AUTO-ALLOW WRITE OPERATIONS
+# (Codex will prompt by default)
+# ------------------------------------------------------------
+
+# Examples of commands that will still prompt:
+#   gh issue create
+#   gh issue edit
+#   gh issue close
+#   gh pr create
+#   gh pr edit
+#   gh pr close
+#   gh pr merge
+#
+# No rules are defined for these on purpose.
+

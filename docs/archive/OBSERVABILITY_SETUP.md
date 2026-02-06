@@ -1,4 +1,5 @@
-# Observability Setup Guide
+# Observability Setup Guide (Archived)
+*Archived snapshot (moved 2026-02-06). See `../roadmaps/observability.md` and issue #18 for current steps.*
 
 **Goal**: Production-grade monitoring with tracing, structured logging, and alerting
 **Status**: Basic observability enabled, missing advanced features

@@ -1,4 +1,5 @@
-# GDPR/CCPA Compliance Roadmap
+# GDPR/CCPA Compliance Roadmap (Archived)
+*Archived snapshot (moved 2026-02-06). See `../roadmaps/compliance.md` for current summary and GitHub issue #19 for active work.*
 
 **Goal**: Full privacy compliance for user data handling
 **Status**: Foundational privacy features implemented, missing user rights endpoints

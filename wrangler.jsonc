@@ -20,7 +20,9 @@
     "DEFAULT_CHUNK_OVERLAP": 100,
     "DEFAULT_TOP_K": 3,
     "MAX_QUERY_LENGTH": 500,
-    "CHAT_LOGGING_ENABLED": true
+    "CHAT_LOGGING_ENABLED": true,
+    "USE_AI_GATEWAY": true,
+    "AI_GATEWAY_ID": "rag-demo"
   },
 
   // Cron triggers for scheduled tasks
@@ -93,6 +95,7 @@
   "observability": {
     "enabled": true
   },
+
 
   // Rate limiting
   "ratelimits": [

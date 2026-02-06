@@ -1,4 +1,5 @@
-# CLAUDE.md
+# CLAUDE.md (Archived)
+*Archived snapshot (moved 2026-02-06). For up-to-date instructions, use `AGENTS.md` and `docs/AGENTS.md`.*
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 

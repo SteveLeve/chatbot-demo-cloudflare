@@ -196,27 +196,31 @@ export class DocumentStore {
 
     try {
       const now = Date.now();
-      const results: TextChunk[] = [];
 
-      // Batch insert for efficiency
-      for (const chunk of chunks) {
-        await this.env.DATABASE
-          .prepare(`
-            INSERT INTO chunks (id, document_id, text, chunk_index, metadata, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-          `)
-          .bind(
-            chunk.id,
-            chunk.documentId,
-            chunk.text,
-            chunk.chunkIndex,
-            JSON.stringify(chunk.metadata),
-            now
-          )
-          .run();
+      const statements = chunks.map((chunk) => ({
+        query: `
+          INSERT INTO chunks (id, document_id, text, chunk_index, metadata, created_at)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `,
+        params: [
+          chunk.id,
+          chunk.documentId,
+          chunk.text,
+          chunk.chunkIndex,
+          JSON.stringify(chunk.metadata),
+          now,
+        ],
+      }));
 
-        results.push({ ...chunk, createdAt: now });
+      try {
+        await this.env.DATABASE.batch(statements);
+      } catch (err) {
+        // Retry once in case of transient failures
+        this.logger.warn('Batch insert failed, retrying once', { error: err });
+        await this.env.DATABASE.batch(statements);
       }
+
+      const results: TextChunk[] = chunks.map((chunk) => ({ ...chunk, createdAt: now }));
 
       this.logger.endTimer('createChunks', { success: true, count: results.length });
       return results;

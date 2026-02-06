@@ -23,6 +23,7 @@ import { createDocumentStore } from '../utils/document-store';
 import { ChatLogger } from '../utils/chat-logger';
 import type { Context } from 'hono';
 import { validateTopK, validateMinSimilarity, sanitizeQuestion } from '../utils/validation';
+import { getCachedEmbedding, cacheEmbedding } from '../utils/embedding-cache';
 
 export async function basicRAG(
   request: RAGQueryRequest,
@@ -80,20 +81,42 @@ export async function basicRAG(
     // Defense-in-depth: Sanitize question (already sanitized at API boundary, but check again)
     const sanitizedQuestion = sanitizeQuestion(question);
 
-    // Step 1: Generate query embedding (use sanitized question)
+    // Step 1: Generate or fetch cached query embedding (use sanitized question)
     logger.startTimer('generateEmbedding');
     logger.debug('Generating query embedding');
 
-    const embeddingResult = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
-      text: [sanitizedQuestion],
-    }) as EmbeddingResponse;
+    let queryEmbedding: number[] | null = null;
 
-    const queryEmbedding = embeddingResult.data[0];
-    logger.endTimer('generateEmbedding', { dimensions: queryEmbedding?.length });
+    // Attempt cache first
+    queryEmbedding = await getCachedEmbedding(sanitizedQuestion, env, {
+      loggerContext: { pattern: 'basic', stage: 'embedding' },
+    });
 
-    if (!queryEmbedding || queryEmbedding.length === 0) {
-      throw new Error('Failed to generate query embedding');
+    const cacheHit = !!queryEmbedding;
+
+    if (!queryEmbedding) {
+      const embeddingResult = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
+        text: [sanitizedQuestion],
+      }, env.USE_AI_GATEWAY && env.AI_GATEWAY_ID ? {
+        gateway: { id: env.AI_GATEWAY_ID },
+      } : undefined) as EmbeddingResponse;
+
+      queryEmbedding = embeddingResult.data[0];
+
+      if (!queryEmbedding || queryEmbedding.length === 0) {
+        throw new Error('Failed to generate query embedding');
+      }
+
+      // Write to cache (non-blocking failure)
+      await cacheEmbedding(sanitizedQuestion, queryEmbedding, env, {
+        loggerContext: { pattern: 'basic', stage: 'embedding' },
+      });
     }
+
+    const embeddingLatency = logger.endTimer('generateEmbedding', {
+      dimensions: queryEmbedding.length,
+      cacheHit,
+    });
 
     // Step 2: Retrieve similar chunks from Vectorize
     logger.startTimer('retrieveVectors');
@@ -163,7 +186,9 @@ export async function basicRAG(
       ],
       temperature: 0.0,
       max_tokens: 1024,
-    }) as GenerationResponse;
+    }, env.USE_AI_GATEWAY && env.AI_GATEWAY_ID ? {
+      gateway: { id: env.AI_GATEWAY_ID },
+    } : undefined) as GenerationResponse;
 
     const answer = generationResult.response || 'Unable to generate answer';
     logger.endTimer('generateAnswer', { answerLength: answer.length });

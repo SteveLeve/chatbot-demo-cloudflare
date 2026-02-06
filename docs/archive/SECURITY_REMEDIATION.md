@@ -1,4 +1,5 @@
-# Security Remediation Checklist
+# Security Remediation Checklist (Archived)
+*Archived snapshot (moved 2026-02-06). See `../status/security.md` and ADR `docs/decisions/adr-20260206-security-hardening.md` for current view.*
 
 **Status**: ✅ **Critical Issues Resolved - Ready for Production**
 **Completion Date**: 2026-01-18
