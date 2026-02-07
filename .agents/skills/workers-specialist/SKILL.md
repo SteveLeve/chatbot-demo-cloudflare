@@ -1,6 +1,7 @@
 ---
 name: workers-specialist
-description: Provide Cloudflare Workers runtime guidance for routing, bindings, performance, security headers, rate limiting, and Hono patterns used in this repo.
+description:
+    Provide Cloudflare Workers runtime guidance for routing, bindings, performance, security headers, rate limiting, and Hono patterns used in this repo.
 ---
 
 # Workers Specialist

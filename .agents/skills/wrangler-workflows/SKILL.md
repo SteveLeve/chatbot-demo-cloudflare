@@ -1,6 +1,7 @@
 ---
 name: wrangler-workflows
-description: Operate wrangler for this project: dev (remote), deploy, migrations, secrets, bindings validation, and workflow execution.
+description: 
+    "Operate wrangler for this project: dev (remote), deploy, migrations, secrets, bindings validation, and workflow execution."
 ---
 
 # Wrangler Workflows
