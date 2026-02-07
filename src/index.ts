@@ -12,7 +12,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { Env, RAGQueryRequest, ApiResponse, IngestionWorkflowParams } from './types';
 import { basicRAG } from './patterns/basic-rag';
-import { createLogger } from './utils/logger';
+import { createLogger, createRequestLogger } from './utils/logger';
 import { checkRateLimit } from './utils/rate-limiter';
 import { IngestionWorkflow } from './ingestion-workflow';
 import type { ExecutionContext, ScheduledEvent, ExportedHandler } from 'cloudflare:workers';
@@ -25,12 +25,53 @@ import {
 	validateContent,
 	validateMetadata,
 } from './utils/validation';
+import { createTraceContext, exportRequestSpan, buildTraceparent } from './utils/trace';
 
 // Export the ingestion workflow
 export { IngestionWorkflow };
 
 // Create Hono application
 const app = new Hono<{ Bindings: Env }>();
+
+// Request-scoped context: requestId + trace context + headers
+app.use('*', async (c, next) => {
+  const requestId = crypto.randomUUID();
+  const traceContext = createTraceContext(c);
+  const start = Date.now();
+
+  c.set('requestId', requestId);
+  c.set('traceContext', traceContext);
+
+  await next();
+
+  const end = Date.now();
+  // Propagate identifiers to response headers for correlation
+  if (!c.res.headers.has('x-request-id')) {
+    c.res.headers.set('x-request-id', requestId);
+  }
+  if (!c.res.headers.has('traceparent')) {
+    c.res.headers.set('traceparent', buildTraceparent(traceContext));
+  }
+  if (traceContext.baggage && !c.res.headers.has('baggage')) {
+    c.res.headers.set('baggage', traceContext.baggage);
+  }
+
+  // Best-effort OTLP export
+  await exportRequestSpan(
+    traceContext,
+    {
+      name: `${c.req.method} ${c.req.path}`,
+      startTime: start,
+      endTime: end,
+      statusCode: c.res.status,
+      attributes: {
+        'http.host': c.req.header('host') || '',
+        'http.user_agent': c.req.header('user-agent') || '',
+      },
+    },
+    c.env
+  );
+});
 
 // Apply security headers globally (Issue #10)
 app.use('/*', securityHeaders());
@@ -78,7 +119,8 @@ app.get('/health', (c) => {
  * GET /api/v1/query?q=<question>&topK=<number>&minSimilarity=<number>
  */
 app.get('/api/v1/query', async (c) => {
-  const logger = createLogger({ endpoint: 'query' }, c.env.LOG_LEVEL);
+  const logger = createRequestLogger(c, { endpoint: 'query' });
+  const requestId = c.get('requestId') as string | undefined;
   logger.info('Received RAG query request');
 
   // Apply rate limiting
@@ -158,6 +200,7 @@ app.get('/api/v1/query', async (c) => {
       data: result,
       metadata: {
         timestamp: new Date().toISOString(),
+        requestId,
       },
     });
 
@@ -184,7 +227,8 @@ app.get('/api/v1/query', async (c) => {
  * Body: { question: string, topK?: number, minSimilarity?: number }
  */
 app.post('/api/v1/query', async (c) => {
-  const logger = createLogger({ endpoint: 'query-post' }, c.env.LOG_LEVEL);
+  const logger = createRequestLogger(c, { endpoint: 'query-post' });
+  const requestId = c.get('requestId') as string | undefined;
   logger.info('Received RAG query POST request');
 
   // Apply rate limiting
@@ -261,6 +305,7 @@ app.post('/api/v1/query', async (c) => {
       data: result,
       metadata: {
         timestamp: new Date().toISOString(),
+        requestId,
       },
     });
 
@@ -291,7 +336,8 @@ app.post('/api/v1/query', async (c) => {
  * Body: { title: string, content: string, metadata?: object }
  */
 app.post('/api/v1/ingest', async (c) => {
-  const logger = createLogger({ endpoint: 'ingest' }, c.env.LOG_LEVEL);
+  const logger = createRequestLogger(c, { endpoint: 'ingest' });
+  const requestId = c.get('requestId') as string | undefined;
   logger.info('Received ingestion request');
 
   // Apply rate limiting (stricter for expensive operations)
@@ -387,6 +433,7 @@ app.post('/api/v1/ingest', async (c) => {
       },
       metadata: {
         timestamp: new Date().toISOString(),
+        requestId,
       },
     });
   } catch (error) {
@@ -410,7 +457,7 @@ app.post('/api/v1/ingest', async (c) => {
  * GET /api/v1/ingest/:workflowId
  */
 app.get('/api/v1/ingest/:workflowId', async (c) => {
-  const logger = createLogger({ endpoint: 'ingest-status' }, c.env.LOG_LEVEL);
+  const logger = createRequestLogger(c, { endpoint: 'ingest-status' });
   const workflowId = c.req.param('workflowId');
 
   try {
@@ -440,6 +487,7 @@ app.get('/api/v1/ingest/:workflowId', async (c) => {
       },
       metadata: {
         timestamp: new Date().toISOString(),
+        requestId: c.get('requestId') as string | undefined,
       },
     });
   } catch (error) {
@@ -519,7 +567,7 @@ app.get('/api/v1/docs', (c) => {
 // ============================================================================
 
 app.onError((err, c) => {
-  const logger = createLogger({ error: true }, c.env.LOG_LEVEL);
+  const logger = createRequestLogger(c, { error: true });
   logger.error('Unhandled error', err);
 
   // Sanitize error for client (Issue #11)

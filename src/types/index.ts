@@ -43,6 +43,12 @@ export interface Env {
   MAX_QUERY_LENGTH: number;
   USE_AI_GATEWAY?: boolean;
   AI_GATEWAY_ID?: string;
+  TRACE_ENABLED?: boolean;
+  TRACE_SAMPLE_RATE?: number;
+  OTLP_ENDPOINT?: string;
+  OTLP_AUTH_HEADER?: string;
+  OTLP_AUTH_VALUE?: string;
+  OTLP_SERVICE_NAME?: string;
 
   // Chat logging
   vars?: {

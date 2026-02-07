@@ -8,6 +8,7 @@ import type { Env, DocumentSource } from '../types';
 import { hashIpAddress } from './privacy';
 import { extractCloudflareMetadata, extractIpAddress } from './metadata';
 import { createLogger, Logger } from './logger';
+import type { TraceContext } from './trace';
 
 // Enable/disable logging via environment variable
 const LOGGING_ENABLED_DEFAULT = true;
@@ -40,6 +41,8 @@ export class ChatLogger {
   private context: Context<{ Bindings: Env }>;
   private loggingEnabled: boolean;
   private logger: Logger;
+  private requestId?: string;
+  private trace?: TraceContext;
 
   constructor(env: Env, context: Context<{ Bindings: Env }>) {
     this.env = env;
@@ -49,8 +52,19 @@ export class ChatLogger {
     const vars = (env as any).vars || {};
     this.loggingEnabled = vars.CHAT_LOGGING_ENABLED !== false;
 
+    this.requestId = context.get('requestId') as string | undefined;
+    this.trace = context.get('traceContext') as TraceContext | undefined;
+
     const logLevel = (env as any).LOG_LEVEL;
-    this.logger = createLogger({ component: 'ChatLogger' }, logLevel);
+    this.logger = createLogger(
+      {
+        component: 'ChatLogger',
+        requestId: this.requestId,
+        traceId: this.trace?.traceId,
+        spanId: this.trace?.spanId,
+      },
+      logLevel
+    );
   }
 
   /**
@@ -85,6 +99,10 @@ export class ChatLogger {
 
       this.sessionId = crypto.randomUUID();
       this.sessionDbId = await this.createSession();
+      this.logger = this.logger.child({
+        sessionId: this.sessionId,
+        sessionDbId: this.sessionDbId,
+      });
     } catch (error) {
       this.logger.error(
         'Failed to initialize session',

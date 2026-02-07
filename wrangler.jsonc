@@ -22,7 +22,10 @@
     "MAX_QUERY_LENGTH": 500,
     "CHAT_LOGGING_ENABLED": true,
     "USE_AI_GATEWAY": true,
-    "AI_GATEWAY_ID": "rag-demo"
+    "AI_GATEWAY_ID": "rag-demo",
+    "TRACE_ENABLED": true,
+    "TRACE_SAMPLE_RATE": 0.05,
+    "OTLP_SERVICE_NAME": "cloudflare-rag-portfolio"
   },
 
   // Cron triggers for scheduled tasks

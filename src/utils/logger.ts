@@ -3,7 +3,8 @@
  * Provides context-aware logging with performance timers
  */
 
-import type { LogLevel, LogEntry } from '../types';
+import type { LogLevel, LogEntry, Env } from '../types';
+import type { Context } from 'hono';
 
 const LOG_LEVELS: Record<LogLevel, number> = {
   DEBUG: 0,
@@ -137,11 +138,30 @@ export class Logger {
    * Format log entry for output
    */
   private format(entry: LogEntry): string {
-    const contextStr = Object.keys(entry.context || {}).length > 0
-      ? ` ${JSON.stringify(entry.context)}`
-      : '';
+    const {
+      requestId,
+      traceId,
+      spanId,
+      sessionId,
+      ...restContext
+    } = entry.context || {};
 
-    return `[${entry.timestamp}] ${entry.level}: ${entry.message}${contextStr}`;
+    const payload: Record<string, any> = {
+      ts: entry.timestamp,
+      level: entry.level,
+      msg: entry.message,
+    };
+
+    if (requestId) payload.requestId = requestId;
+    if (traceId) payload.traceId = traceId;
+    if (spanId) payload.spanId = spanId;
+    if (sessionId) payload.sessionId = sessionId;
+
+    if (restContext && Object.keys(restContext).length > 0) {
+      payload.context = restContext;
+    }
+
+    return JSON.stringify(payload);
   }
 
   /**
@@ -160,4 +180,28 @@ export function createLogger(
   minLevel?: LogLevel
 ): Logger {
   return new Logger(context, minLevel);
+}
+
+/**
+ * Create a request-scoped logger that carries request/trace context automatically.
+ */
+export function createRequestLogger(
+  c: Context<{ Bindings: Env }>,
+  context: Record<string, any> = {}
+): Logger {
+  const requestId = c.get('requestId') as string | undefined;
+  const trace = c.get('traceContext') as
+    | { traceId?: string; spanId?: string }
+    | undefined;
+  const baseLevel = c.env?.LOG_LEVEL || 'INFO';
+
+  return new Logger(
+    {
+      requestId,
+      traceId: trace?.traceId,
+      spanId: trace?.spanId,
+      ...context,
+    },
+    baseLevel
+  );
 }

@@ -24,20 +24,36 @@ import { ChatLogger } from '../utils/chat-logger';
 import type { Context } from 'hono';
 import { validateTopK, validateMinSimilarity, sanitizeQuestion } from '../utils/validation';
 import { getCachedEmbedding, cacheEmbedding } from '../utils/embedding-cache';
+import type { TraceContext } from '../utils/trace';
 
 export async function basicRAG(
   request: RAGQueryRequest,
   env: Env,
   context?: Context<{ Bindings: Env }>
 ): Promise<RAGQueryResponse> {
+  const requestId = context?.get('requestId') as string | undefined;
+  const trace = context?.get('traceContext') as TraceContext | undefined;
+
   const logger = createLogger(
-    { pattern: 'basic', question: request.question },
+    {
+      pattern: 'basic',
+      question: request.question,
+      requestId,
+      traceId: trace?.traceId,
+      spanId: trace?.spanId,
+    },
     env.LOG_LEVEL
   );
   logger.startTimer('basicRAG');
   logger.info('Starting basic RAG query');
 
   const { question, topK = env.DEFAULT_TOP_K, minSimilarity } = request;
+  const sharedLogContext = {
+    pattern: 'basic',
+    requestId,
+    traceId: trace?.traceId,
+    spanId: trace?.spanId,
+  };
 
   // Initialize chat logger if context is provided
   let chatLogger: ChatLogger | null = null;
@@ -89,7 +105,7 @@ export async function basicRAG(
 
     // Attempt cache first
     queryEmbedding = await getCachedEmbedding(sanitizedQuestion, env, {
-      loggerContext: { pattern: 'basic', stage: 'embedding' },
+      loggerContext: { ...sharedLogContext, stage: 'embedding' },
     });
 
     const cacheHit = !!queryEmbedding;
@@ -109,7 +125,7 @@ export async function basicRAG(
 
       // Write to cache (non-blocking failure)
       await cacheEmbedding(sanitizedQuestion, queryEmbedding, env, {
-        loggerContext: { pattern: 'basic', stage: 'embedding' },
+        loggerContext: { ...sharedLogContext, stage: 'embedding' },
       });
     }
 
