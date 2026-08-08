@@ -1,5 +1,12 @@
 # Production Readiness Checklist
 
+> **Superseded in part by epic #30.** This checklist predates the Cloudflare-first agentic RAG pivot
+> (dated 2026-02-06). Security posture below is still current, but the RAG-architecture context is not.
+> See [`../status/now-next.md`](../status/now-next.md) for current status and
+> [`../spec/spec-agentic-rag-portfolio.md`](../spec/spec-agentic-rag-portfolio.md) for the target design.
+> Full archival is scheduled for the rework-branch cutover — see
+> [`../status/doc-audit-agentic-rag.md`](doc-audit-agentic-rag.md).
+
 **Status**: 🟢 **Security Hardening Complete - Ready for Production**
 **Target**: Performance optimization in 1-2 weeks
 **Last Updated**: 2026-02-06

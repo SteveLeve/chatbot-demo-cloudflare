@@ -1,5 +1,13 @@
 # Quick Start Guide
 
+> **This guide walks through the current, pre-pivot setup** — bulk Wikipedia corpus, single-turn
+> `basic-rag` pattern, `llama-3.1-8b-instruct` generation. The project is moving to a Cloudflare-first
+> agentic architecture (epic #30); the corpus, ingestion steps, and model below will change. See
+> [`ARCHITECTURE.md`](ARCHITECTURE.md#direction-cloudflare-first-agentic-rag-epic-30),
+> [`spec/spec-agentic-rag-portfolio.md`](spec/spec-agentic-rag-portfolio.md), and
+> [`status/doc-audit-agentic-rag.md`](status/doc-audit-agentic-rag.md) for what's changing and when.
+> The "What's Next" section at the bottom of this file is already up to date.
+
 Get your Cloudflare RAG Portfolio running in minutes.
 
 ## Prerequisites

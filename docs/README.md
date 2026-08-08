@@ -39,3 +39,5 @@ reporting, and a red-team mode. Start here:
 - Agentic RAG spec: `docs/spec/spec-agentic-rag-portfolio.md`
 - Status (now & next): `docs/status/now-next.md`
 - Roadmaps: `docs/roadmaps/` (see `agentic-rag.md`)
+- Doc/code disposition audit: `docs/status/doc-audit-agentic-rag.md`
+- Rework cutover runbook: `docs/runbooks/rework-branch-cutover.md`

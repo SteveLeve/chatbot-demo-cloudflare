@@ -8,6 +8,9 @@
 - Prior hardening remains shipped: security (PRs #22/#23), perf (#28), observability phase 1 (#29).
 
 ## Next
+- Documentation & code disposition audit complete (`docs/status/doc-audit-agentic-rag.md`); cutover
+  procedure defined (`docs/runbooks/rework-branch-cutover.md`). Once #31 merges, `chore/30-rework-cutover`
+  runs before any phase branch opens.
 - **Phase 0 (#32): model refresh** — the current generation model `@cf/meta/llama-3.1-8b-instruct` is deprecated (listed expiry 2026-05-30, already past). Blocks Phase 3, which needs a function-calling model.
 - Phase 2 (#33): curated corpus + static corpus browser + glossary example-prompt injection.
 - Phase 3 (#34): Agents SDK RAG agent with transparent step/trace UI. Also adds the first `durable_objects` bindings + `migrations` to `wrangler.jsonc`.
@@ -28,5 +31,7 @@
 - Spec: `docs/spec/spec-agentic-rag-portfolio.md`
 - ADR: `docs/decisions/adr-20260807-agents-sdk-runtime.md`
 - Roadmap: `docs/roadmaps/agentic-rag.md`
+- Doc/code disposition audit: `docs/status/doc-audit-agentic-rag.md`
+- Rework cutover runbook: `docs/runbooks/rework-branch-cutover.md`
 - Prior issues: #18 (observability), #19 (compliance), #20/#21 (model & reranking — reconcile with #32), #6–#11 (security)
 - Prior PRs: #22, #23, #28, #29
