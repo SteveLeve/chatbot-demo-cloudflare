@@ -1,4 +1,13 @@
-# Project Status Summary
+# Project Status Summary (ARCHIVED)
+
+> **Historical snapshot — do not use as current status.** This captured the project on 2025-01-06,
+> when it was two commits of scaffolding awaiting Cloudflare resource setup. Since then the demo has
+> shipped and deployed, security hardening / performance / observability have landed, and the project
+> has pivoted to Cloudflare-first agentic RAG (epic #30).
+>
+> Current status: [`../status/now-next.md`](../status/now-next.md) ·
+> Direction: [`../spec/spec-agentic-rag-portfolio.md`](../spec/spec-agentic-rag-portfolio.md) ·
+> Phases: [`../roadmaps/agentic-rag.md`](../roadmaps/agentic-rag.md)
 
 **Last Updated**: 2025-01-06
 **Phase**: Initial scaffolding complete, ready for Cloudflare setup

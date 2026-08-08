@@ -1,5 +1,12 @@
 # Deployment Guide
 
+> **Deploy mechanics below stay valid through the pivot** (single-Worker deploy via `npm run deploy`
+> is unchanged), but this guide predates the Cloudflare-first agentic RAG direction (epic #30). Phase 3
+> (#34) adds a `durable_objects` binding and a `migrations` entry to `wrangler.jsonc` — the first change
+> to deploy config in this epic. See
+> [`spec/spec-agentic-rag-portfolio.md`](spec/spec-agentic-rag-portfolio.md) and
+> [`status/doc-audit-agentic-rag.md`](status/doc-audit-agentic-rag.md) for what else changes and when.
+
 This guide covers deploying the RAG Portfolio, which uses a modern full-stack Workers architecture where both frontend and backend are deployed together as a single Worker.
 
 ## Architecture Overview

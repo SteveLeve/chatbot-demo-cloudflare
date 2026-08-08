@@ -2,6 +2,16 @@
 
 This directory holds living project knowledge. The root stays lean; everything else belongs here.
 
+## Where the project is headed
+
+The project has pivoted from "hand-crafted vs framework RAG" to **Cloudflare-first agentic RAG** —
+Agents SDK on Durable Objects, a curated and inspectable corpus, transparent step traces, eval
+reporting, and a red-team mode. Start here:
+[spec](spec/spec-agentic-rag-portfolio.md) ·
+[ADR](decisions/adr-20260807-agents-sdk-runtime.md) ·
+[roadmap](roadmaps/agentic-rag.md) ·
+[epic #30](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/30)
+
 ## Philosophy
 - Capture **now & next**: current state, near-term work, owners, and links to GitHub issues/PRs for history.
 - Point to **GitHub** for long-tail detail and decisions already merged.
@@ -11,7 +21,7 @@ This directory holds living project knowledge. The root stays lean; everything e
 - `status/` — living status notes, production readiness, security posture.
 - `decisions/` — Architecture Decision Records (ADRs) with index.
 - `spec/` — feature and API specs.
-- `roadmaps/` — concise roadmaps (compliance, observability, performance) with links to GitHub.
+- `roadmaps/` — concise roadmaps (agentic RAG, compliance, observability, performance) with links to GitHub.
 - `runbooks/` — operational how-tos and checklists.
 - `guides/` — setup and how-to guides.
 - `archive/` — historical reports kept for reference.
@@ -26,5 +36,8 @@ This directory holds living project knowledge. The root stays lean; everything e
 ## Quick Links
 - Agent playbook: `docs/AGENTS.md`
 - ADR index: `docs/decisions/README.md`
+- Agentic RAG spec: `docs/spec/spec-agentic-rag-portfolio.md`
 - Status (now & next): `docs/status/now-next.md`
-- Roadmaps: `docs/roadmaps/`
+- Roadmaps: `docs/roadmaps/` (see `agentic-rag.md`)
+- Doc/code disposition audit: `docs/status/doc-audit-agentic-rag.md`
+- Rework cutover runbook: `docs/runbooks/rework-branch-cutover.md`

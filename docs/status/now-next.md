@@ -1,22 +1,37 @@
 # Status: Now & Next
-- **Last Updated**: 2026-02-06
+- **Last Updated**: 2026-08-07
 - **Owner**: Project Maintainer
 
 ## Now
-- Security hardening completed; monitoring rollout for PR #22/#23 (issues #6–#11).
-- Performance quick wins landed (#12 embedding cache, #13 D1 batch inserts); AI Gateway live (#16).
-- Observability phase 1 shipped: JSON logs with request/trace IDs; OTLP export flag ready (issue #18).
-- Compliance endpoints pending design/implementation (issue #19).
+- Portfolio reimagining kicked off: Cloudflare-first **agentic RAG** with Agents SDK, eval reporting, and red-team concepts (epic #30).
+- Phase 1 in flight: vision/spec/ADR/docs reframe (`docs/spec/spec-agentic-rag-portfolio.md`, `docs/decisions/adr-20260807-agents-sdk-runtime.md`).
+- Prior hardening remains shipped: security (PRs #22/#23), perf (#28), observability phase 1 (#29).
 
 ## Next
-- Wire OTLP destination + dashboards; add smoke tests for logging/cache retry (issue #18).
-- Validate cache hit latency target (≤45ms cached) and adjust thresholds (#12/#13).
-- Implement privacy endpoints (export/delete/opt-out) and retention cron (issue #19).
+- Documentation & code disposition audit complete (`docs/status/doc-audit-agentic-rag.md`); cutover
+  procedure defined (`docs/runbooks/rework-branch-cutover.md`). Once #31 merges, `chore/30-rework-cutover`
+  runs before any phase branch opens.
+- **Phase 0 (#32): model refresh** — the current generation model `@cf/meta/llama-3.1-8b-instruct` is deprecated (listed expiry 2026-05-30, already past). Blocks Phase 3, which needs a function-calling model.
+- Phase 2 (#33): curated corpus + static corpus browser + glossary example-prompt injection.
+- Phase 3 (#34): Agents SDK RAG agent with transparent step/trace UI. Also adds the first `durable_objects` bindings + `migrations` to `wrangler.jsonc`.
+- Phase 4 (#35): eval reporting surface. Phase 5 (#36): red-team demo mode.
+- Deprioritized vs reimagining: OTLP dashboards (#18).
+- **Not simply deprioritized**: privacy endpoints (#19) are now *coupled to Phase 5* — red-team mode drives more user-supplied prompt text into the chat log, so #19 must be revisited before #36 ships.
 
 ## Risks/Watch
+- **Deprecated generation model in production today** — resolve via Phase 0 (#32) before agent work begins.
+- **Red-team prompts will land in chat logs** — `CHAT_LOGGING_ENABLED: true`; `src/utils/chat-logger.ts` writes prompts + hashed IPs to D1. Tag or exclude red-team sessions; see #19.
+- Durable Objects not yet configured — Phase 3 needs bindings + `new_sqlite_classes` migration. Free plan allows SQLite-backed DOs only (100k req/day).
+- Agents SDK API churn — pin ADR and cite official docs when implementing Phase 3.
+- Scope creep into unbounded corpus or third-party agent *orchestration* frameworks — enforce #30 non-goals. (The AI SDK is permitted as an adapter-confined model/tool layer; see the ADR boundary table.)
 - Rate limiting false positives during peak demo traffic — monitor logs.
-- Compliance timeline risk if endpoints slip; create interim FAQ note if delayed.
 
 ## References
-- Issues: #18 (observability), #19 (compliance), #6–#11 (security)
-- PRs: #22, #23
+- Epic: #30 — sub-issues #32 (Phase 0), #33 (Phase 2), #34 (Phase 3), #35 (Phase 4), #36 (Phase 5)
+- Spec: `docs/spec/spec-agentic-rag-portfolio.md`
+- ADR: `docs/decisions/adr-20260807-agents-sdk-runtime.md`
+- Roadmap: `docs/roadmaps/agentic-rag.md`
+- Doc/code disposition audit: `docs/status/doc-audit-agentic-rag.md`
+- Rework cutover runbook: `docs/runbooks/rework-branch-cutover.md`
+- Prior issues: #18 (observability), #19 (compliance), #20/#21 (model & reranking — reconcile with #32), #6–#11 (security)
+- Prior PRs: #22, #23, #28, #29

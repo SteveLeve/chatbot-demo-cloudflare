@@ -1,5 +1,13 @@
 # Quick Start Guide
 
+> **This guide walks through the current, pre-pivot setup** — bulk Wikipedia corpus, single-turn
+> `basic-rag` pattern, `llama-3.1-8b-instruct` generation. The project is moving to a Cloudflare-first
+> agentic architecture (epic #30); the corpus, ingestion steps, and model below will change. See
+> [`ARCHITECTURE.md`](ARCHITECTURE.md#direction-cloudflare-first-agentic-rag-epic-30),
+> [`spec/spec-agentic-rag-portfolio.md`](spec/spec-agentic-rag-portfolio.md), and
+> [`status/doc-audit-agentic-rag.md`](status/doc-audit-agentic-rag.md) for what's changing and when.
+> The "What's Next" section at the bottom of this file is already up to date.
+
 Get your Cloudflare RAG Portfolio running in minutes.
 
 ## Prerequisites
@@ -334,14 +342,14 @@ Check logs in the Cloudflare dashboard:
 
 Once the basic RAG system is working, you can explore:
 
-1. **Advanced Patterns** (Phase 2):
-   - Implement reranking for better quality
-   - Add refinement for complex questions
-   - Build agentic search capabilities
+1. **The agentic RAG direction** (epic #30 — see `docs/roadmaps/agentic-rag.md`):
+   - Phase 0 (#32): refresh the generation model — the current one is deprecated
+   - Phase 2 (#33): curated corpus + static corpus browser + glossary prompt injection
+   - Phase 3 (#34): Agents SDK Durable Object agent with a step/trace panel
+   - Phase 4 (#35): eval reporting · Phase 5 (#36): red-team mode
 
-2. **Hybrid Search**:
-   - Combine vector search with keyword matching
-   - Use D1's FTS5 for precise queries
+2. **Retrieval quality** (tracked in #21, now framed as future agent tools):
+   - Reranking, and hybrid search combining vector similarity with D1 FTS5
 
 3. **Performance Tuning**:
    - Enable caching
