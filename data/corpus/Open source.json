@@ -1,0 +1,10 @@
+{
+  "id": "open-source",
+  "title": "Open source",
+  "content": "Open source is a software similar to free software, but is more related to business. It is different from other software because the source code is available to everyone. The source code is a set of instructions for the computer, written in a programming language. \n\nAnyone can see how the source code works and can change it if they want to make it work differently. The opposite of open source is closed source. Closed source software is not available to everyone. Open source has a lot in common with free software but each has its own focus and goals.\n\nOpen source and free software have been around for decades. They became more popular with the Linux and BSD software communities.  To protect the code, a special user license is used. The most common kinds of licence are the GPL, BSD and LGPL. Wikipedia uses open source too. The Open Source Movement is led by the Open Source Initiative.\n\nThe open source movement became separate from the free software movement in 1998.\n\nExamples\n\nComputing\n GNU Octave\n R\n Scilab\n\nDocument creation\n GNU Emacs\n LaTeX\n Beamer\n LibreOffice\n SATySFi\n Vim\n\nCompanies making open source software\n Facebook\n Google\n Microsoft\n\nReferences\n\nOther websites\n\n Open Source Initiative\n Open Source Download Centre \n\nSoftware\nFree content",
+  "metadata": {
+    "categories": [],
+    "url": "https://simple.wikipedia.org/wiki/Open%20source",
+    "id": "3621"
+  }
+}

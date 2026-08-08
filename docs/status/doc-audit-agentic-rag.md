@@ -66,30 +66,34 @@
 | Path | Classification | Disposition | Executes | Notes |
 |---|---|---|---|---|
 | `src/patterns/basic-rag.ts` | OLD | replace | Phase 3 (#34) | Single-turn pipeline superseded by Agents SDK loop |
-| `src/ingestion-workflow.ts` | OLD | replace | Phase 2 (#33) | Re-pointed at curated corpus, or replaced entirely |
-| `src/utils/document-store.ts` | OLD | replace | Phase 2/3 (#33/#34) | Bulk-corpus storage abstraction; reshape for curated corpus + agent tool access |
-| `src/utils/chunking.ts` | OLD | replace | Phase 2 (#33) | Tied to bulk-ingestion assumptions; review against curated-corpus chunk sizes |
+| `src/ingestion-workflow.ts` | TRANSITIONAL | update | done (Phase 2 / #33) | Stable corpus ids via ingest; curated corpus path `data/corpus/` |
+| `src/utils/document-store.ts` | NEUTRAL | keep | — | `getArticle` used by `GET /api/v1/corpus/:id`; further reshape in Phase 3 |
+| `src/utils/chunking.ts` | NEUTRAL | keep | — | Works for curated corpus sizes; no bulk assumptions changed |
 | `src/utils/embedding-cache.ts` | NEUTRAL | keep | — | Embedding model unchanged (BGE base); cache keys remain valid. Revisit if #20 upgrades embeddings |
 | `src/types/index.ts` (`pattern` union, ~line 169) | OLD | replace | Phase 3 (#34) | `'basic' \| 'reranking' \| 'refinement' \| 'agentic'` encodes retired taxonomy |
-| `src/index.ts` (route wiring) | OLD | update | Phase 3 (#34) | New agent/corpus/eval/red-team routes added per spec's API table; old routes deprecated once agent path is feature-complete |
+| `src/index.ts` (route wiring) | TRANSITIONAL | update | Phase 3 (#34) | `GET /api/v1/corpus/:id` added (#33); agent/eval/red-team routes remain |
 | `wrangler.jsonc` (bindings) | OLD | update | Phase 3 (#34) | Add `durable_objects` binding + `migrations`/`new_sqlite_classes` entry |
 | `migrations/0001_create_documents_table.sql`, `0002_create_chunks_table.sql`, `0003_create_fts_table.sql` | OLD | replace | Phase 2/3 (#33/#34) | Bulk-corpus schema; `0003` comment names the retired reranking/hybrid-search taxonomy |
-| `data/wikipedia/README.md`, `scripts/fetch-wikipedia.py`, `scripts/ingest-wikipedia.js` | OLD | replace | Phase 2 (#33) | Bulk corpus fetch/ingest tooling, superseded by curated-corpus workflow |
-| `ui/src/pages/BasicChatPage.tsx` | OLD | replace | Phase 3 (#34) | No trace-panel/agent-step visibility; target for rework |
+| `data/wikipedia/README.md`, `scripts/fetch-wikipedia.py` | OLD | keep | — | Legacy bulk fetch; curated workflow uses `data/corpus/` |
+| `scripts/ingest-wikipedia.js`, `scripts/build-corpus.js` | NEW | keep | done (#33) | Curated ingest; manifest builder |
+| `data/corpus/*` | NEW | keep | done (#33) | ~37 committed articles |
+| `ui/src/pages/CorpusPage.tsx`, `ui/src/content/corpus-manifest.json` | NEW | keep | done (#33) | Static corpus browser |
+| `ui/src/pages/BasicChatPage.tsx` | TRANSITIONAL | update | Phase 3 (#34) | `?q=` prompt injection added; trace panel lands in #34 |
+| `ui/src/content/{glossary-data,faq-data,sidebar-sections}.ts` | NEW | keep | done (#33) | Glossary `examplePrompts[]` shipped |
 | `ui/src/components/QueryInterface.tsx` | — | delete | done (cutover) | Removed in `chore/30-rework-cutover` (was unreferenced dead code) |
 | `src/index.ts:513` (`GET /api/v1/docs` self-documentation) | OLD | update | Phase 3 (#34) | Live API response only describes the `basic` pattern (`patterns.basic.description: 'Single-turn retrieval-augmented generation'`); this is code-as-narrative, update alongside route wiring |
-| `ui/src/pages/LandingPage.tsx:34-37` | OLD copy / NEUTRAL shell | update | Phase 2 (#33) | "Advanced RAG (Coming Soon) — Streaming responses, multi-turn conversations, and advanced retrieval patterns" is the most visible stale claim in the project (it's on the landing page); most visited surface, should be the *first* item in #33, not a loose end. Page shell/layout is reusable — only this copy block needs rewriting |
+| `ui/src/pages/LandingPage.tsx` | NEW | keep | done (#33) | Corpus browser card; agentic roadmap copy replaces stale "Advanced RAG" |
+| `ui/src/content/glossary-data.ts` | NEW | keep | done (#33) | `examplePrompts[]` + chat injection via `?q=` |
+| `ui/src/pages/GlossaryPage.tsx` | NEW | keep | done (#33) | Renders example prompt links to chat |
 | `ui/src/components/sidebar/TechStackFooter.tsx` + `TECH_STACK` consts (`BasicChatPage.tsx`, `FaqPage.tsx`, `GlossaryPage.tsx`) | NEUTRAL shell / minor-stale copy | update | Phase 3 (#34) | Component itself is presentational (props-driven, reusable as-is); the `TECH_STACK.technologies`/`description` literals list current stack only — not misleading, just incomplete once Agents SDK/DO ship |
 | `src/utils/{trace,logger,chat-logger,privacy,rate-limiter,security,validation,metadata}.ts` | NEUTRAL | keep | — | Cross-cutting infra reused as-is; spec mandates reusing `trace.ts`/`logger.ts` for the trace panel |
 | `migrations/0004_add_chat_logging.sql` | NEUTRAL | keep | — | Extended (tag/exclude red-team sessions), not replaced |
-| `ui/src/content/{glossary-data,faq-data,sidebar-sections}.ts` | NEUTRAL | keep | — | Glossary gets `examplePrompts[]` extension, not replacement |
-| `ui/src/components/sidebar/*` (excl. `TechStackFooter.tsx`, see above), `SourcesCard.tsx`, `ThemeToggle.tsx`, `MessageBubble.tsx`, `ChatInput.tsx`, `layouts/DemoLayout.tsx` | NEUTRAL | keep | — | Presentational shell, spec says "retain and extend" |
-| `ui/src/pages/{FaqPage,GlossaryPage}.tsx` | NEUTRAL | keep | — | Non-RAG-pattern pages |
+| `ui/src/pages/{FaqPage,GlossaryPage}.tsx` | NEW | keep | done (#33) | Glossary prompt injection |
 
 ## Risks/Watch
 - If a `Phase N` code row's replacement is delayed past its target phase, the corresponding doc rows above it stay `TRANSITIONAL`/banner-only longer than intended — re-check this table when a phase issue (#32-#36) closes.
 - `docs/archive/CLAUDE.generated.md` is disclaimed but not corrected; if it ever becomes a live onboarding reference again, escalate to `rewrite`.
-- `ui/src/pages/LandingPage.tsx` is the highest-visibility stale surface left (public-facing, not just agent-facing) — do not let it slip past the *first* PR of Phase 2 (#33).
+- `ui/src/pages/LandingPage.tsx` stale copy resolved in Phase 2 (#33).
 - If evolve-in-place trips the escape-hatch criteria mid-phase, this table becomes the hybrid **port allowlist inverted**: every `keep`/NEUTRAL row is a port candidate, every `replace`/`delete` row is rebuilt fresh. See the runbook's Tier 2/3 sections.
 
 ## References

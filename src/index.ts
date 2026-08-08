@@ -26,6 +26,7 @@ import {
 	validateMetadata,
 } from './utils/validation';
 import { createTraceContext, exportRequestSpan, buildTraceparent } from './utils/trace';
+import { createDocumentStore } from './utils/document-store';
 
 // Export the ingestion workflow
 export { IngestionWorkflow };
@@ -355,6 +356,8 @@ app.post('/api/v1/ingest', async (c) => {
       title: string;
       content: string;
       metadata?: Record<string, any>;
+      id?: string;
+      articleId?: string;
     }>();
 
     // Validate input
@@ -409,9 +412,15 @@ app.post('/api/v1/ingest', async (c) => {
       }
     }
 
-    // Create workflow params
+    // Create workflow params (stable id from curated corpus when provided)
+    const stableId =
+      body.id ||
+      body.articleId ||
+      body.metadata?.corpusId ||
+      crypto.randomUUID();
+
     const params: IngestionWorkflowParams = {
-      articleId: crypto.randomUUID(),
+      articleId: stableId,
       title: body.title,
       content: body.content,
       metadata: body.metadata || {},
@@ -507,6 +516,73 @@ app.get('/api/v1/ingest/:workflowId', async (c) => {
 });
 
 // ============================================================================
+// Corpus Routes
+// ============================================================================
+
+/**
+ * Get full article body from R2 (ingested curated corpus)
+ * GET /api/v1/corpus/:id
+ */
+app.get('/api/v1/corpus/:id', async (c) => {
+  const logger = createRequestLogger(c, { endpoint: 'corpus-get' });
+  const articleId = c.req.param('id');
+
+  if (!articleId || articleId.length > 128) {
+    return c.json<ApiResponse>(
+      {
+        success: false,
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'Invalid corpus article id',
+        },
+      },
+      400
+    );
+  }
+
+  try {
+    const store = createDocumentStore(c.env, logger);
+    const article = await store.getArticle(articleId);
+
+    if (!article) {
+      return c.json<ApiResponse>(
+        {
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message:
+              'Article not found in storage. Run corpus ingest: npm run ingest ./data/corpus',
+          },
+        },
+        404
+      );
+    }
+
+    return c.json<ApiResponse>({
+      success: true,
+      data: {
+        id: article.id,
+        title: article.title,
+        content: article.content,
+        metadata: article.metadata,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+      },
+    });
+  } catch (error) {
+    logger.error('Corpus fetch failed', error);
+    const sanitizedError = sanitizeError(error, c.env);
+    return c.json<ApiResponse>(
+      {
+        success: false,
+        error: sanitizedError,
+      },
+      500
+    );
+  }
+});
+
+// ============================================================================
 // Documentation Route
 // ============================================================================
 
@@ -535,7 +611,14 @@ app.get('/api/v1/docs', (c) => {
         title: 'Article title (required)',
         content: 'Article content (required)',
         metadata: 'Additional metadata (optional)',
+        id: 'Stable article id for curated corpus (optional)',
       },
+    },
+    corpus: {
+      description: 'Fetch full article body from R2 (after ingest)',
+      endpoint: '/api/v1/corpus/:id',
+      method: 'GET',
+      note: 'Article list is static in the SPA manifest (ui/src/content/corpus-manifest.json)',
     },
     examples: {
       query: {

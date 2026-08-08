@@ -59,3 +59,6 @@ temp/
 data/wikipedia/*.json
 data/wikipedia/*.txt
 !data/wikipedia/.gitkeep
+
+# Curated corpus is committed (Phase 2 / #33); only ignore scratch copies
+data/corpus/*.tmp
