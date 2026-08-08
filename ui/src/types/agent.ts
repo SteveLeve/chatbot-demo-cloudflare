@@ -1,24 +1,21 @@
-export type TraceEventType = 'retrieve' | 'tool' | 'generate' | 'guard' | 'eval';
+import type { DocumentSource } from './index';
 
-export interface TraceEvent {
-  type: TraceEventType;
-  summary: string;
-  detail?: Record<string, unknown>;
-  timestamp: number;
-  traceId?: string;
-  spanId?: string;
-}
+/** Trace types shared with the worker — keep in sync with src/types/trace.ts */
+export type {
+  TraceEvent,
+  TraceEventType,
+  TraceEventDetail,
+  RetrieveTraceDetail,
+  ToolTraceDetail,
+  GenerateTraceDetail,
+} from '../../../src/types/trace';
 
+import type { TraceEvent } from '../../../src/types/trace';
+
+/** Wire contract for RAGAgent state — keep in sync with src/types/agent-wire.ts */
 export interface RAGAgentState {
   traceEvents: TraceEvent[];
   traceId?: string;
   spanId?: string;
-  lastSources?: Array<{
-    documentId: string;
-    chunkId: string;
-    title: string;
-    chunkText: string;
-    chunkIndex: number;
-    similarity: number;
-  }>;
+  lastSources: DocumentSource[];
 }

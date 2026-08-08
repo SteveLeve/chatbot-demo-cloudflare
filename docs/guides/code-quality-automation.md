@@ -17,7 +17,7 @@ Written down here so they don't go stale in a closed issue (see [#40](https://gi
 | Root lint/format | None. No ESLint, no Prettier, no `.editorconfig`. |
 | Root typecheck | `tsconfig.json` is strict, but there's no `typecheck` script exposing it. |
 | Root coverage | `test:coverage` script exists but is **broken** — no `@vitest/coverage-*` devDependency, no `vitest.config.*` with thresholds. Not fixed by this work; flagged for a future pass. |
-| `ui/` lint | ESLint 9 + `@typescript-eslint` + `eslint-plugin-react-hooks`/`react-refresh` already configured, with a `lint` script. No Prettier. |
+| `ui/` lint | `lint` script in package.json; **no `eslint.config.js` yet** — script fails until Phase 1 adds config (see below). No Prettier. |
 | Project layout | Root and `ui/` are **two separate npm projects** (no npm workspaces) — two `node_modules`, two config-resolution roots. |
 | CI | No `.github/workflows/` directory at all. |
 | Pre-commit | No Husky/lint-staged/simple-git-hooks. `.git/hooks/` has only the default samples. |

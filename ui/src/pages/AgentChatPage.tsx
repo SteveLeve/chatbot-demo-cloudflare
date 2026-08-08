@@ -47,11 +47,18 @@ function getOrCreateSessionId(): string {
   return id;
 }
 
+function mintSpanId(): string {
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 export function AgentChatPage() {
   const [searchParams] = useSearchParams();
   const [input, setInput] = useState('');
   const [bootstrap, setBootstrap] = useState<BootstrapData | null>(null);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
+  const [bootstrapLoading, setBootstrapLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const traceBodyRef = useRef<{ traceId: string; spanId: string }>({
     traceId: '',
@@ -64,10 +71,10 @@ export function AgentChatPage() {
     name: sessionName,
     onStateUpdate: (state) => {
       if (state.traceId) {
-        traceBodyRef.current = {
-          traceId: state.traceId,
-          spanId: state.spanId ?? '',
-        };
+        traceBodyRef.current.traceId = state.traceId;
+      }
+      if (state.spanId) {
+        traceBodyRef.current.spanId = state.spanId;
       }
     },
   });
@@ -84,8 +91,11 @@ export function AgentChatPage() {
     let cancelled = false;
 
     async function loadBootstrap() {
+      setBootstrapLoading(true);
       try {
-        const response = await fetch(getApiUrl('/api/v1/agent/bootstrap'));
+        const response = await fetch(getApiUrl('/api/v1/agent/bootstrap'), {
+          headers: { 'x-chat-session-id': sessionName },
+        });
         const data: ApiResponse<BootstrapData> = await response.json();
         if (!data.success || !data.data) {
           throw new Error(data.error?.message || 'Bootstrap failed');
@@ -96,12 +106,17 @@ export function AgentChatPage() {
             traceId: data.data.traceId,
             spanId: data.data.spanId,
           };
+          setBootstrapError(null);
         }
       } catch (error) {
         if (!cancelled) {
           setBootstrapError(
             error instanceof Error ? error.message : 'Bootstrap failed'
           );
+        }
+      } finally {
+        if (!cancelled) {
+          setBootstrapLoading(false);
         }
       }
     }
@@ -110,7 +125,7 @@ export function AgentChatPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [sessionName]);
 
   useEffect(() => {
     const q = searchParams.get('q');
@@ -121,30 +136,39 @@ export function AgentChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isStreaming]);
 
+  const bootstrapReady = bootstrap !== null && !bootstrapError;
+
   const handleSubmit = useCallback(() => {
     const text = input.trim();
-    if (!text || isStreaming) return;
+    if (!text || isStreaming || !bootstrapReady) return;
 
+    traceBodyRef.current.spanId = mintSpanId();
     sendMessage({ text });
     setInput('');
-  }, [input, isStreaming, sendMessage]);
+  }, [input, isStreaming, sendMessage, bootstrapReady]);
 
   const agentState = agent.state;
   const traceEvents = agentState?.traceEvents ?? [];
-  const lastSources = agentState?.lastSources;
+  const lastSources = agentState?.lastSources ?? [];
 
   return (
     <DemoLayout title="Agentic RAG + Trace" techStack={TECH_STACK}>
       <div className="flex flex-col lg:flex-row h-full min-h-[60vh]">
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {bootstrapLoading && (
+              <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                Connecting trace context…
+              </div>
+            )}
+
             {bootstrapError && (
               <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
                 Trace bootstrap failed: {bootstrapError}
               </div>
             )}
 
-            {messages.length === 0 && (
+            {messages.length === 0 && bootstrapReady && (
               <div className="text-center text-gray-500 dark:text-gray-400 mt-16">
                 <p className="text-lg">Ask the agent about the curated corpus</p>
                 <p className="text-sm mt-2 max-w-md mx-auto">
@@ -189,7 +213,7 @@ export function AgentChatPage() {
                     }`}
                   >
                     <div className="whitespace-pre-wrap">{text}</div>
-                    {isLatestAssistant && lastSources && lastSources.length > 0 && (
+                    {isLatestAssistant && lastSources.length > 0 && (
                       <SourcesCard sources={lastSources} />
                     )}
                   </div>
@@ -213,8 +237,17 @@ export function AgentChatPage() {
               value={input}
               onChange={setInput}
               onSubmit={handleSubmit}
-              disabled={isStreaming || status === 'submitted'}
-              placeholder="Ask about the corpus…"
+              disabled={
+                !bootstrapReady ||
+                bootstrapLoading ||
+                isStreaming ||
+                status === 'submitted'
+              }
+              placeholder={
+                bootstrapReady
+                  ? 'Ask about the corpus…'
+                  : 'Waiting for trace bootstrap…'
+              }
             />
           </div>
         </div>

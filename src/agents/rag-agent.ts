@@ -4,6 +4,7 @@
  */
 
 import { AIChatAgent } from '@cloudflare/ai-chat';
+import type { Connection } from 'agents';
 import {
   convertToModelMessages,
   streamText,
@@ -11,21 +12,16 @@ import {
   tool,
 } from 'ai';
 import { z } from 'zod';
-import type { Env, DocumentSource } from '../types';
+import type { Env } from '../types';
+import type { RAGAgentState } from '../types/agent-wire';
 import type { TraceEvent } from '../types/trace';
 import { GENERATION_MODEL } from '../config/models';
 import { createWorkersAIModel } from '../ai/workers-ai';
-import { retrieveFromCorpus } from '../utils/retrieval';
+import { runRetrieveFromCorpusTool } from './rag-agent-tools';
 import { createLogger } from '../utils/logger';
 
-export interface RAGAgentState {
-  traceEvents: TraceEvent[];
-  traceId?: string;
-  spanId?: string;
-  lastSources: DocumentSource[];
-}
-
 const MAX_TRACE_EVENTS = 100;
+const MAX_PERSISTED_MESSAGES = 50;
 
 function buildAgentSystemPrompt(): string {
   return `You are a retrieval-augmented assistant for a curated demo corpus (~37 Wikipedia articles).
@@ -47,6 +43,26 @@ export class RAGAgent extends AIChatAgent<Env, RAGAgentState> {
     lastSources: [],
   };
 
+  maxPersistedMessages = MAX_PERSISTED_MESSAGES;
+
+  validateStateChange(nextState: RAGAgentState, source: Connection | 'server'): void {
+    if (source === 'server') return;
+
+    const traceEventsMatch =
+      JSON.stringify(nextState.traceEvents) === JSON.stringify(this.state.traceEvents);
+    const sourcesMatch =
+      JSON.stringify(nextState.lastSources) === JSON.stringify(this.state.lastSources);
+
+    if (
+      !traceEventsMatch ||
+      !sourcesMatch ||
+      nextState.traceId !== this.state.traceId ||
+      nextState.spanId !== this.state.spanId
+    ) {
+      throw new Error('Trace and retrieval state is server-owned');
+    }
+  }
+
   private pushTrace(event: Omit<TraceEvent, 'traceId' | 'spanId'>): void {
     const entry: TraceEvent = {
       ...event,
@@ -66,13 +82,12 @@ export class RAGAgent extends AIChatAgent<Env, RAGAgentState> {
     const traceId = typeof body.traceId === 'string' ? body.traceId : undefined;
     const spanId = typeof body.spanId === 'string' ? body.spanId : undefined;
 
-    if (traceId) {
-      this.setState({
-        ...this.state,
-        traceId,
-        spanId,
-      });
-    }
+    this.setState({
+      ...this.state,
+      traceId,
+      spanId,
+      lastSources: [],
+    });
 
     const logger = createLogger(
       {
@@ -91,57 +106,64 @@ export class RAGAgent extends AIChatAgent<Env, RAGAgentState> {
     });
 
     const workersai = createWorkersAIModel(this.env);
+    const maxQueryLength = this.env.MAX_QUERY_LENGTH;
 
     const retrieveTool = tool({
       description:
         'Search the curated demo corpus for document chunks relevant to a query. Always call this before answering factual questions.',
       inputSchema: z.object({
-        query: z.string().describe('Search query — usually the user question or a focused sub-query'),
+        query: z
+          .string()
+          .max(maxQueryLength)
+          .describe('Search query — usually the user question or a focused sub-query'),
         topK: z.number().int().min(1).max(10).optional(),
       }),
       execute: async ({ query, topK }) => {
-        this.pushTrace({
-          type: 'retrieve',
-          summary: `Retrieving chunks for "${query.slice(0, 80)}${query.length > 80 ? '…' : ''}"`,
-          timestamp: Date.now(),
-        });
-
-        const result = await retrieveFromCorpus(query, this.env, {
-          topK: topK ?? this.env.DEFAULT_TOP_K,
-          traceId: this.state.traceId,
-          spanId: this.state.spanId,
-        });
-
-        if (result.chunks.length === 0) {
-          this.pushTrace({
-            type: 'guard',
-            summary: 'No corpus chunks matched — agent should refuse or ask to rephrase',
-            detail: { query, matchCount: 0 },
-            timestamp: Date.now(),
-          });
-        } else {
-          this.pushTrace({
-            type: 'retrieve',
-            summary: `Retrieved ${result.chunks.length} chunk(s)`,
-            detail: {
-              titles: result.chunks.map((c) => c.title),
-              scores: result.chunks.map((c) => c.similarity),
-              chunkIds: result.chunks.map((c) => c.id),
+        const toolResult = await runRetrieveFromCorpusTool(
+          query,
+          topK ?? this.env.DEFAULT_TOP_K,
+          this.env,
+          {
+            onRetrieveStart: (summary) => {
+              this.pushTrace({
+                type: 'retrieve',
+                summary,
+                timestamp: Date.now(),
+              });
             },
-            timestamp: Date.now(),
-          });
-        }
+            onRetrieveEmpty: (q) => {
+              this.pushTrace({
+                type: 'guard',
+                summary: 'No corpus chunks matched — agent should refuse or ask to rephrase',
+                detail: { query: q, matchCount: 0 },
+                timestamp: Date.now(),
+              });
+            },
+            onRetrieveHit: (detail) => {
+              this.pushTrace({
+                type: 'retrieve',
+                summary: `Retrieved ${detail.chunkIds?.length ?? 0} chunk(s)`,
+                detail,
+                timestamp: Date.now(),
+              });
+            },
+          },
+          {
+            traceId: this.state.traceId,
+            spanId: this.state.spanId,
+          }
+        );
 
         this.setState({
           ...this.state,
-          lastSources: result.sources,
+          lastSources: toolResult.sources,
         });
 
         logger.info('Retrieve tool completed', {
-          chunkCount: result.chunks.length,
+          chunkCount: toolResult.chunkCount,
         });
 
-        return result.contextText;
+        return toolResult.contextText;
       },
     });
 

@@ -1,5 +1,6 @@
 /**
- * Shared corpus retrieval for basic RAG and the Agents SDK agent.
+ * Corpus retrieval used by the Agents SDK retrieve tool (src/agents/rag-agent.ts).
+ * Basic RAG (src/patterns/basic-rag.ts) uses the same helper for vector search.
  */
 
 import type { Env, DocumentSource, EmbeddingResponse } from '../types';
@@ -40,6 +41,13 @@ export async function retrieveFromCorpus(
   );
 
   const sanitized = sanitizeQuestion(query);
+
+  if (sanitized.length > env.MAX_QUERY_LENGTH) {
+    throw new Error(
+      `Query exceeds maximum length of ${env.MAX_QUERY_LENGTH} characters`
+    );
+  }
+
   const topK = options?.topK ?? env.DEFAULT_TOP_K;
 
   let embedding = await getCachedEmbedding(sanitized, env, {

@@ -14,18 +14,15 @@ import type {
   Env,
   RAGQueryRequest,
   RAGQueryResponse,
-  DocumentSource,
-  EmbeddingResponse,
   GenerationResponse,
 } from '../types';
 import { createLogger } from '../utils/logger';
-import { createDocumentStore } from '../utils/document-store';
 import { ChatLogger } from '../utils/chat-logger';
 import type { Context } from 'hono';
 import { validateTopK, validateMinSimilarity, sanitizeQuestion } from '../utils/validation';
-import { getCachedEmbedding, cacheEmbedding } from '../utils/embedding-cache';
 import type { TraceContext } from '../utils/trace';
-import { EMBEDDING_MODEL, GENERATION_MODEL } from '../config/models';
+import { GENERATION_MODEL } from '../config/models';
+import { retrieveFromCorpus } from '../utils/retrieval';
 
 export async function basicRAG(
   request: RAGQueryRequest,
@@ -49,12 +46,6 @@ export async function basicRAG(
   logger.info('Starting basic RAG query');
 
   const { question, topK = env.DEFAULT_TOP_K, minSimilarity } = request;
-  const sharedLogContext = {
-    pattern: 'basic',
-    requestId,
-    traceId: trace?.traceId,
-    spanId: trace?.spanId,
-  };
 
   // Initialize chat logger if context is provided
   let chatLogger: ChatLogger | null = null;
@@ -98,56 +89,17 @@ export async function basicRAG(
     // Defense-in-depth: Sanitize question (already sanitized at API boundary, but check again)
     const sanitizedQuestion = sanitizeQuestion(question);
 
-    // Step 1: Generate or fetch cached query embedding (use sanitized question)
-    logger.startTimer('generateEmbedding');
-    logger.debug('Generating query embedding');
-
-    let queryEmbedding: number[] | null = null;
-
-    // Attempt cache first
-    queryEmbedding = await getCachedEmbedding(sanitizedQuestion, env, {
-      loggerContext: { ...sharedLogContext, stage: 'embedding' },
-    });
-
-    const cacheHit = !!queryEmbedding;
-
-    if (!queryEmbedding) {
-      const embeddingResult = await env.AI.run(EMBEDDING_MODEL, {
-        text: [sanitizedQuestion],
-      }, env.USE_AI_GATEWAY && env.AI_GATEWAY_ID ? {
-        gateway: { id: env.AI_GATEWAY_ID },
-      } : undefined) as EmbeddingResponse;
-
-      queryEmbedding = embeddingResult.data[0];
-
-      if (!queryEmbedding || queryEmbedding.length === 0) {
-        throw new Error('Failed to generate query embedding');
-      }
-
-      // Write to cache (non-blocking failure)
-      await cacheEmbedding(sanitizedQuestion, queryEmbedding, env, {
-        loggerContext: { ...sharedLogContext, stage: 'embedding' },
-      });
-    }
-
-    const embeddingLatency = logger.endTimer('generateEmbedding', {
-      dimensions: queryEmbedding.length,
-      cacheHit,
-    });
-
-    // Step 2: Retrieve similar chunks from Vectorize
-    logger.startTimer('retrieveVectors');
-    const store = createDocumentStore(env, logger);
-
-    const vectorMatches = await store.queryVectors(
-      queryEmbedding,
+    // Retrieve via shared corpus helper (embedding + Vectorize + D1)
+    logger.startTimer('retrieve');
+    const retrieval = await retrieveFromCorpus(sanitizedQuestion, env, {
       topK,
-      minSimilarity
-    );
+      minSimilarity,
+      traceId: trace?.traceId,
+      spanId: trace?.spanId,
+    });
+    logger.endTimer('retrieve', { matches: retrieval.chunks.length });
 
-    logger.endTimer('retrieveVectors', { matches: vectorMatches.length });
-
-    if (vectorMatches.length === 0) {
+    if (retrieval.chunks.length === 0) {
       logger.warn('No relevant chunks found');
       const latency = logger.endTimer('basicRAG');
       const answer = "I don't have enough information to answer this question based on the available documents.";
@@ -176,23 +128,16 @@ export async function basicRAG(
       };
     }
 
-    // Step 3: Fetch full chunk text from D1
-    logger.startTimer('fetchChunks');
-    const chunkIds = vectorMatches.map((m) => m.id);
-    const chunks = await store.getChunksWithMetadata(chunkIds);
-    logger.endTimer('fetchChunks', { chunks: chunks.length });
-
-    // Step 4: Build context from chunks
-    const context = chunks
-      .map((chunk, idx) => `[${idx + 1}] ${chunk.text}`)
+    const context = retrieval.sources
+      .map((source, idx) => `[${idx + 1}] ${source.chunkText}`)
       .join('\n\n');
 
     logger.debug('Context built', {
-      chunks: chunks.length,
+      chunks: retrieval.chunks.length,
       contextLength: context.length,
     });
 
-    // Step 5: Generate answer
+    // Generate answer
     logger.startTimer('generateAnswer');
     const systemPrompt = buildSystemPrompt(context);
 
@@ -210,18 +155,8 @@ export async function basicRAG(
     const answer = generationResult.response || 'Unable to generate answer';
     logger.endTimer('generateAnswer', { answerLength: answer.length });
 
-    // Build source citations
-    const sources: DocumentSource[] = chunks.map((chunk, idx) => {
-      const match = vectorMatches.find((m) => m.id === chunk.id);
-      return {
-        documentId: chunk.documentId,
-        chunkId: chunk.id,
-        title: chunk.title,
-        chunkText: chunk.text,
-        chunkIndex: chunk.chunkIndex,
-        similarity: match?.score || 0,
-      };
-    });
+    // Build source citations (from shared retrieval)
+    const sources = retrieval.sources;
 
     const latency = logger.endTimer('basicRAG');
     logger.info('Basic RAG query completed', { latencyMs: latency });
@@ -245,7 +180,7 @@ export async function basicRAG(
       metadata: {
         pattern: 'basic',
         latencyMs: latency,
-        retrievedChunks: chunks.length,
+        retrievedChunks: retrieval.chunks.length,
       },
     };
   } catch (error) {

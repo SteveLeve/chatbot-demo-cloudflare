@@ -14,7 +14,7 @@ import { routeAgentRequest } from 'agents';
 import type { Env, RAGQueryRequest, ApiResponse, IngestionWorkflowParams } from './types';
 import { basicRAG } from './patterns/basic-rag';
 import { createLogger, createRequestLogger } from './utils/logger';
-import { checkRateLimit } from './utils/rate-limiter';
+import { checkRateLimit, checkRequestRateLimit } from './utils/rate-limiter';
 import { IngestionWorkflow } from './ingestion-workflow';
 import { RAGAgent } from './agents/rag-agent';
 import type { ExecutionContext, ScheduledEvent, ExportedHandler } from 'cloudflare:workers';
@@ -527,7 +527,11 @@ app.get('/api/v1/ingest/:workflowId', async (c) => {
  */
 app.get('/api/v1/agent/bootstrap', (c) => {
   const trace = c.get('traceContext');
-  const sessionId = crypto.randomUUID();
+  const clientSession = c.req.header('x-chat-session-id');
+  const sessionId =
+    clientSession && clientSession.length > 0 && clientSession.length <= 128
+      ? clientSession
+      : crypto.randomUUID();
 
   return c.json<ApiResponse>({
     success: true,
@@ -755,6 +759,23 @@ export default {
     await handleScheduled(event, env, ctx);
   },
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    const url = new URL(request.url);
+
+    if (url.pathname.startsWith('/agents/')) {
+      const rateLimitResponse = await checkRequestRateLimit(
+        request,
+        env.QUERY_RATE_LIMITER,
+        {
+          limit: 100,
+          window: 60,
+          keyPrefix: 'agent',
+        }
+      );
+      if (rateLimitResponse) {
+        return rateLimitResponse;
+      }
+    }
+
     const agentResponse = await routeAgentRequest(request, env);
     if (agentResponse) {
       return agentResponse;

@@ -5,7 +5,6 @@ const TYPE_LABELS: Record<TraceEvent['type'], string> = {
   tool: 'Tool',
   generate: 'Generate',
   guard: 'Guard',
-  eval: 'Eval',
 };
 
 const TYPE_COLORS: Record<TraceEvent['type'], string> = {
@@ -13,7 +12,6 @@ const TYPE_COLORS: Record<TraceEvent['type'], string> = {
   tool: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200',
   generate: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
   guard: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-  eval: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
 };
 
 interface TracePanelProps {

@@ -36,7 +36,7 @@ A dependency that wants to own the *loop* is out. A dependency that formats a mo
 - **Positive**: Portfolio narrative matches platform skill; single-vendor edge stack; DO state/session fits multi-step agent demos; aligns with Cloudflare docs and hiring signal.
 - **Negative/Risks**: Agents SDK API surface may evolve; DO semantics require careful testing; migration path from `src/patterns/basic-rag.ts` must be phased.
 - **Negative/Risks**: The AI SDK allowance is a deliberate, documented exception to the "Cloudflare-first" rule. It must stay confined to one adapter module so the agent loop remains platform-owned and the dependency stays swappable for direct `env.AI` calls.
-- **Negative/Risks**: Agents SDK requires Durable Objects. `wrangler.jsonc` has no `durable_objects` binding or `migrations` entry today; Phase 3 must add both (`new_sqlite_classes`). On the Workers Free plan only SQLite-backed DOs are available, with daily caps (100k requests, 5M row reads) that apply to a public demo.
+- **Negative/Risks**: Agents SDK requires Durable Objects. **Resolved in Phase 3 (#34):** `RAG_AGENT` binding + `v1-rag-agent` migration in `wrangler.jsonc`. On the Workers Free plan only SQLite-backed DOs are available, with daily caps (100k requests, 5M row reads) that apply to a public demo.
 - **Follow-ups**: Phase 0 model refresh (current generation model is deprecated — see spec); implement Phases 2–5 on #30 (corpus browser, agent+trace, eval, red-team); update architecture docs when the agent path ships.
 
 ## Alternatives Considered
