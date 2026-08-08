@@ -1,15 +1,18 @@
-# Production Readiness Checklist
+# Production Readiness Checklist (ARCHIVED)
 
-> **Superseded in part by epic #30.** This checklist predates the Cloudflare-first agentic RAG pivot
-> (dated 2026-02-06). Security posture below is still current, but the RAG-architecture context is not.
-> See [`../status/now-next.md`](../status/now-next.md) for current status and
-> [`../spec/spec-agentic-rag-portfolio.md`](../spec/spec-agentic-rag-portfolio.md) for the target design.
-> Full archival is scheduled for the rework-branch cutover — see
-> [`../status/doc-audit-agentic-rag.md`](doc-audit-agentic-rag.md).
+> **Historical snapshot — do not use as current status.** Archived 2026-08-08 during
+> `chore/30-rework-cutover` (epic #30). This checklist predates the Cloudflare-first agentic RAG pivot
+> (dated 2026-02-06). Security findings below may still be useful as history; the RAG-architecture
+> context is not current.
+>
+> Current status: [`../status/now-next.md`](../status/now-next.md) ·
+> Direction: [`../spec/spec-agentic-rag-portfolio.md`](../spec/spec-agentic-rag-portfolio.md) ·
+> Disposition audit: [`../status/doc-audit-agentic-rag.md`](../status/doc-audit-agentic-rag.md) ·
+> Security posture: [`../status/security.md`](../status/security.md)
 
-**Status**: 🟢 **Security Hardening Complete - Ready for Production**
-**Target**: Performance optimization in 1-2 weeks
-**Last Updated**: 2026-02-06
+**Status**: 🟢 **Security Hardening Complete - Ready for Production** (as of archival date)
+**Target**: Performance optimization in 1-2 weeks (historical)
+**Last Updated**: 2026-02-06 (archived 2026-08-08)
 
 ---
 
@@ -40,7 +43,7 @@ Comprehensive production analysis completed using Cloudflare expert agents. Appl
 - **Status**: ✅ Completed (2026-01-18)
 - **Pull Request**: [#22](https://github.com/SteveLeve/chatbot-demo-cloudflare/pull/22)
 - **Resolution**: Salt stored in Cloudflare secrets, validation added, tests passing
-- **Checklist**: [Security remediation archive](../archive/SECURITY_REMEDIATION.md#issue-6-insecure-ip-address-salt-configuration)
+- **Checklist**: [Security remediation archive](SECURITY_REMEDIATION.md#issue-6-insecure-ip-address-salt-configuration)
 
 **Completed Actions**:
 - ✅ Generated cryptographically secure salt (32 bytes)
@@ -55,7 +58,7 @@ Comprehensive production analysis completed using Cloudflare expert agents. Appl
 - **Status**: ✅ Completed (2026-01-18)
 - **Pull Request**: [#22](https://github.com/SteveLeve/chatbot-demo-cloudflare/pull/22)
 - **Resolution**: Rate limiting implemented (100 req/min query, 10 req/min ingest), 429 responses working
-- **Checklist**: [Security remediation archive](../archive/SECURITY_REMEDIATION.md#issue-7-missing-rate-limiting)
+- **Checklist**: [Security remediation archive](SECURITY_REMEDIATION.md#issue-7-missing-rate-limiting)
 
 **Completed Actions**:
 - ✅ Implemented Workers Rate Limiting API
@@ -85,7 +88,7 @@ Comprehensive production analysis completed using Cloudflare expert agents. Appl
 
 **Deliverable**: Security score 🟢 Green ✅
 **Owner**: Security + Backend Team
-**Detailed Plan**: [Security remediation archive](../archive/SECURITY_REMEDIATION.md)
+**Detailed Plan**: [Security remediation archive](SECURITY_REMEDIATION.md)
 
 ---
 
@@ -560,7 +563,7 @@ Comprehensive production analysis completed using Cloudflare expert agents. Appl
 
 - **Production Analysis Report**: See complete analysis summary
 - **GitHub Issues**: https://github.com/SteveLeve/chatbot-demo-cloudflare/issues
-- **Security Remediation**: [Security remediation archive](../archive/SECURITY_REMEDIATION.md)
+- **Security Remediation**: [Security remediation archive](SECURITY_REMEDIATION.md)
 - **Performance Optimization**: [Performance roadmap](../roadmaps/performance.md)
 - **Observability Setup**: [Observability roadmap](../roadmaps/observability.md)
 - **Compliance Roadmap**: [Compliance roadmap](../roadmaps/compliance.md)
