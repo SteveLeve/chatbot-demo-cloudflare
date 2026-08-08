@@ -1,5 +1,5 @@
 # Status: Documentation & Code Disposition Audit (Agentic RAG Pivot, Epic #30)
-- **Last Updated**: 2026-08-08
+- **Last Updated**: 2026-08-08 (cutover executed)
 - **Owner**: Project Maintainer
 
 > **Purpose.** Before any rework implementation code lands, this table records what every doc and every
@@ -48,7 +48,7 @@
 | `docs/roadmaps/performance.md` | NEUTRAL | keep | — | Cross-cutting |
 | `docs/roadmaps/compliance.md` | NEUTRAL | keep | — | Coupled to Phase 5 (#36) per `now-next.md`, content itself unaffected |
 | `docs/status/now-next.md` | NEW | keep | — | Living current-state doc |
-| `docs/status/production-readiness.md` | OLD → banner-added | archive | cutover | Dated 2026-02-06, no epic #30 awareness; move to `docs/archive/` in cutover PR |
+| `docs/archive/production-readiness.md` | ARCHIVED | keep | done (cutover) | Moved from `docs/status/` in `chore/30-rework-cutover`; disclaimer header added |
 | `docs/status/security.md` | NEUTRAL | keep | — | Security posture, architecture-independent |
 | `docs/status/doc-audit-agentic-rag.md` | NEW | keep | — | This file |
 | `docs/runbooks/cloudflare-deploy.md` | NEUTRAL | keep | — | Mechanics unaffected by pivot |
@@ -59,7 +59,7 @@
 | `docs/templates/*` (4 files) | NEUTRAL | keep | — | Pure scaffolding |
 | `docs/skills/workers-ai-specialist/SKILL.md` | OLD → banner-added | update | Phase 0 (#32) | Named the deprecated generation model as ground truth with a live code snippet, no pivot awareness — same poisoning class as `copilot-instructions.md`; deprecation note added this PR, full model-name update lands with #32 |
 | `docs/skills/*` (other 5 files) | NEUTRAL | keep | — | Agent specialist playbooks, architecture-independent |
-| `docs/archive/*` (7 files) | ARCHIVED | keep | — | Already historical; `CLAUDE.generated.md` has a disclaimer but stale body — lowest priority, no action needed while archived |
+| `docs/archive/*` (8 files, incl. `production-readiness.md`) | ARCHIVED | keep | — | Already historical; `CLAUDE.generated.md` has a disclaimer but stale body — lowest priority, no action needed while archived |
 
 ## Code
 
@@ -76,7 +76,7 @@
 | `migrations/0001_create_documents_table.sql`, `0002_create_chunks_table.sql`, `0003_create_fts_table.sql` | OLD | replace | Phase 2/3 (#33/#34) | Bulk-corpus schema; `0003` comment names the retired reranking/hybrid-search taxonomy |
 | `data/wikipedia/README.md`, `scripts/fetch-wikipedia.py`, `scripts/ingest-wikipedia.js` | OLD | replace | Phase 2 (#33) | Bulk corpus fetch/ingest tooling, superseded by curated-corpus workflow |
 | `ui/src/pages/BasicChatPage.tsx` | OLD | replace | Phase 3 (#34) | No trace-panel/agent-step visibility; target for rework |
-| `ui/src/components/QueryInterface.tsx` | OLD, unreferenced | delete | cutover | Confirmed dead code (no imports found); unrelated to pivot but safe to remove in the no-new-code cutover PR |
+| `ui/src/components/QueryInterface.tsx` | — | delete | done (cutover) | Removed in `chore/30-rework-cutover` (was unreferenced dead code) |
 | `src/index.ts:513` (`GET /api/v1/docs` self-documentation) | OLD | update | Phase 3 (#34) | Live API response only describes the `basic` pattern (`patterns.basic.description: 'Single-turn retrieval-augmented generation'`); this is code-as-narrative, update alongside route wiring |
 | `ui/src/pages/LandingPage.tsx:34-37` | OLD copy / NEUTRAL shell | update | Phase 2 (#33) | "Advanced RAG (Coming Soon) — Streaming responses, multi-turn conversations, and advanced retrieval patterns" is the most visible stale claim in the project (it's on the landing page); most visited surface, should be the *first* item in #33, not a loose end. Page shell/layout is reusable — only this copy block needs rewriting |
 | `ui/src/components/sidebar/TechStackFooter.tsx` + `TECH_STACK` consts (`BasicChatPage.tsx`, `FaqPage.tsx`, `GlossaryPage.tsx`) | NEUTRAL shell / minor-stale copy | update | Phase 3 (#34) | Component itself is presentational (props-driven, reusable as-is); the `TECH_STACK.technologies`/`description` literals list current stack only — not misleading, just incomplete once Agents SDK/DO ship |
