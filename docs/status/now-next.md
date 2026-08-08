@@ -1,22 +1,27 @@
 # Status: Now & Next
-- **Last Updated**: 2026-02-06
+- **Last Updated**: 2026-08-07
 - **Owner**: Project Maintainer
 
 ## Now
-- Security hardening completed; monitoring rollout for PR #22/#23 (issues #6–#11).
-- Performance quick wins landed (#12 embedding cache, #13 D1 batch inserts); AI Gateway live (#16).
-- Observability phase 1 shipped: JSON logs with request/trace IDs; OTLP export flag ready (issue #18).
-- Compliance endpoints pending design/implementation (issue #19).
+- Portfolio reimagining kicked off: Cloudflare-first **agentic RAG** with Agents SDK, eval reporting, and red-team concepts (epic #30).
+- Phase 1 in flight: vision/spec/ADR/docs reframe (`docs/spec/spec-agentic-rag-portfolio.md`, `docs/decisions/adr-20260807-agents-sdk-runtime.md`).
+- Prior hardening remains shipped: security (PRs #22/#23), perf (#28), observability phase 1 (#29).
 
 ## Next
-- Wire OTLP destination + dashboards; add smoke tests for logging/cache retry (issue #18).
-- Validate cache hit latency target (≤45ms cached) and adjust thresholds (#12/#13).
-- Implement privacy endpoints (export/delete/opt-out) and retention cron (issue #19).
+- Phase 2: corpus browser + glossary example-prompt injection (#30).
+- Phase 3: Agents SDK RAG agent with transparent step/trace UI (#30).
+- Phase 4–5: eval reporting surface, then red-team demo mode (#30).
+- Backlog (lower priority vs reimagining): OTLP dashboards (#18), privacy endpoints (#19).
 
 ## Risks/Watch
+- Agents SDK API churn — pin ADR and cite official docs when implementing Phase 3.
+- Scope creep into unbounded corpus or third-party agent frameworks — enforce #30 non-goals.
 - Rate limiting false positives during peak demo traffic — monitor logs.
-- Compliance timeline risk if endpoints slip; create interim FAQ note if delayed.
 
 ## References
-- Issues: #18 (observability), #19 (compliance), #6–#11 (security)
-- PRs: #22, #23
+- Epic: #30
+- Spec: `docs/spec/spec-agentic-rag-portfolio.md`
+- ADR: `docs/decisions/adr-20260807-agents-sdk-runtime.md`
+- Roadmap: `docs/roadmaps/agentic-rag.md`
+- Prior issues: #18 (observability), #19 (compliance), #6–#11 (security)
+- Prior PRs: #22, #23, #28, #29

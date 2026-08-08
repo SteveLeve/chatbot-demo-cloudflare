@@ -1,34 +1,36 @@
 # Cloudflare RAG Portfolio
 
-Professional demonstration of Retrieval-Augmented Generation (RAG) patterns on Cloudflare Workers AI.
+Cloudflare-first portfolio demo of Retrieval-Augmented Generation (RAG) and **agentic architecture** on Workers AI—transparent, educational, and platform-native.
 
 ## Overview
 
-This project showcases a production-grade RAG implementation using Cloudflare's edge computing platform, demonstrating how to build intelligent Q&A systems that combine semantic search with generative AI.
+This project demonstrates how to build grounded Q&A on Cloudflare's edge stack (Workers, Workers AI, Vectorize, D1, R2, Workflows), with a clear path to an **Agents SDK** runtime that exposes tool/retrieval traces, evaluation reporting, and red-team concepts. The corpus stays constrained so visitors can inspect exactly what knowledge the system has.
+
+North star and phased delivery: [GitHub issue #30](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/30), [spec](docs/spec/spec-agentic-rag-portfolio.md), [ADR](docs/decisions/adr-20260807-agents-sdk-runtime.md).
 
 ## Documentation
 
 - Living docs are under `docs/` (see `docs/README.md` for the map).
 - Current status and near-term work: `docs/status/now-next.md`.
 - Decisions: `docs/decisions/` (ADRs).
+- Agentic RAG roadmap: `docs/roadmaps/agentic-rag.md`.
 
-### Current Features (Phase 1)
+### Current Features
 
-- **Basic Single-Turn RAG**: Query Wikipedia articles with AI-powered answers and source citations
+- **Basic Single-Turn RAG**: Query a constrained Wikipedia corpus with AI-powered answers and source citations
 - **Hybrid Storage Architecture**: R2 for documents, D1 for metadata/chunks, Vectorize for embeddings
 - **Durable Ingestion**: Workflow-based article processing with automatic retry and observability
-- **Modern React UI**: Interactive demo interface with Tailwind CSS
-- **Production-Ready**: Structured logging, error handling, TypeScript throughout
+- **Educational UI**: Chat demo, glossary, FAQ, and sidebar explainers (citations, failure modes, security)
+- **Production-Shaped Hardening**: Structured logging, rate limiting, error handling, TypeScript throughout
 
-### Planned Features (Phase 2)
+### Direction (Epic #30)
 
-- **Advanced RAG Patterns**:
-  - Reranking: Improve result quality with multi-stage retrieval
-  - Refinement: Iterative answer improvement with context expansion
-  - Agentic Search: Question decomposition and multi-step reasoning
-- **Hybrid Search**: Combine vector similarity with keyword matching (D1 FTS5)
-- **Streaming Responses**: Real-time token delivery for better UX
-- **Performance Optimizations**: Caching, batching, adaptive top-K selection
+- **Agents SDK runtime**: Durable Object agents for multi-step RAG—not third-party agent frameworks
+- **Transparency**: Trace panel for retrieve / tool / generate steps
+- **Corpus browser**: Static, browseable view of available articles so the knowledge boundary is visible
+- **Glossary → prompts**: Inject example queries from glossary terms into chat
+- **Eval reporting**: Demo-scale faithfulness / groundedness / retrieval relevance on a gold set
+- **Red-team mode**: Curated adversarial prompts with expected defenses (injection, out-of-corpus, hallucination pressure)
 
 ## Quick Reference
 
