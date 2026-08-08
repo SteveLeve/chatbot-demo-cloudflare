@@ -57,7 +57,7 @@
 | `docs/runbooks/security-salt-rotation.md` | NEUTRAL | keep | — | Unaffected by pivot |
 | `docs/runbooks/rework-branch-cutover.md` | NEW | keep | — | This audit's companion runbook |
 | `docs/templates/*` (4 files) | NEUTRAL | keep | — | Pure scaffolding |
-| `docs/skills/workers-ai-specialist/SKILL.md` | OLD → banner-added | update | Phase 0 (#32) | Named the deprecated generation model as ground truth with a live code snippet, no pivot awareness — same poisoning class as `copilot-instructions.md`; deprecation note added this PR, full model-name update lands with #32 |
+| `docs/skills/workers-ai-specialist/SKILL.md` | NEW | keep | done (Phase 0 / #32) | Updated to Llama 4 Scout + `src/config/models.ts` |
 | `docs/skills/*` (other 5 files) | NEUTRAL | keep | — | Agent specialist playbooks, architecture-independent |
 | `docs/archive/*` (8 files, incl. `production-readiness.md`) | ARCHIVED | keep | — | Already historical; `CLAUDE.generated.md` has a disclaimer but stale body — lowest priority, no action needed while archived |
 
@@ -69,7 +69,7 @@
 | `src/ingestion-workflow.ts` | OLD | replace | Phase 2 (#33) | Re-pointed at curated corpus, or replaced entirely |
 | `src/utils/document-store.ts` | OLD | replace | Phase 2/3 (#33/#34) | Bulk-corpus storage abstraction; reshape for curated corpus + agent tool access |
 | `src/utils/chunking.ts` | OLD | replace | Phase 2 (#33) | Tied to bulk-ingestion assumptions; review against curated-corpus chunk sizes |
-| `src/utils/embedding-cache.ts` | OLD | replace | Phase 0/3 (#32/#34) | Review once embedding-model decision (Phase 0) and agent tool-call shape (Phase 3) land |
+| `src/utils/embedding-cache.ts` | NEUTRAL | keep | — | Embedding model unchanged (BGE base); cache keys remain valid. Revisit if #20 upgrades embeddings |
 | `src/types/index.ts` (`pattern` union, ~line 169) | OLD | replace | Phase 3 (#34) | `'basic' \| 'reranking' \| 'refinement' \| 'agentic'` encodes retired taxonomy |
 | `src/index.ts` (route wiring) | OLD | update | Phase 3 (#34) | New agent/corpus/eval/red-team routes added per spec's API table; old routes deprecated once agent path is feature-complete |
 | `wrangler.jsonc` (bindings) | OLD | update | Phase 3 (#34) | Add `durable_objects` binding + `migrations`/`new_sqlite_classes` entry |

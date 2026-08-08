@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   created_at INTEGER NOT NULL,
 
   -- AI response metadata (only for assistant messages)
-  model_name TEXT,  -- e.g., '@cf/meta/llama-3.1-8b-instruct'
+  model_name TEXT,  -- e.g., '@cf/meta/llama-4-scout-17b-16e-instruct'
   temperature TEXT,
   latency_ms INTEGER,
   token_count INTEGER,

@@ -239,7 +239,7 @@ Wikipedia Article
 
 ### Models Used
 - **Embeddings**: `@cf/baai/bge-base-en-v1.5` (768 dimensions, cosine similarity)
-- **Generation**: `@cf/meta/llama-3.1-8b-instruct` (128K context, temp 0.2)
+- **Generation**: `@cf/meta/llama-4-scout-17b-16e-instruct` (131K context, function calling, temp 0.0)
 
 ## Troubleshooting
 
