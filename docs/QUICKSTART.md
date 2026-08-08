@@ -334,14 +334,14 @@ Check logs in the Cloudflare dashboard:
 
 Once the basic RAG system is working, you can explore:
 
-1. **Advanced Patterns** (Phase 2):
-   - Implement reranking for better quality
-   - Add refinement for complex questions
-   - Build agentic search capabilities
+1. **The agentic RAG direction** (epic #30 — see `docs/roadmaps/agentic-rag.md`):
+   - Phase 0 (#32): refresh the generation model — the current one is deprecated
+   - Phase 2 (#33): curated corpus + static corpus browser + glossary prompt injection
+   - Phase 3 (#34): Agents SDK Durable Object agent with a step/trace panel
+   - Phase 4 (#35): eval reporting · Phase 5 (#36): red-team mode
 
-2. **Hybrid Search**:
-   - Combine vector search with keyword matching
-   - Use D1's FTS5 for precise queries
+2. **Retrieval quality** (tracked in #21, now framed as future agent tools):
+   - Reranking, and hybrid search combining vector similarity with D1 FTS5
 
 3. **Performance Tuning**:
    - Enable caching

@@ -4,6 +4,13 @@
 
 This RAG system is built on Cloudflare's edge computing platform, leveraging Workers AI, Vectorize, D1, and R2 to create a production-grade question-answering system.
 
+> **This document describes the system as it exists today** — a single-turn RAG pipeline. The project
+> has pivoted to a Cloudflare-first **agentic** architecture (epic #30): an Agents SDK Durable Object
+> runtime, a curated and inspectable corpus, a trace panel exposing every agent action, plus eval
+> reporting and a red-team mode. See [**Direction: Cloudflare-First Agentic RAG**](#direction-cloudflare-first-agentic-rag-epic-30)
+> below, and [`spec/spec-agentic-rag-portfolio.md`](spec/spec-agentic-rag-portfolio.md) for the target design.
+> Sections are updated here as each phase ships.
+
 ## Development Setup Architecture
 
 The project uses **two separate dev servers** running in parallel:
@@ -480,14 +487,38 @@ childLogger.info('Processing request');
 3. **Caching**: Aggressive KV caching reduces backend load
 4. **Async Ingestion**: Workflows handle large-scale batch ingestion
 
-## Future Enhancements (Phase 2)
+## Direction: Cloudflare-First Agentic RAG (Epic #30)
 
-### Advanced RAG Patterns
+The previous "Phase 2: reranking / refinement / agentic search" plan is **superseded**. That roadmap
+framed the project as hand-crafted-vs-framework RAG, a contrast that no longer differentiates. The
+project is now positioned as a demonstration of **agentic architecture on the Cloudflare platform**:
+transparent, educational, and platform-native.
 
-1. **Reranking**: Use `@cf/baai/bge-reranker-base` to re-score top-10 → top-3
-2. **Refinement**: Iterative answer improvement with context expansion
-3. **Agentic Search**: Question decomposition, multi-step reasoning
-4. **Hybrid Search**: Combine Vectorize (semantic) + D1 FTS5 (keyword) with RRF
+The target architecture adds, on top of the pipeline documented above:
+
+- **Cloudflare Agents SDK** (Durable Objects) as the agent runtime — see
+  [`decisions/adr-20260807-agents-sdk-runtime.md`](decisions/adr-20260807-agents-sdk-runtime.md).
+  This requires `durable_objects` bindings and a `migrations` entry (`new_sqlite_classes`) that
+  `wrangler.jsonc` does not have yet.
+- **A curated, committed corpus** with a static build-time manifest, so the knowledge boundary is
+  visible to visitors rather than implied.
+- **A trace panel** exposing retrieve / tool / generate / guard steps, reusing the existing
+  `traceId`/`spanId` from `src/utils/trace.ts` so UI steps correlate with Workers logs.
+- **Eval reporting** and a **red-team mode** as first-class demo surfaces.
+
+Full detail: [`spec/spec-agentic-rag-portfolio.md`](spec/spec-agentic-rag-portfolio.md) ·
+phases and dependencies: [`roadmaps/agentic-rag.md`](roadmaps/agentic-rag.md).
+
+Reranking and hybrid search are not abandoned — they are retrieval-quality work that can become
+agent tools, tracked separately (#21) rather than as the project's headline direction.
+
+### Model status
+
+The generation model documented above, `@cf/meta/llama-3.1-8b-instruct`, is **deprecated** in the
+Workers AI catalog (listed expiry 2026-05-30). Replacement is Phase 0 (#32) and is a prerequisite
+for the agent runtime, which needs a function-calling model.
+
+## Future Enhancements
 
 ### Performance
 

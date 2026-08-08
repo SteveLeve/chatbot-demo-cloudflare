@@ -177,9 +177,19 @@ Comprehensive production analysis completed using Cloudflare expert agents. Appl
 
 **Goal**: Quality improvements and advanced features
 
+> **Superseded in part by epic #30.** The project's direction is now Cloudflare-first agentic RAG —
+> see `../roadmaps/agentic-rag.md`. Two items below now sit inside **Phase 0 (#32, model refresh)**
+> rather than a distant "future" bucket, because the current generation model
+> `@cf/meta/llama-3.1-8b-instruct` is **deprecated** (listed expiry 2026-05-30) and the agent runtime
+> requires a function-calling model.
+
 **AI/RAG Enhancements (P4)**:
-- [ ] #20: Upgrade to BGE-Large embedding model (+10% quality)
-- [ ] #21: Implement LLM reranking (+20-30% relevance)
+- [ ] **#32 (Phase 0, now blocking)**: replace the deprecated generation model with a current
+      function-calling model
+- [ ] #20: Upgrade to BGE-Large embedding model (+10% quality) — **fold into #32**; changing the
+      embedding model means re-embedding the corpus and recreating the Vectorize index, so decide it
+      alongside the generation swap rather than separately
+- [ ] #21: Implement LLM reranking (+20-30% relevance) — still valid, reframed as a future **agent tool**
 - [ ] Semantic chunking for Wikipedia (+35% context)
 - [ ] Dynamic topK based on query complexity
 - [ ] Hybrid search (semantic + keyword)

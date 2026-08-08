@@ -25,7 +25,8 @@ North star and phased delivery: [GitHub issue #30](https://github.com/SteveLeve/
 
 ### Direction (Epic #30)
 
-- **Agents SDK runtime**: Durable Object agents for multi-step RAG—not third-party agent frameworks
+- **Model refresh (Phase 0)**: replace the deprecated generation model with a current function-calling model
+- **Agents SDK runtime**: Durable Object agents for multi-step RAG—not third-party agent orchestration frameworks
 - **Transparency**: Trace panel for retrieve / tool / generate steps
 - **Corpus browser**: Static, browseable view of available articles so the knowledge boundary is visible
 - **Glossary → prompts**: Inject example queries from glossary terms into chat
@@ -89,7 +90,7 @@ North star and phased delivery: [GitHub issue #30](https://github.com/SteveLeve/
 - **Build Target**: Static assets served from Workers
 - **AI Models**:
   - Embeddings: `@cf/baai/bge-base-en-v1.5` (768 dimensions)
-  - Generation: `@cf/meta/llama-3.1-8b-instruct`
+  - Generation: `@cf/meta/llama-3.1-8b-instruct` — **deprecated**; replacement tracked in Phase 0 ([#32](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/32))
 - **Storage**:
   - R2: Full Wikipedia articles
   - D1 (SQLite): Document metadata and text chunks
@@ -110,7 +111,7 @@ Retrieve Chunks (D1)
     ↓
 Build Context
     ↓
-Generate Answer (@cf/meta/llama-3.1-8b-instruct)
+Generate Answer (@cf/meta/llama-3.1-8b-instruct)   ← deprecated, see #32
     ↓
 Return Answer + Citations
 ```

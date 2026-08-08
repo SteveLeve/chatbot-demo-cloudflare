@@ -1,12 +1,12 @@
 # Cloudflare RAG Portfolio - Setup Guide
 
-**Current Status**: Scaffolding complete, ready for Cloudflare resource setup
+**Current Status**: Deployed and live. Single-turn RAG shipped; pivoting to Cloudflare-first agentic RAG (epic #30). Current work: [`../status/now-next.md`](../status/now-next.md).
 
 ## Project Overview
 
-A production-grade RAG (Retrieval-Augmented Generation) system built on Cloudflare's edge platform, demonstrating single-turn Q&A over Wikipedia articles with plans for advanced patterns (reranking, refinement, agentic search).
+A production-grade RAG (Retrieval-Augmented Generation) system built on Cloudflare's edge platform, demonstrating single-turn Q&A over a constrained Wikipedia corpus, evolving toward a Cloudflare-first **agentic** architecture (Agents SDK, trace transparency, eval reporting, red-team mode — epic #30).
 
-**Tech Stack**: Workers, Hono, Workers AI (bge-base-en-v1.5 + Llama 3.1), Vectorize, D1, R2, KV, React + Tailwind
+**Tech Stack**: Workers, Hono, Workers AI (bge-base-en-v1.5 + Llama 3.1 — generation model deprecated, replacement tracked in #32), Vectorize, D1, R2, KV, React + Tailwind
 
 ## What's Built ✅
 
@@ -295,21 +295,24 @@ After completing setup, you should be able to:
 - ✅ Ingest new Wikipedia articles
 - ✅ Check workflow status in Cloudflare dashboard
 
-## What's Next (Phase 2)
+## What's Next (Epic #30)
 
-After validating basic RAG works:
-1. Implement reranking pattern
-2. Add refinement (iterative improvement)
-3. Build agentic search (question decomposition)
-4. Add hybrid search (vector + keyword)
-5. Streaming responses
-6. Performance optimizations
+After validating basic RAG works, the project moves toward Cloudflare-first agentic RAG. See
+`docs/roadmaps/agentic-rag.md` for phases and dependencies.
+
+1. Phase 0 (#32): replace the deprecated generation model with a function-calling model
+2. Phase 2 (#33): curated committed corpus + static corpus browser + glossary prompt injection
+3. Phase 3 (#34): Agents SDK Durable Object agent with a transparent step/trace panel
+4. Phase 4 (#35): eval reporting over a demo-scale gold set
+5. Phase 5 (#36): red-team / adversarial demo mode
+6. Retrieval quality (reranking, hybrid search) tracked separately in #21
 
 ## Resources
 
 - **Docs**: `docs/ARCHITECTURE.md` - Deep dive into system design
 - **Quick Start**: `docs/QUICKSTART.md` - Step-by-step guide
-- **Status**: `docs/PROJECT_STATUS.md` - Current state + roadmap
+- **Status**: `docs/status/now-next.md` - Current state + near-term work
+- **Direction**: `docs/spec/spec-agentic-rag-portfolio.md` + `docs/roadmaps/agentic-rag.md` - the agentic RAG pivot (epic #30)
 - **Cloudflare Docs**: https://developers.cloudflare.com/workers-ai/
 
 ---
