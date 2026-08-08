@@ -47,8 +47,8 @@ The demo's current models predate this reimagining and one of them is end-of-lif
 
 | Concern | Current | Status |
 |---------|---------|--------|
-| Generation | `@cf/meta/llama-3.1-8b-instruct` (`src/patterns/basic-rag.ts:198`) | **Deprecated** in the Workers AI catalog; listed expiry 2026-05-30 (already past). Context window ~7,968 tokens, which constrains multi-step agent prompting and trace-heavy contexts. |
-| Embeddings | `@cf/baai/bge-base-en-v1.5`, 768-dim (`src/ingestion-workflow.ts:133`, `src/patterns/basic-rag.ts:114`) | Verify currency before committing. |
+| Generation | `@cf/meta/llama-4-scout-17b-16e-instruct` (`src/config/models.ts`) | **Selected (Phase 0 / #32).** Function calling, 131k context, not deprecated. Replaces `@cf/meta/llama-3.1-8b-instruct`. |
+| Embeddings | `@cf/baai/bge-base-en-v1.5`, 768-dim (`src/config/models.ts`) | **Verified current.** Keep; changing requires recreating Vectorize (see #20). |
 
 **Requirements for the replacement generation model**
 - Listed as supporting **function calling** in the Workers AI catalog (required by the Agents SDK tool loop).
@@ -127,7 +127,7 @@ Retain and extend: educational sidebar, FAQ, Sources card patterns in `ui/`.
 | Eval metrics overclaiming | Label as **demo-scale**; document methodology limits |
 | Red-team prompts misused | Curated list only; educational framing; no attack tooling |
 | **Red-team prompts persisted to chat logs** | `CHAT_LOGGING_ENABLED: true` and `src/utils/chat-logger.ts` write prompts plus hashed IPs to D1 (`chat_sessions`, `chat_messages`). Red-team mode will drive adversarial text into that same store. Tag or exclude red-team sessions from logging; this couples Phase 5 to the privacy endpoints in #19. |
-| **Deprecated generation model** | `@cf/meta/llama-3.1-8b-instruct` is past its listed expiry. Phase 0 model refresh blocks Phase 3 — see **Model Selection**. |
+| **Generation model (was deprecated)** | Resolved in Phase 0 (#32): `@cf/meta/llama-4-scout-17b-16e-instruct`. |
 | **Durable Objects not yet configured** | `wrangler.jsonc` has no `durable_objects` binding and no `migrations` entry. Phase 3 must add both, declaring the agent class under `new_sqlite_classes`. On the Workers Free plan only SQLite-backed DOs are available, capped at 100k requests/day and 5M row reads/day — a real ceiling for a public demo. |
 | Migration from `basic-rag` route | Keep Phase 1 basic path until Agents SDK path is feature-complete; then deprecate. Note `src/types/index.ts:169` still types `pattern` as `'basic' \| 'reranking' \| 'refinement' \| 'agentic'` — that union encodes the retired taxonomy and should be refactored in Phase 3. |
 

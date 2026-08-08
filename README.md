@@ -89,8 +89,8 @@ North star and phased delivery: [GitHub issue #30](https://github.com/SteveLeve/
 - **Frontend**: React 18 + Vite + Tailwind CSS
 - **Build Target**: Static assets served from Workers
 - **AI Models**:
-  - Embeddings: `@cf/baai/bge-base-en-v1.5` (768 dimensions)
-  - Generation: `@cf/meta/llama-3.1-8b-instruct` — **deprecated**; replacement tracked in Phase 0 ([#32](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/32))
+  - Embeddings: `@cf/baai/bge-base-en-v1.5` (768 dimensions) — verified current (Phase 0 / #32)
+  - Generation: `@cf/meta/llama-4-scout-17b-16e-instruct` — function calling, 131k context (Phase 0 / #32)
 - **Storage**:
   - R2: Full Wikipedia articles
   - D1 (SQLite): Document metadata and text chunks
@@ -111,7 +111,7 @@ Retrieve Chunks (D1)
     ↓
 Build Context
     ↓
-Generate Answer (@cf/meta/llama-3.1-8b-instruct)   ← deprecated, see #32
+Generate Answer (@cf/meta/llama-4-scout-17b-16e-instruct)
     ↓
 Return Answer + Citations
 ```

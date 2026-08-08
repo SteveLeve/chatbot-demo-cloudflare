@@ -11,7 +11,7 @@ See [`../status/now-next.md`](../status/now-next.md).
 | Phase | Deliverable | Issue | Exit criteria |
 |-------|-------------|-------|---------------|
 | 1 | Vision / spec / ADR / docs reframe | this PR | No doc contradicts the north star; spec + ADR reviewed |
-| 0 | Model refresh — replace deprecated generation model, verify embedding model | [#32](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/32) | No deprecated model referenced in code or docs; chosen model verified to support function calling |
+| 0 | Model refresh — `@cf/meta/llama-4-scout-17b-16e-instruct`; keep BGE embeddings | [#32](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/32) | No deprecated generation model in code/docs; Scout supports function calling; IDs in `src/config/models.ts` |
 | 2 | Curated corpus + static corpus browser + glossary prompt injection | [#33](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/33) | Corpus reproducible from a fresh clone; article list visible without a network round-trip; glossary terms inject working queries |
 | 3 | Agents SDK RAG agent + step transparency (trace UI) | [#34](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/34) | Every agent action visible and explained; trace entries correlate to Workers logs by `traceId`; no framework owns the loop |
 | 4 | Eval reporting surface (demo-scale gold set) | [#35](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/35) | Report readable and self-explaining; failure cases shown; methodology limits stated on the page |

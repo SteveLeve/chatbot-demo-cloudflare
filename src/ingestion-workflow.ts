@@ -23,6 +23,7 @@ import type {
 } from './types';
 import { createLogger } from './utils/logger';
 import { createDocumentStore } from './utils/document-store';
+import { EMBEDDING_MODEL } from './config/models';
 import { chunkWikipediaArticle } from './utils/chunking';
 
 export class IngestionWorkflow extends WorkflowEntrypoint<Env, IngestionWorkflowParams> {
@@ -130,7 +131,7 @@ export class IngestionWorkflow extends WorkflowEntrypoint<Env, IngestionWorkflow
 
         for (let i = 0; i < texts.length; i += batchSize) {
           const batch = texts.slice(i, i + batchSize);
-        const result = await this.env.AI.run('@cf/baai/bge-base-en-v1.5', {
+        const result = await this.env.AI.run(EMBEDDING_MODEL, {
           text: batch,
         }, this.env.USE_AI_GATEWAY && this.env.AI_GATEWAY_ID ? {
           gateway: { id: this.env.AI_GATEWAY_ID },

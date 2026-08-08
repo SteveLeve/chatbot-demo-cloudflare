@@ -25,6 +25,7 @@ import type { Context } from 'hono';
 import { validateTopK, validateMinSimilarity, sanitizeQuestion } from '../utils/validation';
 import { getCachedEmbedding, cacheEmbedding } from '../utils/embedding-cache';
 import type { TraceContext } from '../utils/trace';
+import { EMBEDDING_MODEL, GENERATION_MODEL } from '../config/models';
 
 export async function basicRAG(
   request: RAGQueryRequest,
@@ -111,7 +112,7 @@ export async function basicRAG(
     const cacheHit = !!queryEmbedding;
 
     if (!queryEmbedding) {
-      const embeddingResult = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
+      const embeddingResult = await env.AI.run(EMBEDDING_MODEL, {
         text: [sanitizedQuestion],
       }, env.USE_AI_GATEWAY && env.AI_GATEWAY_ID ? {
         gateway: { id: env.AI_GATEWAY_ID },
@@ -157,7 +158,7 @@ export async function basicRAG(
           role: 'assistant',
           content: answer,
           messageIndex: messageIndex + 1,
-          modelName: '@cf/meta/llama-3.1-8b-instruct',
+          modelName: GENERATION_MODEL,
           latencyMs: latency,
           sources: [],
         });
@@ -195,7 +196,7 @@ export async function basicRAG(
     logger.startTimer('generateAnswer');
     const systemPrompt = buildSystemPrompt(context);
 
-    const generationResult = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const generationResult = await env.AI.run(GENERATION_MODEL, {
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: question },
@@ -231,7 +232,7 @@ export async function basicRAG(
         role: 'assistant',
         content: answer,
         messageIndex: messageIndex + 1,
-        modelName: '@cf/meta/llama-3.1-8b-instruct',
+        modelName: GENERATION_MODEL,
         latencyMs: latency,
         sources,
       });
@@ -256,7 +257,7 @@ export async function basicRAG(
         role: 'assistant',
         content: '',
         messageIndex: messageIndex + 1,
-        modelName: '@cf/meta/llama-3.1-8b-instruct',
+        modelName: GENERATION_MODEL,
         hasError: true,
         errorMessage: error instanceof Error ? error.message : 'Unknown error',
       });

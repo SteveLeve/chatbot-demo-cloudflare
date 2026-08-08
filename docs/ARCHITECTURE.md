@@ -74,11 +74,11 @@ The project uses **two separate dev servers** running in parallel:
    - Performance: ~100-200ms per request
    - Cost: Free tier included
 
-2. **Text Generation**: `@cf/meta/llama-3.1-8b-instruct`
-   - Purpose: Generate natural language answers
-   - Context window: 128K tokens
-   - Temperature: 0.2 (factual responses)
-   - Performance: ~500-800ms per request
+2. **Text Generation**: `@cf/meta/llama-4-scout-17b-16e-instruct`
+   - Purpose: Generate natural language answers; supports function calling for Agents SDK
+   - Context window: 131K tokens
+   - Temperature: 0.0 (factual responses in basic RAG)
+   - Performance: edge-hosted MoE (17B active / 16 experts)
 
 ### 3. Vectorize (Vector Database)
 
@@ -514,9 +514,9 @@ agent tools, tracked separately (#21) rather than as the project's headline dire
 
 ### Model status
 
-The generation model documented above, `@cf/meta/llama-3.1-8b-instruct`, is **deprecated** in the
-Workers AI catalog (listed expiry 2026-05-30). Replacement is Phase 0 (#32) and is a prerequisite
-for the agent runtime, which needs a function-calling model.
+Generation uses `@cf/meta/llama-4-scout-17b-16e-instruct` (Phase 0 / #32): non-deprecated, function
+calling, 131k context. IDs live in `src/config/models.ts`. Embeddings remain
+`@cf/baai/bge-base-en-v1.5` (changing them requires recreating Vectorize — see #20).
 
 ## Future Enhancements
 
