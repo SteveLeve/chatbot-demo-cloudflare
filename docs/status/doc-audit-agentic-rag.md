@@ -9,6 +9,14 @@
 > "now/next," each row states current classification, target disposition, and when that disposition
 > executes. Execution procedure: [`../runbooks/rework-branch-cutover.md`](../runbooks/rework-branch-cutover.md).
 > This doc self-obsoletes once the rework (Phases 0-5, #32-#36) completes — archive it then.
+>
+> **Cross-checked** against a parallel strategy plan (`.cursor/plans/greenfield_agentic_rewrite_2ce53f3e.plan.md`)
+> which independently converged on the same in-place/purge-first → hybrid escape-hatch shape. That pass
+> surfaced surfaces this table had missed on the first draft (`package.json` description, `LandingPage.tsx`
+> stale copy, the `TechStackFooter`/`TECH_STACK` UI narrative, the `/api/v1/docs` self-documentation route,
+> and a stale model reference inside `docs/skills/workers-ai-specialist/SKILL.md`) — folded in below. It also
+> referenced `.agents/skills/*`, which **does not exist in this repo** (that path is from a sibling project
+> in the same workspace) — noted so nobody chases a phantom path during cutover.
 
 ## Legend
 - **Classification**: `NEW` (already pivot-aligned) · `TRANSITIONAL` (hedged with a pivot banner, body still pre-pivot) · `OLD` (no pivot awareness) · `NEUTRAL` (process/infra doc, architecture-independent) · `ARCHIVED` (already historical)
@@ -22,6 +30,7 @@
 | `README.md` | TRANSITIONAL | keep | — | "Direction (Epic #30)" section already split from "Current Features" |
 | `AGENTS.md` | NEUTRAL | keep | — | Pointer to `docs/AGENTS.md` |
 | `.github/copilot-instructions.md` | OLD → rewritten | rewrite | NOW | Highest-leverage poisoning risk (AI-agent ground truth); rewritten this PR |
+| `package.json` (`description` field) | OLD → rewritten | rewrite | NOW | One-line portfolio description named the pre-pivot concept only; fixed this PR |
 | `data/wikipedia/README.md` | OLD | replace | Phase 2 (#33) | Superseded by `data/corpus/` curated-set docs |
 | `docs/README.md` | NEW | keep | — | Docs hub, already links spec/ADR/roadmap/epic |
 | `docs/AGENTS.md` | NEUTRAL | keep | — | Doc-type taxonomy this audit follows |
@@ -48,7 +57,8 @@
 | `docs/runbooks/security-salt-rotation.md` | NEUTRAL | keep | — | Unaffected by pivot |
 | `docs/runbooks/rework-branch-cutover.md` | NEW | keep | — | This audit's companion runbook |
 | `docs/templates/*` (4 files) | NEUTRAL | keep | — | Pure scaffolding |
-| `docs/skills/*` (6 files) | NEUTRAL | keep | — | Agent specialist playbooks, not RAG architecture |
+| `docs/skills/workers-ai-specialist/SKILL.md` | OLD → banner-added | update | Phase 0 (#32) | Named the deprecated generation model as ground truth with a live code snippet, no pivot awareness — same poisoning class as `copilot-instructions.md`; deprecation note added this PR, full model-name update lands with #32 |
+| `docs/skills/*` (other 5 files) | NEUTRAL | keep | — | Agent specialist playbooks, architecture-independent |
 | `docs/archive/*` (7 files) | ARCHIVED | keep | — | Already historical; `CLAUDE.generated.md` has a disclaimer but stale body — lowest priority, no action needed while archived |
 
 ## Code
@@ -67,15 +77,20 @@
 | `data/wikipedia/README.md`, `scripts/fetch-wikipedia.py`, `scripts/ingest-wikipedia.js` | OLD | replace | Phase 2 (#33) | Bulk corpus fetch/ingest tooling, superseded by curated-corpus workflow |
 | `ui/src/pages/BasicChatPage.tsx` | OLD | replace | Phase 3 (#34) | No trace-panel/agent-step visibility; target for rework |
 | `ui/src/components/QueryInterface.tsx` | OLD, unreferenced | delete | cutover | Confirmed dead code (no imports found); unrelated to pivot but safe to remove in the no-new-code cutover PR |
+| `src/index.ts:513` (`GET /api/v1/docs` self-documentation) | OLD | update | Phase 3 (#34) | Live API response only describes the `basic` pattern (`patterns.basic.description: 'Single-turn retrieval-augmented generation'`); this is code-as-narrative, update alongside route wiring |
+| `ui/src/pages/LandingPage.tsx:34-37` | OLD copy / NEUTRAL shell | update | Phase 2 (#33) | "Advanced RAG (Coming Soon) — Streaming responses, multi-turn conversations, and advanced retrieval patterns" is the most visible stale claim in the project (it's on the landing page); most visited surface, should be the *first* item in #33, not a loose end. Page shell/layout is reusable — only this copy block needs rewriting |
+| `ui/src/components/sidebar/TechStackFooter.tsx` + `TECH_STACK` consts (`BasicChatPage.tsx`, `FaqPage.tsx`, `GlossaryPage.tsx`) | NEUTRAL shell / minor-stale copy | update | Phase 3 (#34) | Component itself is presentational (props-driven, reusable as-is); the `TECH_STACK.technologies`/`description` literals list current stack only — not misleading, just incomplete once Agents SDK/DO ship |
 | `src/utils/{trace,logger,chat-logger,privacy,rate-limiter,security,validation,metadata}.ts` | NEUTRAL | keep | — | Cross-cutting infra reused as-is; spec mandates reusing `trace.ts`/`logger.ts` for the trace panel |
 | `migrations/0004_add_chat_logging.sql` | NEUTRAL | keep | — | Extended (tag/exclude red-team sessions), not replaced |
 | `ui/src/content/{glossary-data,faq-data,sidebar-sections}.ts` | NEUTRAL | keep | — | Glossary gets `examplePrompts[]` extension, not replacement |
-| `ui/src/components/sidebar/*`, `SourcesCard.tsx`, `ThemeToggle.tsx`, `MessageBubble.tsx`, `ChatInput.tsx`, `layouts/DemoLayout.tsx` | NEUTRAL | keep | — | Presentational shell, spec says "retain and extend" |
-| `ui/src/pages/{FaqPage,GlossaryPage,LandingPage}.tsx` | NEUTRAL | keep | — | Non-RAG-pattern pages |
+| `ui/src/components/sidebar/*` (excl. `TechStackFooter.tsx`, see above), `SourcesCard.tsx`, `ThemeToggle.tsx`, `MessageBubble.tsx`, `ChatInput.tsx`, `layouts/DemoLayout.tsx` | NEUTRAL | keep | — | Presentational shell, spec says "retain and extend" |
+| `ui/src/pages/{FaqPage,GlossaryPage}.tsx` | NEUTRAL | keep | — | Non-RAG-pattern pages |
 
 ## Risks/Watch
 - If a `Phase N` code row's replacement is delayed past its target phase, the corresponding doc rows above it stay `TRANSITIONAL`/banner-only longer than intended — re-check this table when a phase issue (#32-#36) closes.
 - `docs/archive/CLAUDE.generated.md` is disclaimed but not corrected; if it ever becomes a live onboarding reference again, escalate to `rewrite`.
+- `ui/src/pages/LandingPage.tsx` is the highest-visibility stale surface left (public-facing, not just agent-facing) — do not let it slip past the *first* PR of Phase 2 (#33).
+- If evolve-in-place trips the escape-hatch criteria mid-phase, this table becomes the hybrid **port allowlist inverted**: every `keep`/NEUTRAL row is a port candidate, every `replace`/`delete` row is rebuilt fresh. See the runbook's Tier 2/3 sections.
 
 ## References
 - Epic: https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/30

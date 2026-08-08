@@ -1,7 +1,7 @@
 {
   "name": "cloudflare-rag-portfolio",
   "version": "0.1.0",
-  "description": "Professional portfolio demonstrating RAG patterns on Cloudflare Workers AI",
+  "description": "Cloudflare-first agentic RAG portfolio demo — Agents SDK, Workers AI, Vectorize, D1, R2 (epic #30; pivoting from an earlier single-turn RAG demo)",
   "type": "module",
   "main": "src/index.ts",
   "scripts": {

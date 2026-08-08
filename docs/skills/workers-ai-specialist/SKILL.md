@@ -7,8 +7,14 @@ description: Guide model selection, embeddings, RAG patterns, AI Gateway, cachin
 
 Use for AI/model questions (LLaMA, BGE embeddings), RAG design, AI Gateway, and cache/latency optimization.
 
+> **Model refresh pending (Phase 0, issue #32).** `@cf/meta/llama-3.1-8b-instruct` below is
+> **deprecated** in the Workers AI catalog (listed expiry 2026-05-30, already past) and its replacement
+> has not been selected yet — see [`../../spec/spec-agentic-rag-portfolio.md`](../../spec/spec-agentic-rag-portfolio.md#model-selection-phase-0)
+> for requirements/candidates. Do not propose new code that hardcodes this model name as a long-term
+> choice; treat it as "current until #32 lands."
+
 ## Project defaults
-- Models: `@cf/meta/llama-3.1-8b-instruct` (QA), `@cf/baai/bge-base-en-v1.5` (embed). Remote-only.
+- Models: `@cf/meta/llama-3.1-8b-instruct` (QA, **deprecated** — see note above), `@cf/baai/bge-base-en-v1.5` (embed). Remote-only.
 - Vector store: Cloudflare Vectorize (binding `VECTOR_INDEX`).
 - Embedding cache: KV `EMBEDDINGS_CACHE` (issue #12 to implement).
 - AI Gateway: configure via `ai_gateway` in `wrangler.jsonc` (issue #16). Start disabled; enable with real gateway ID.
