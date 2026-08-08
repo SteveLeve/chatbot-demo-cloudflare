@@ -5,19 +5,19 @@
 ## Now
 - Phase 1 docs pivot **merged** (PR #31).
 - Rework cutover **merged** (PR #37): archived `production-readiness.md`, deleted dead `QueryInterface.tsx`.
-- **Phase 0 (#32) in flight** (`feat/32-model-refresh`): generation → `@cf/meta/llama-4-scout-17b-16e-instruct`; embeddings kept on `@cf/baai/bge-base-en-v1.5`.
+- Phase 0 model refresh **merged** (PR #38): `@cf/meta/llama-4-scout-17b-16e-instruct`; IDs in `src/config/models.ts`.
+- **Phase 2 (#33) in flight** (`feat/33-corpus-glossary`): curated `data/corpus/`, static manifest, corpus browser, glossary prompt injection.
 - Prior hardening remains shipped: security (PRs #22/#23), perf (#28), observability phase 1 (#29).
 
 ## Next
-- Merge Phase 0 (#32), then open phase branches in order:
-  - Phase 2 (#33): curated corpus + static corpus browser + glossary prompt injection (Landing “Coming Soon” copy first).
+- Merge Phase 2 (#33), then open phase branches in order:
   - Phase 3 (#34): Agents SDK RAG agent + trace UI + `durable_objects` bindings.
   - Phase 4 (#35): eval reporting. Phase 5 (#36): red-team demo mode.
 - Deprioritized vs reimagining: OTLP dashboards (#18).
 - **Coupled to Phase 5**: privacy endpoints (#19).
 
 ## Risks/Watch
-- Escape hatch: evaluate runbook criteria 1–8 at each phase start/merge (`docs/runbooks/rework-branch-cutover.md`). Cutover gate: **passed** (no util/migration/UI structural breakage).
+- Escape hatch: evaluate runbook criteria 1–8 at each phase start/merge (`docs/runbooks/rework-branch-cutover.md`). Cutover gate: **passed**.
 - Durable Objects not yet configured — Phase 3 needs bindings + `new_sqlite_classes` migration.
 - Scope creep into unbounded corpus or third-party agent orchestration frameworks — enforce #30 non-goals.
 - Rate limiting false positives during peak demo traffic — monitor logs.
@@ -30,4 +30,4 @@
 - Doc/code disposition audit: `docs/status/doc-audit-agentic-rag.md`
 - Rework cutover runbook: `docs/runbooks/rework-branch-cutover.md`
 - Prior issues: #18 (observability), #19 (compliance), #20/#21 (model & reranking — reconcile with #32), #6–#11 (security)
-- Prior PRs: #22, #23, #28, #29, #31, #37
+- Prior PRs: #22, #23, #28, #29, #31, #37, #38

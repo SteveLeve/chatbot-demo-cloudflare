@@ -6,7 +6,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "wrangler dev",
-    "build": "cd ui && npm run build",
+    "build": "npm run corpus:build && cd ui && npm run build",
     "deploy": "npm run build && npm run db:migrate:remote && wrangler deploy",
     "deploy:production": "npm run build && npm run db:migrate:remote && wrangler deploy",
     "cf-typegen": "wrangler types",
@@ -23,7 +23,9 @@
     "fetch-data": "python scripts/fetch-wikipedia.py --size-mb 10",
     "fetch-data:quick": "python scripts/fetch-wikipedia.py --size-mb 5",
     "fetch-data:large": "python scripts/fetch-wikipedia.py --size-mb 20",
-    "ingest": "node scripts/ingest-wikipedia.js"
+    "corpus:build": "node scripts/build-corpus.js",
+    "ingest": "node scripts/ingest-wikipedia.js",
+    "ingest:corpus": "node scripts/ingest-wikipedia.js ./data/corpus"
   },
   "keywords": [
     "cloudflare",

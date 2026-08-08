@@ -28,7 +28,7 @@ async function ingestWikipediaDataset(config) {
     console.log(`Found ${jsonFiles.length} articles to ingest`);
 
     if (jsonFiles.length === 0) {
-      console.warn('No JSON files found. Run: python scripts/fetch-wikipedia.py --size-mb 10');
+      console.warn('No JSON files found. For curated corpus: npm run corpus:build -- --copy');
       process.exit(1);
     }
 
@@ -47,13 +47,20 @@ async function ingestWikipediaDataset(config) {
           const content = await fs.readFile(filePath, 'utf-8');
           const article = JSON.parse(content);
 
-          // Send to worker
+          // Send to worker (pass stable id from curated corpus when present)
+          const payload = {
+            title: article.title,
+            content: article.content,
+            metadata: article.metadata,
+            ...(article.id ? { id: article.id } : {}),
+          };
+
           const response = await fetch(`${workerUrl}/api/v1/ingest`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(article),
+            body: JSON.stringify(payload),
           });
 
           if (!response.ok) {
@@ -105,8 +112,9 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.length < 1) {
-    console.error('Usage: npm run ingest <data-directory>');
-    console.error('Example: npm run ingest ./data/wikipedia');
+    console.error('Usage: npm run ingest <data-directory> [worker-url]');
+    console.error('Example: npm run ingest ./data/corpus');
+    console.error('Legacy bulk: npm run ingest ./data/wikipedia');
     process.exit(1);
   }
 

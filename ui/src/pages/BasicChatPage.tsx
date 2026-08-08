@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
 import { MessageBubble } from '../components/MessageBubble';
 import { ChatInput } from '../components/ChatInput';
 import { DemoLayout } from '../components/layouts/DemoLayout';
@@ -15,10 +16,17 @@ const TECH_STACK: TechStackInfo = {
 };
 
 export function BasicChatPage() {
+  const [searchParams] = useSearchParams();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Glossary / corpus links inject ?q= prompt
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q) setInput(q);
+  }, [searchParams]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -88,8 +96,13 @@ export function BasicChatPage() {
       <div className="p-4 space-y-4">
         {messages.length === 0 && (
           <div className="text-center text-gray-500 dark:text-gray-400 mt-20">
-            <p className="text-lg">Ask me anything about Wikipedia topics!</p>
-            <p className="text-sm mt-2">Try: "What is artificial intelligence?" or "Who is Alan Turing?"</p>
+            <p className="text-lg">Ask about the curated demo corpus</p>
+            <p className="text-sm mt-2">
+              Try: &quot;What is artificial intelligence?&quot; or browse{' '}
+              <Link to="/docs/corpus" className="text-blue-600 dark:text-blue-400 hover:underline">
+                what&apos;s in the corpus
+              </Link>
+            </p>
           </div>
         )}
 

@@ -4,6 +4,7 @@ import { LandingPage } from './pages/LandingPage';
 import { BasicChatPage } from './pages/BasicChatPage';
 import { FaqPage } from './pages/FaqPage';
 import { GlossaryPage } from './pages/GlossaryPage';
+import { CorpusPage } from './pages/CorpusPage';
 import { applyTheme, getInitialTheme } from './lib/theme';
 
 function App() {
@@ -19,6 +20,8 @@ function App() {
           <Route path="/demos/basic-rag" element={<BasicChatPage />} />
           <Route path="/docs/faq" element={<FaqPage />} />
           <Route path="/docs/glossary" element={<GlossaryPage />} />
+          <Route path="/docs/corpus" element={<CorpusPage />} />
+          <Route path="/docs/corpus/:id" element={<CorpusPage />} />
         </Routes>
         {/* Footer removed - now per-page */}
       </div>

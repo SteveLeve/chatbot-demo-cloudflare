@@ -12,7 +12,8 @@ export function LandingPage() {
           Cloudflare RAG Portfolio
         </h1>
         <p className="text-gray-600 dark:text-gray-400 text-center mb-8">
-          A collection of RAG demonstrations built with Cloudflare Workers AI, Vectorize, and D1.
+          A Cloudflare-first demo of retrieval-augmented generation and agentic architecture on
+          Workers AI, Vectorize, D1, and R2.
         </p>
 
         <div className="grid gap-4">
@@ -24,17 +25,31 @@ export function LandingPage() {
               Basic RAG Chatbot
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              A simple Retrieval-Augmented Generation chatbot using Wikipedia data.
-              Demonstrates vector search and context injection.
+              Single-turn retrieval over a curated corpus. See vector search, context injection,
+              and cited answers.
             </p>
           </Link>
 
-          <div className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg opacity-50 cursor-not-allowed bg-white dark:bg-gray-800">
-            <h2 className="text-xl font-semibold text-gray-400 dark:text-gray-500 mb-2">
-              Advanced RAG (Coming Soon)
+          <Link
+            to="/docs/corpus"
+            className="block p-6 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-md transition-all group bg-white dark:bg-gray-800"
+          >
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-2">
+              Corpus Browser
             </h2>
-            <p className="text-gray-400 dark:text-gray-500">
-              Streaming responses, multi-turn conversations, and advanced retrieval patterns.
+            <p className="text-gray-600 dark:text-gray-400">
+              Inspect the ~37 committed articles this demo can retrieve — static manifest, no API
+              round-trip to see what the system knows.
+            </p>
+          </Link>
+
+          <div className="p-6 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+            <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Agentic RAG + Trace UI
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              Cloudflare Agents SDK runtime with transparent step traces, eval reporting, and
+              red-team scenarios — tracked in epic #30 (Phases 3–5).
             </p>
           </div>
         </div>
@@ -44,24 +59,24 @@ export function LandingPage() {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 text-center">
             Learn About RAG
           </h3>
-          <div className="flex gap-3 justify-center">
+          <div className="flex flex-wrap gap-3 justify-center">
             <Link
               to="/docs/faq"
               className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
               FAQ
             </Link>
             <Link
               to="/docs/glossary"
               className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
               Glossary
+            </Link>
+            <Link
+              to="/docs/corpus"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            >
+              Corpus
             </Link>
           </div>
         </div>

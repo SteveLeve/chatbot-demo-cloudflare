@@ -13,11 +13,13 @@ const TECH_STACK: TechStackInfo = {
 function GlossaryTermCard({
   term,
   definition,
-  learnMore
+  learnMore,
+  examplePrompts,
 }: {
   term: string;
   definition: string;
   learnMore?: Array<{ text: string; url: string }>;
+  examplePrompts?: string[];
 }) {
   const termId = term.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
@@ -32,6 +34,25 @@ function GlossaryTermCard({
       <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
         {definition}
       </p>
+
+      {examplePrompts && examplePrompts.length > 0 && (
+        <div className="mb-4">
+          <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            Try in the demo
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {examplePrompts.map((prompt) => (
+              <Link
+                key={prompt}
+                to={`/demos/basic-rag?q=${encodeURIComponent(prompt)}`}
+                className="text-sm px-3 py-1.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+              >
+                {prompt}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {learnMore && learnMore.length > 0 && (
         <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -138,6 +159,7 @@ export function GlossaryPage() {
                     term={term.term}
                     definition={term.definition}
                     learnMore={term.learnMore}
+                    examplePrompts={term.examplePrompts}
                   />
                 ))}
               </div>
