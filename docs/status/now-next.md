@@ -6,19 +6,19 @@
 - Phase 1 docs pivot **merged** (PR #31).
 - Rework cutover **merged** (PR #37): archived `production-readiness.md`, deleted dead `QueryInterface.tsx`.
 - Phase 0 model refresh **merged** (PR #38): `@cf/meta/llama-4-scout-17b-16e-instruct`; IDs in `src/config/models.ts`.
-- **Phase 2 (#33) in flight** (`feat/33-corpus-glossary`): curated `data/corpus/`, static manifest, corpus browser, glossary prompt injection.
+- Phase 2 corpus + glossary **merged** (PR #39): curated `data/corpus/`, static manifest, corpus browser, glossary prompt injection.
+- **Phase 3 (#34) in flight** (`feat/34-agent-do-trace`): Agents SDK `RAGAgent`, trace panel, `durable_objects` bindings.
 - Prior hardening remains shipped: security (PRs #22/#23), perf (#28), observability phase 1 (#29).
 
 ## Next
-- Merge Phase 2 (#33), then open phase branches in order:
-  - Phase 3 (#34): Agents SDK RAG agent + trace UI + `durable_objects` bindings.
+- Merge Phase 3 (#34), then open phase branches in order:
   - Phase 4 (#35): eval reporting. Phase 5 (#36): red-team demo mode.
 - Deprioritized vs reimagining: OTLP dashboards (#18).
 - **Coupled to Phase 5**: privacy endpoints (#19).
 
 ## Risks/Watch
 - Escape hatch: evaluate runbook criteria 1–8 at each phase start/merge (`docs/runbooks/rework-branch-cutover.md`). Cutover gate: **passed**.
-- Durable Objects not yet configured — Phase 3 needs bindings + `new_sqlite_classes` migration.
+- Durable Objects configured in Phase 3 (#34) — `RAGAgent` SQLite-backed DO + trace panel.
 - Scope creep into unbounded corpus or third-party agent orchestration frameworks — enforce #30 non-goals.
 - Rate limiting false positives during peak demo traffic — monitor logs.
 

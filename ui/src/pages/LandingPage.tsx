@@ -43,14 +43,16 @@ export function LandingPage() {
             </p>
           </Link>
 
-          <div className="p-6 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/50">
-            <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Agentic RAG + Trace UI
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              Cloudflare Agents SDK runtime with transparent step traces, eval reporting, and
-              red-team scenarios — tracked in epic #30 (Phases 3–5).
-            </p>
+          <div className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-md transition-all group bg-white dark:bg-gray-800">
+            <Link to="/demos/agent-rag" className="block">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-2">
+                Agentic RAG + Trace UI
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                Cloudflare Agents SDK runtime with a retrieve tool, streaming chat, and a step
+                trace panel correlated to Workers logs.
+              </p>
+            </Link>
           </div>
         </div>
 

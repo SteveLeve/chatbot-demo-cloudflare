@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { LandingPage } from './pages/LandingPage';
 import { BasicChatPage } from './pages/BasicChatPage';
+import { AgentChatPage } from './pages/AgentChatPage';
 import { FaqPage } from './pages/FaqPage';
 import { GlossaryPage } from './pages/GlossaryPage';
 import { CorpusPage } from './pages/CorpusPage';
@@ -18,6 +19,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/demos/basic-rag" element={<BasicChatPage />} />
+          <Route path="/demos/agent-rag" element={<AgentChatPage />} />
           <Route path="/docs/faq" element={<FaqPage />} />
           <Route path="/docs/glossary" element={<GlossaryPage />} />
           <Route path="/docs/corpus" element={<CorpusPage />} />

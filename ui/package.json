@@ -9,9 +9,14 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@ai-sdk/react": "^4.0.61",
+    "@cloudflare/ai-chat": "^0.10.1",
+    "agents": "^0.20.1",
+    "ai": "^7.0.58",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.11.0"
+    "react-router-dom": "^7.11.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/react": "^18.3.27",

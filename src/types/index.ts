@@ -26,6 +26,12 @@ export interface Env {
   // Workflows
   INGESTION_WORKFLOW: Workflow;
 
+  // Agents SDK (Phase 3 / #34)
+  RAG_AGENT: DurableObjectNamespace;
+
+  // Static assets
+  ASSETS: Fetcher;
+
   // Rate limiting
   QUERY_RATE_LIMITER: RateLimit;
   INGEST_RATE_LIMITER: RateLimit;
@@ -166,7 +172,7 @@ export interface RAGQueryResponse {
   answer: string;
   sources: DocumentSource[];
   metadata: {
-    pattern: 'basic' | 'reranking' | 'refinement' | 'agentic';
+    pattern: 'basic' | 'agentic';
     latencyMs: number;
     retrievedChunks: number;
     tokensUsed?: number;

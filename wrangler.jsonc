@@ -73,6 +73,23 @@
     }
   ],
 
+  // Agents SDK — RAG agent (SQLite-backed Durable Object)
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "RAG_AGENT",
+        "class_name": "RAGAgent"
+      }
+    ]
+  },
+
+  "migrations": [
+    {
+      "tag": "v1-rag-agent",
+      "new_sqlite_classes": ["RAGAgent"]
+    }
+  ],
+
   // Workflows binding (for data ingestion)
   "workflows": [
     {

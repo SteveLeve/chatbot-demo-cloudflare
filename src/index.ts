@@ -10,11 +10,13 @@
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { routeAgentRequest } from 'agents';
 import type { Env, RAGQueryRequest, ApiResponse, IngestionWorkflowParams } from './types';
 import { basicRAG } from './patterns/basic-rag';
 import { createLogger, createRequestLogger } from './utils/logger';
 import { checkRateLimit } from './utils/rate-limiter';
 import { IngestionWorkflow } from './ingestion-workflow';
+import { RAGAgent } from './agents/rag-agent';
 import type { ExecutionContext, ScheduledEvent, ExportedHandler } from 'cloudflare:workers';
 import { getCorsConfig, securityHeaders, sanitizeError } from './utils/security';
 import {
@@ -28,8 +30,8 @@ import {
 import { createTraceContext, exportRequestSpan, buildTraceparent } from './utils/trace';
 import { createDocumentStore } from './utils/document-store';
 
-// Export the ingestion workflow
-export { IngestionWorkflow };
+// Export workflows and agents
+export { IngestionWorkflow, RAGAgent };
 
 // Create Hono application
 const app = new Hono<{ Bindings: Env }>();
@@ -516,6 +518,30 @@ app.get('/api/v1/ingest/:workflowId', async (c) => {
 });
 
 // ============================================================================
+// Agent Routes (Phase 3 / #34)
+// ============================================================================
+
+/**
+ * Bootstrap trace ids for the agent trace panel (correlates with Workers logs).
+ * GET /api/v1/agent/bootstrap
+ */
+app.get('/api/v1/agent/bootstrap', (c) => {
+  const trace = c.get('traceContext');
+  const sessionId = crypto.randomUUID();
+
+  return c.json<ApiResponse>({
+    success: true,
+    data: {
+      traceId: trace.traceId,
+      spanId: trace.spanId,
+      sessionId,
+      agent: 'RAGAgent',
+      agentRoute: `/agents/ragagent/${sessionId}`,
+    },
+  });
+});
+
+// ============================================================================
 // Corpus Routes
 // ============================================================================
 
@@ -593,7 +619,7 @@ app.get('/api/v1/docs', (c) => {
     description: 'API documentation for RAG patterns demonstration',
     patterns: {
       basic: {
-        description: 'Single-turn retrieval-augmented generation',
+        description: 'Single-turn retrieval-augmented generation (legacy comparison path)',
         endpoint: '/api/v1/query',
         method: 'GET | POST',
         parameters: {
@@ -601,6 +627,13 @@ app.get('/api/v1/docs', (c) => {
           topK: 'Number of chunks to retrieve (default: 3)',
           minSimilarity: 'Minimum similarity score (0-1)',
         },
+      },
+      agentic: {
+        description:
+          'Agents SDK RAG agent with retrieve tool and trace events (WebSocket via /agents/ragagent/:session)',
+        bootstrap: '/api/v1/agent/bootstrap',
+        websocketRoute: '/agents/ragagent/:sessionId',
+        note: 'Use useAgent + useAgentChat from the SPA; pass traceId/spanId from bootstrap in request body',
       },
     },
     ingestion: {
@@ -721,5 +754,12 @@ export default {
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     await handleScheduled(event, env, ctx);
   },
-  fetch: app.fetch,
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    const agentResponse = await routeAgentRequest(request, env);
+    if (agentResponse) {
+      return agentResponse;
+    }
+
+    return app.fetch(request, env, ctx);
+  },
 } satisfies ExportedHandler<Env>;
