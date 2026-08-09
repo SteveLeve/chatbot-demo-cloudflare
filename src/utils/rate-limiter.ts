@@ -73,42 +73,90 @@ export async function checkRateLimit(
  * Generate rate limit key from session ID or IP address
  * Prefers session ID for stability, falls back to IP
  */
-function getRateLimitKey(c: Context<{ Bindings: Env }>, prefix: string): string {
-  // Try to extract session ID first (more stable than IP)
-  const sessionId = extractSessionId(c);
-  if (sessionId) {
-    return `${prefix}:session:${sessionId}`;
+export function getRateLimitKeyFromRequest(
+  request: Request,
+  prefix: string
+): string {
+  const url = new URL(request.url);
+  const agentSession = url.pathname.match(/^\/agents\/[^/]+\/([^/]+)/)?.[1];
+  if (agentSession) {
+    return `${prefix}:agent-session:${agentSession}`;
   }
 
-  // Fall back to IP address
-  const ip = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for') || 'unknown';
+  const headerSessionId = request.headers.get('x-chat-session-id');
+  if (headerSessionId) {
+    return `${prefix}:session:${headerSessionId}`;
+  }
+
+  const cookieHeader = request.headers.get('cookie');
+  if (cookieHeader) {
+    for (const cookie of cookieHeader.split(';')) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === 'chat-session-id' && value) {
+        return `${prefix}:session:${decodeURIComponent(value)}`;
+      }
+    }
+  }
+
+  const ip =
+    request.headers.get('cf-connecting-ip') ||
+    request.headers.get('x-forwarded-for') ||
+    'unknown';
   return `${prefix}:ip:${ip}`;
 }
 
 /**
- * Extract session ID from headers or cookies
- * Returns null if no session ID found
+ * Check rate limit for a raw Request (agent WebSocket / HTTP outside Hono).
  */
-function extractSessionId(c: Context<{ Bindings: Env }>): string | null {
-  // Check header first
-  const headerSessionId = c.req.header('x-chat-session-id');
-  if (headerSessionId && headerSessionId.length > 0) {
-    return headerSessionId;
-  }
+export async function checkRequestRateLimit(
+  request: Request,
+  rateLimiter: RateLimit,
+  config: RateLimitConfig
+): Promise<Response | null> {
+  const key = getRateLimitKeyFromRequest(request, config.keyPrefix);
 
-  // Check cookies
-  const cookieHeader = c.req.header('cookie');
-  if (!cookieHeader) {
+  try {
+    const { success } = await rateLimiter.limit({ key });
+
+    if (!success) {
+      const retryAfter = config.window;
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: `Rate limit exceeded. Maximum ${config.limit} requests per ${config.window} seconds.`,
+            details: {
+              limit: config.limit,
+              window: config.window,
+              retryAfter,
+            },
+          },
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Limit': config.limit.toString(),
+            'X-RateLimit-Window': config.window.toString(),
+          },
+        }
+      );
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Rate limit check failed:', error);
     return null;
   }
+}
 
-  const cookies = cookieHeader.split(';').map((c) => c.trim());
-  for (const cookie of cookies) {
-    const [name, value] = cookie.split('=');
-    if (name === 'chat-session-id' && value) {
-      return decodeURIComponent(value);
-    }
-  }
-
-  return null;
+/**
+ * Generate rate limit key from session ID or IP address
+ * Prefers session ID for stability, falls back to IP
+ */
+function getRateLimitKey(c: Context<{ Bindings: Env }>, prefix: string): string {
+  return getRateLimitKeyFromRequest(c.req.raw, prefix);
 }

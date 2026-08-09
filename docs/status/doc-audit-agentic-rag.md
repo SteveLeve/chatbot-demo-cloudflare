@@ -65,14 +65,20 @@
 
 | Path | Classification | Disposition | Executes | Notes |
 |---|---|---|---|---|
-| `src/patterns/basic-rag.ts` | OLD | replace | Phase 3 (#34) | Single-turn pipeline superseded by Agents SDK loop |
+| `src/patterns/basic-rag.ts` | OLD | keep (comparison) | — | Legacy path at `/api/v1/query`; primary demo is `RAGAgent` (#34) |
+| `src/agents/rag-agent.ts` | NEW | keep | done (#34) | Agents SDK agent with retrieve tool + trace state |
+| `src/utils/retrieval.ts` | NEW | keep | done (#34) | Shared corpus retrieval |
+| `src/ai/workers-ai.ts` | NEW | keep | done (#34) | `workers-ai-provider` adapter |
+| `src/types/trace.ts` | NEW | keep | done (#34) | Trace event types |
+| `ui/src/pages/AgentChatPage.tsx` | NEW | keep | done (#34) | Agent demo + trace panel |
+| `ui/src/components/TracePanel.tsx` | NEW | keep | done (#34) | Step trace UI |
 | `src/ingestion-workflow.ts` | TRANSITIONAL | update | done (Phase 2 / #33) | Stable corpus ids via ingest; curated corpus path `data/corpus/` |
 | `src/utils/document-store.ts` | NEUTRAL | keep | — | `getArticle` used by `GET /api/v1/corpus/:id`; further reshape in Phase 3 |
 | `src/utils/chunking.ts` | NEUTRAL | keep | — | Works for curated corpus sizes; no bulk assumptions changed |
 | `src/utils/embedding-cache.ts` | NEUTRAL | keep | — | Embedding model unchanged (BGE base); cache keys remain valid. Revisit if #20 upgrades embeddings |
-| `src/types/index.ts` (`pattern` union, ~line 169) | OLD | replace | Phase 3 (#34) | `'basic' \| 'reranking' \| 'refinement' \| 'agentic'` encodes retired taxonomy |
-| `src/index.ts` (route wiring) | TRANSITIONAL | update | Phase 3 (#34) | `GET /api/v1/corpus/:id` added (#33); agent/eval/red-team routes remain |
-| `wrangler.jsonc` (bindings) | OLD | update | Phase 3 (#34) | Add `durable_objects` binding + `migrations`/`new_sqlite_classes` entry |
+| `src/types/index.ts` (`pattern` union, ~line 169) | TRANSITIONAL | updated | #34 | Union trimmed to `'basic' \| 'agentic'` |
+| `src/index.ts` (route wiring) | TRANSITIONAL | updated | #34 | Agent routes + bootstrap; eval/red-team remain |
+| `wrangler.jsonc` (bindings) | TRANSITIONAL | updated | #34 | `RAG_AGENT` DO + `v1-rag-agent` migration |
 | `migrations/0001_create_documents_table.sql`, `0002_create_chunks_table.sql`, `0003_create_fts_table.sql` | OLD | replace | Phase 2/3 (#33/#34) | Bulk-corpus schema; `0003` comment names the retired reranking/hybrid-search taxonomy |
 | `data/wikipedia/README.md`, `scripts/fetch-wikipedia.py` | OLD | keep | — | Legacy bulk fetch; curated workflow uses `data/corpus/` |
 | `scripts/ingest-wikipedia.js`, `scripts/build-corpus.js` | NEW | keep | done (#33) | Curated ingest; manifest builder |
@@ -81,7 +87,7 @@
 | `ui/src/pages/BasicChatPage.tsx` | TRANSITIONAL | update | Phase 3 (#34) | `?q=` prompt injection added; trace panel lands in #34 |
 | `ui/src/content/{glossary-data,faq-data,sidebar-sections}.ts` | NEW | keep | done (#33) | Glossary `examplePrompts[]` shipped |
 | `ui/src/components/QueryInterface.tsx` | — | delete | done (cutover) | Removed in `chore/30-rework-cutover` (was unreferenced dead code) |
-| `src/index.ts:513` (`GET /api/v1/docs` self-documentation) | OLD | update | Phase 3 (#34) | Live API response only describes the `basic` pattern (`patterns.basic.description: 'Single-turn retrieval-augmented generation'`); this is code-as-narrative, update alongside route wiring |
+| `src/index.ts:513` (`GET /api/v1/docs` self-documentation) | TRANSITIONAL | updated | #34 | Documents `basic` + `agentic` patterns |
 | `ui/src/pages/LandingPage.tsx` | NEW | keep | done (#33) | Corpus browser card; agentic roadmap copy replaces stale "Advanced RAG" |
 | `ui/src/content/glossary-data.ts` | NEW | keep | done (#33) | `examplePrompts[]` + chat injection via `?q=` |
 | `ui/src/pages/GlossaryPage.tsx` | NEW | keep | done (#33) | Renders example prompt links to chat |

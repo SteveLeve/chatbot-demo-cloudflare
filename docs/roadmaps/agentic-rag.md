@@ -34,7 +34,7 @@ flowchart LR
 ```
 
 - **Phase 3 blocked by Phase 0** — an agent loop needs a function-calling model; the current one is deprecated.
-- **Phase 3 also blocked on config** — `wrangler.jsonc` has no `durable_objects` binding and no `migrations` entry.
+- **Phase 3 config landed** — `wrangler.jsonc` has `RAG_AGENT` + `v1-rag-agent` migration (#34).
 - **Phase 4 blocked by Phase 2** — a gold set is only meaningful against a stable, curated corpus.
 - **Phase 5 coupled to [#19](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/19)** — red-team mode increases retained prompt text, so privacy endpoints are not merely deprioritized.
 

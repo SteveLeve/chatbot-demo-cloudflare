@@ -128,7 +128,7 @@ Retain and extend: educational sidebar, FAQ, Sources card patterns in `ui/`.
 | Red-team prompts misused | Curated list only; educational framing; no attack tooling |
 | **Red-team prompts persisted to chat logs** | `CHAT_LOGGING_ENABLED: true` and `src/utils/chat-logger.ts` write prompts plus hashed IPs to D1 (`chat_sessions`, `chat_messages`). Red-team mode will drive adversarial text into that same store. Tag or exclude red-team sessions from logging; this couples Phase 5 to the privacy endpoints in #19. |
 | **Generation model (was deprecated)** | Resolved in Phase 0 (#32): `@cf/meta/llama-4-scout-17b-16e-instruct`. |
-| **Durable Objects not yet configured** | `wrangler.jsonc` has no `durable_objects` binding and no `migrations` entry. Phase 3 must add both, declaring the agent class under `new_sqlite_classes`. On the Workers Free plan only SQLite-backed DOs are available, capped at 100k requests/day and 5M row reads/day — a real ceiling for a public demo. |
+| **Durable Objects (Workers Free plan caps)** | Configured in Phase 3 (#34): `RAG_AGENT` binding + `v1-rag-agent` migration. SQLite-backed DOs capped at 100k requests/day and 5M row reads/day — monitor for a public demo. |
 | Migration from `basic-rag` route | Keep Phase 1 basic path until Agents SDK path is feature-complete; then deprecate. Note `src/types/index.ts:169` still types `pattern` as `'basic' \| 'reranking' \| 'refinement' \| 'agentic'` — that union encodes the retired taxonomy and should be refactored in Phase 3. |
 
 ## Testing & Acceptance
