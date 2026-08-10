@@ -55,6 +55,7 @@ export async function tryRedteamScenario(
 	context.set('skipChatLogging', true);
 
 	const started = Date.now();
+	// basicRAG sanitizes the prompt before retrieve + generate (not retrieval-only)
 	const ragResult = await basicRAG({ question: scenario.prompt }, env, context);
 	const latencyMs = Date.now() - started;
 	const answer = ragResult.answer ?? '';
