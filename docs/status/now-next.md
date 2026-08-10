@@ -5,7 +5,7 @@
 
 ## Now
 
-- Phase 4 eval reporting **in progress** on `feat/35-eval-reporting` (#35): gold set, hybrid metrics, `GET /api/v1/eval/report` + optional `POST /run`, `/docs/eval` page, Playwright harness.
+- Phase 4 eval reporting **in review** (PR #45 / #35): gold set, hybrid metrics, `GET /api/v1/eval/report` + optional `POST /run`, `/docs/eval` page, Playwright harness.
 - Phase 3 Agents SDK / trace UI **merged** (PR #41 / #34).
 - Code quality automation **complete** (#40): Phases 1–3 (PR #42), Node 24 CI pin (PR #43), `protect-main` requires `root` + `ui`.
 - Prior hardening remains shipped: security (PRs #22/#23), perf (#28), observability phase 1 (#29); model refresh (#38), corpus (#39).
