@@ -35,16 +35,19 @@ North star and phased delivery: [GitHub issue #30](https://github.com/SteveLeve/
 
 ## Quick Reference
 
-| Task | Command | Notes |
-|------|---------|-------|
-| **Local development** | `npm run dev` + `npm run ui:dev` | Two terminal windows |
-| **Build frontend** | `npm run build` | Creates `./public/` |
-| **Deploy to production** | `npm run deploy` | Single command, full deployment |
-| **Run tests** | `npm test` | Backend tests |
-| **Type checking** | `npm run cf-typegen` | Generate Cloudflare types |
-| **Database migrations** | `wrangler d1 migrations create wikipedia-db <name>` | Then edit SQL file |
-| **Apply migrations** | `wrangler d1 migrations apply wikipedia-db --local` | Or `--remote` for prod |
-| **View Worker logs** | `wrangler tail --env production` | Real-time logs |
+| Task                          | Command                                             | Notes                                                      |
+| ----------------------------- | --------------------------------------------------- | ---------------------------------------------------------- |
+| **Local development**         | `npm run dev` + `npm run ui:dev`                    | Two terminal windows                                       |
+| **Build frontend**            | `npm run build`                                     | Creates `./public/`                                        |
+| **Deploy to production**      | `npm run deploy`                                    | Single command, full deployment                            |
+| **Run tests**                 | `npm test`                                          | Backend tests (`CI=true` or `-- --run` for single pass)    |
+| **Lint**                      | `npm run lint`                                      | Root + `ui/` ESLint                                        |
+| **Type check**                | `npm run typecheck`                                 | `tsc --noEmit` on Worker code                              |
+| **Format (staged)**           | pre-commit hook                                     | Husky + lint-staged on commit; `npm run format` for manual |
+| **Generate Cloudflare types** | `npm run cf-typegen`                                | Updates `worker-configuration.d.ts`                        |
+| **Database migrations**       | `wrangler d1 migrations create wikipedia-db <name>` | Then edit SQL file                                         |
+| **Apply migrations**          | `wrangler d1 migrations apply wikipedia-db --local` | Or `--remote` for prod                                     |
+| **View Worker logs**          | `wrangler tail --env production`                    | Real-time logs                                             |
 
 ## Architecture
 
@@ -75,6 +78,7 @@ North star and phased delivery: [GitHub issue #30](https://github.com/SteveLeve/
 ```
 
 **Why Single Worker?**
+
 - ✅ Single `wrangler deploy` command
 - ✅ No CORS (same origin for frontend + API)
 - ✅ Shared bindings (frontend can access D1, KV, R2 if needed)
@@ -210,19 +214,19 @@ wrangler kv namespace create RAG_CACHE
   "d1_databases": [
     {
       "binding": "DATABASE",
-      "database_id": "YOUR_D1_ID_HERE"
-    }
+      "database_id": "YOUR_D1_ID_HERE",
+    },
   ],
   "kv_namespaces": [
     {
       "binding": "EMBEDDINGS_CACHE",
-      "id": "YOUR_KV_ID_HERE"
+      "id": "YOUR_KV_ID_HERE",
     },
     {
       "binding": "RAG_CACHE",
-      "id": "YOUR_KV_ID_HERE"
-    }
-  ]
+      "id": "YOUR_KV_ID_HERE",
+    },
+  ],
 }
 ```
 
@@ -298,6 +302,7 @@ Visit http://localhost:3000 to interact with the RAG system.
 ```
 
 **Key Files:**
+
 - `wrangler.jsonc`: Configures Worker to serve React app from `./public`
 - `ui/vite.config.ts`: Builds React to `../public` (Worker's assets directory)
 - `npm run build`: Builds React app to `./public`
@@ -310,11 +315,13 @@ Visit http://localhost:3000 to interact with the RAG system.
 **GET /api/v1/query**
 
 Query parameters:
+
 - `q` (required): Question to answer
 - `topK` (optional): Number of chunks to retrieve (default: 3)
 - `minSimilarity` (optional): Minimum similarity threshold (0-1)
 
 Example:
+
 ```bash
 curl "http://localhost:8787/api/v1/query?q=What%20is%20AI?"
 ```
@@ -322,6 +329,7 @@ curl "http://localhost:8787/api/v1/query?q=What%20is%20AI?"
 **POST /api/v1/query**
 
 Request body:
+
 ```json
 {
   "question": "What is artificial intelligence?",
@@ -335,6 +343,7 @@ Request body:
 **POST /api/v1/ingest**
 
 Request body:
+
 ```json
 {
   "title": "Artificial Intelligence",
@@ -377,25 +386,32 @@ This project uses **two coordinated dev servers** during development:
 ```
 
 **Backend (Port 8787)** - Worker + API:
+
 ```bash
 npm run dev
 ```
+
 Starts the Cloudflare Worker development environment with:
+
 - Live reload on code changes
 - API endpoints at `http://localhost:8787`
 - All bindings (D1, Vectorize, R2, KV) configured locally
 - Static asset serving (from `/public` if built)
 
 **Frontend (Port 3000)** - React App:
+
 ```bash
 npm run ui:dev
 ```
+
 Starts the React Vite dev server with:
+
 - Hot module reloading (HMR) for instant UI updates
 - Automatic proxy to `http://localhost:8787` for `/api/*` requests
 - Vite's dev server magic for fast development
 
 **Setup**:
+
 ```bash
 # Terminal 1: Start the Worker (serves API + static assets)
 npm run dev
@@ -441,6 +457,7 @@ npm run deploy
 ```
 
 This command:
+
 1. Builds the React frontend to `./public`
 2. Applies database migrations
 3. Deploys both frontend + API to Cloudflare Workers
@@ -450,6 +467,7 @@ Your app will be live at: `https://cloudflare-rag-portfolio.your-subdomain.worke
 ### Why This Architecture?
 
 **Single-Worker deployment** is modern best practice because:
+
 - ✅ One deployment instead of managing multiple services
 - ✅ No CORS issues (frontend and API share the same origin)
 - ✅ Access to all Cloudflare features (Durable Objects, Email, etc.)
@@ -477,6 +495,7 @@ wrangler secret put ANTHROPIC_API_KEY --env production
 ## Performance
 
 Expected latencies for basic RAG:
+
 - Embedding generation: ~100-200ms
 - Vector search: ~50-100ms
 - Chunk retrieval: ~20-50ms
@@ -499,6 +518,7 @@ For a 10-20MB Wikipedia dataset with 1000 queries/day:
 ## Learning Resources
 
 ### Official Cloudflare Documentation
+
 - [Cloudflare Workers AI Docs](https://developers.cloudflare.com/workers-ai/)
 - [Vectorize Documentation](https://developers.cloudflare.com/vectorize/)
 - [D1 Documentation](https://developers.cloudflare.com/d1/)
@@ -506,12 +526,14 @@ For a 10-20MB Wikipedia dataset with 1000 queries/day:
 - [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/)
 
 ### Architecture & Best Practices
+
 - [Pages → Workers Migration Guide](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/) - Why we chose Workers
 - [Full-Stack Development on Cloudflare Workers](https://blog.cloudflare.com/full-stack-development-on-cloudflare-workers/) - Cloudflare's recommendation
 - [RAG Architecture Guide](./docs/ARCHITECTURE.md) - This project's design
 - [Deployment Guide](./docs/DEPLOYMENT.md) - Comprehensive deployment reference
 
 ### RAG & AI Concepts
+
 - [Retrieval-Augmented Generation (RAG) Overview](https://en.wikipedia.org/wiki/Prompt_engineering#Retrieval-augmented_generation)
 - [Vector Search Best Practices](https://developers.cloudflare.com/vectorize/)
 - [Semantic Search with Embeddings](https://developers.cloudflare.com/workers-ai/)

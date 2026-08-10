@@ -6,60 +6,36 @@
 // Environment Bindings
 // ============================================================================
 
+/** Worker bindings and environment configuration. */
 export interface Env {
-  // AI binding
-  AI: Ai;
-
-  // D1 Database
-  DATABASE: D1Database;
-
-  // Vectorize
-  VECTOR_INDEX: VectorizeIndex;
-
-  // R2 Buckets
-  ARTICLES_BUCKET: R2Bucket;
-
-  // KV Caches
-  EMBEDDINGS_CACHE: KVNamespace;
-  RAG_CACHE: KVNamespace;
-
-  // Workflows
-  INGESTION_WORKFLOW: Workflow;
-
-  // Agents SDK (Phase 3 / #34)
-  RAG_AGENT: DurableObjectNamespace;
-
-  // Static assets
-  ASSETS: Fetcher;
-
-  // Rate limiting
-  QUERY_RATE_LIMITER: RateLimit;
-  INGEST_RATE_LIMITER: RateLimit;
-
-  // Secrets (not in vars)
-  CHAT_LOG_IP_SALT: string;
-
-  // Environment variables
-  ENVIRONMENT: string;
-  LOG_LEVEL: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
-  ENABLE_TEXT_SPLITTING: boolean;
-  DEFAULT_CHUNK_SIZE: number;
-  DEFAULT_CHUNK_OVERLAP: number;
-  DEFAULT_TOP_K: number;
-  MAX_QUERY_LENGTH: number;
-  USE_AI_GATEWAY?: boolean;
-  AI_GATEWAY_ID?: string;
-  TRACE_ENABLED?: boolean;
-  TRACE_SAMPLE_RATE?: number;
-  OTLP_ENDPOINT?: string;
-  OTLP_AUTH_HEADER?: string;
-  OTLP_AUTH_VALUE?: string;
-  OTLP_SERVICE_NAME?: string;
-
-  // Chat logging
-  vars?: {
-    CHAT_LOGGING_ENABLED?: boolean;
-  };
+	AI: Ai;
+	DATABASE: D1Database;
+	VECTOR_INDEX: VectorizeIndex;
+	ARTICLES_BUCKET: R2Bucket;
+	EMBEDDINGS_CACHE: KVNamespace;
+	RAG_CACHE: KVNamespace;
+	INGESTION_WORKFLOW: Workflow;
+	RAG_AGENT: DurableObjectNamespace<import('../agents/rag-agent').RAGAgent>;
+	ASSETS: Fetcher;
+	QUERY_RATE_LIMITER: RateLimit;
+	INGEST_RATE_LIMITER: RateLimit;
+	CHAT_LOG_IP_SALT: string;
+	ENVIRONMENT: string;
+	LOG_LEVEL: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
+	ENABLE_TEXT_SPLITTING: boolean;
+	DEFAULT_CHUNK_SIZE: number;
+	DEFAULT_CHUNK_OVERLAP: number;
+	DEFAULT_TOP_K: number;
+	MAX_QUERY_LENGTH: number;
+	CHAT_LOGGING_ENABLED: boolean;
+	USE_AI_GATEWAY?: boolean;
+	AI_GATEWAY_ID?: string;
+	TRACE_ENABLED?: boolean;
+	TRACE_SAMPLE_RATE?: number;
+	OTLP_ENDPOINT?: string;
+	OTLP_AUTH_HEADER?: string;
+	OTLP_AUTH_VALUE?: string;
+	OTLP_SERVICE_NAME?: string;
 }
 
 // ============================================================================
@@ -70,50 +46,50 @@ export interface Env {
  * Wikipedia article stored in R2
  */
 export interface WikipediaArticle {
-  id: string;
-  title: string;
-  content: string;
-  metadata: {
-    categories: string[];
-    url?: string;
-    lastModified?: string;
-    wordCount: number;
-  };
-  createdAt: string;
-  updatedAt: string;
+	id: string;
+	title: string;
+	content: string;
+	metadata: {
+		categories: string[];
+		url?: string;
+		lastModified?: string;
+		wordCount: number;
+	};
+	createdAt: string;
+	updatedAt: string;
 }
 
 /**
  * Document metadata stored in D1
  */
 export interface DocumentMetadata {
-  id: string;
-  articleId: string;
-  title: string;
-  metadata: Record<string, any>;
-  createdAt: number;
-  updatedAt: number;
+	id: string;
+	articleId: string;
+	title: string;
+	metadata: Record<string, any>;
+	createdAt: number;
+	updatedAt: number;
 }
 
 /**
  * Text chunk stored in D1
  */
 export interface TextChunk {
-  id: string;
-  documentId: string;
-  text: string;
-  chunkIndex: number;
-  metadata: Record<string, any>;
-  createdAt: number;
+	id: string;
+	documentId: string;
+	text: string;
+	chunkIndex: number;
+	metadata: Record<string, any>;
+	createdAt: number;
 }
 
 /**
  * Chunk with full metadata (joined from documents table)
  */
 export interface ChunkWithMetadata extends TextChunk {
-  title: string;
-  articleId: string;
-  documentMetadata: Record<string, any>;
+	title: string;
+	articleId: string;
+	documentMetadata: Record<string, any>;
 }
 
 // ============================================================================
@@ -124,31 +100,31 @@ export interface ChunkWithMetadata extends TextChunk {
  * Vector metadata stored in Vectorize
  */
 export interface VectorMetadata {
-  documentId: string;
-  chunkId: string;
-  chunkIndex: number;
-  title: string;
+	documentId: string;
+	chunkId: string;
+	chunkIndex: number;
+	title: string;
 }
 
 /**
  * Vector match from Vectorize query
  */
 export interface VectorMatch {
-  id: string;
-  score: number;
-  metadata?: VectorMetadata;
+	id: string;
+	score: number;
+	metadata?: VectorMetadata;
 }
 
 /**
  * Document source for citations
  */
 export interface DocumentSource {
-  documentId: string;
-  chunkId: string;
-  title: string;
-  chunkText: string;
-  chunkIndex: number;
-  similarity: number;
+	documentId: string;
+	chunkId: string;
+	title: string;
+	chunkText: string;
+	chunkIndex: number;
+	similarity: number;
 }
 
 // ============================================================================
@@ -159,24 +135,24 @@ export interface DocumentSource {
  * RAG query request
  */
 export interface RAGQueryRequest {
-  question: string;
-  topK?: number;
-  minSimilarity?: number;
+	question: string;
+	topK?: number;
+	minSimilarity?: number;
 }
 
 /**
  * RAG query response
  */
 export interface RAGQueryResponse {
-  question: string;
-  answer: string;
-  sources: DocumentSource[];
-  metadata: {
-    pattern: 'basic' | 'agentic';
-    latencyMs: number;
-    retrievedChunks: number;
-    tokensUsed?: number;
-  };
+	question: string;
+	answer: string;
+	sources: DocumentSource[];
+	metadata: {
+		pattern: 'basic' | 'agentic';
+		latencyMs: number;
+		retrievedChunks: number;
+		tokensUsed?: number;
+	};
 }
 
 // ============================================================================
@@ -187,32 +163,32 @@ export interface RAGQueryResponse {
  * Ingestion workflow parameters
  */
 export interface IngestionWorkflowParams {
-  articleId: string;
-  title: string;
-  content: string;
-  metadata: Record<string, any>;
-  chunkSize?: number;
-  chunkOverlap?: number;
+	articleId: string;
+	title: string;
+	content: string;
+	metadata: Record<string, any>;
+	chunkSize?: number;
+	chunkOverlap?: number;
 }
 
 /**
  * Ingestion workflow result
  */
 export interface IngestionWorkflowResult {
-  success: boolean;
-  documentId: string;
-  chunksCreated: number;
-  vectorsInserted: number;
-  error?: string;
+	success: boolean;
+	documentId: string;
+	chunksCreated: number;
+	vectorsInserted: number;
+	error?: string;
 }
 
 /**
  * Workflow step result
  */
 export interface WorkflowStepResult<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
+	success: boolean;
+	data?: T;
+	error?: string;
 }
 
 // ============================================================================
@@ -223,35 +199,35 @@ export interface WorkflowStepResult<T = any> {
  * Embedding request
  */
 export interface EmbeddingRequest {
-  text: string | string[];
+	text: string | string[];
 }
 
 /**
  * Embedding response from Workers AI
  */
 export interface EmbeddingResponse {
-  data: number[][];
+	data: number[][];
 }
 
 /**
  * LLM generation request
  */
 export interface GenerationRequest {
-  messages: Array<{
-    role: 'system' | 'user' | 'assistant';
-    content: string;
-  }>;
-  temperature?: number;
-  max_tokens?: number;
-  stream?: boolean;
+	messages: Array<{
+		role: 'system' | 'user' | 'assistant';
+		content: string;
+	}>;
+	temperature?: number;
+	max_tokens?: number;
+	stream?: boolean;
 }
 
 /**
  * LLM generation response
  */
 export interface GenerationResponse {
-  response?: string;
-  [key: string]: any;
+	response?: string;
+	[key: string]: any;
 }
 
 // ============================================================================
@@ -267,10 +243,10 @@ export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
  * Log entry
  */
 export interface LogEntry {
-  level: LogLevel;
-  message: string;
-  context?: Record<string, any>;
-  timestamp: string;
+	level: LogLevel;
+	message: string;
+	context?: Record<string, any>;
+	timestamp: string;
 }
 
 // ============================================================================
@@ -281,29 +257,29 @@ export interface LogEntry {
  * Application error
  */
 export class AppError extends Error {
-  constructor(
-    message: string,
-    public code: string,
-    public statusCode: number = 500,
-    public details?: Record<string, any>
-  ) {
-    super(message);
-    this.name = 'AppError';
-  }
+	constructor(
+		message: string,
+		public code: string,
+		public statusCode: number = 500,
+		public details?: Record<string, any>,
+	) {
+		super(message);
+		this.name = 'AppError';
+	}
 }
 
 /**
  * Validation error
  */
 export class ValidationError extends Error {
-  constructor(
-    message: string,
-    public field: string,
-    public code: string = 'VALIDATION_ERROR'
-  ) {
-    super(message);
-    this.name = 'ValidationError';
-  }
+	constructor(
+		message: string,
+		public field: string,
+		public code: string = 'VALIDATION_ERROR',
+	) {
+		super(message);
+		this.name = 'ValidationError';
+	}
 }
 
 // ============================================================================
@@ -314,17 +290,17 @@ export class ValidationError extends Error {
  * API response wrapper
  */
 export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: {
-    code: string;
-    message: string;
-    details?: Record<string, any>;
-  };
-  metadata?: {
-    timestamp: string;
-    requestId?: string;
-  };
+	success: boolean;
+	data?: T;
+	error?: {
+		code: string;
+		message: string;
+		details?: Record<string, any>;
+	};
+	metadata?: {
+		timestamp: string;
+		requestId?: string;
+	};
 }
 
 // ============================================================================
@@ -335,37 +311,37 @@ export interface ApiResponse<T = any> {
  * Parameters for logging a chat message
  */
 export interface LogChatMessageParams {
-  role: 'user' | 'assistant';
-  content: string;
-  messageIndex: number;
+	role: 'user' | 'assistant';
+	content: string;
+	messageIndex: number;
 
-  // Assistant-specific metadata
-  modelName?: string;
-  temperature?: number;
-  latencyMs?: number;
-  tokenCount?: number;
-  promptTokens?: number;
-  completionTokens?: number;
+	// Assistant-specific metadata
+	modelName?: string;
+	temperature?: number;
+	latencyMs?: number;
+	tokenCount?: number;
+	promptTokens?: number;
+	completionTokens?: number;
 
-  // RAG sources (for assistant messages)
-  sources?: DocumentSource[];
+	// RAG sources (for assistant messages)
+	sources?: DocumentSource[];
 
-  // Error tracking
-  hasError?: boolean;
-  errorMessage?: string;
+	// Error tracking
+	hasError?: boolean;
+	errorMessage?: string;
 }
 
 /**
  * Cloudflare metadata extracted from request context
  */
 export interface CloudflareMetadata {
-  userAgent: string;
-  country: string | null;
-  region: string | null;
-  city: string | null;
-  lat: number | null;
-  lng: number | null;
-  timezone: string | null;
-  colo: string | null;
-  asn: number | null;
+	userAgent: string;
+	country: string | null;
+	region: string | null;
+	city: string | null;
+	lat: number | null;
+	lng: number | null;
+	timezone: string | null;
+	colo: string | null;
+	asn: number | null;
 }

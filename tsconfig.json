@@ -46,18 +46,14 @@
     "jsxImportSource": "hono/jsx",
 
     /* Cloudflare Workers Types */
-    "types": [
-      "@types/node"
-    ]
+    "types": ["@types/node"]
   },
   "include": [
     "src/**/*",
     "scripts/**/*",
-    ".wrangler/types/**/*"
+    "tests/**/*",
+    ".wrangler/types/**/*",
+    "worker-configuration.d.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "ui"
-  ]
+  "exclude": ["node_modules", "dist", "ui", "scripts/ingest-wikipedia.ts"]
 }

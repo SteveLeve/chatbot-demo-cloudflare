@@ -23,7 +23,10 @@ describe('Security Utils', () => {
 			const env = createMockEnv('development');
 			const config = getCorsConfig(env);
 
-			expect(config.origin).toEqual(['http://localhost:3000', 'http://localhost:8787']);
+			expect(config.origin).toEqual([
+				'http://localhost:3000',
+				'http://localhost:8787',
+			]);
 			expect(config.allowMethods).toEqual(['GET', 'POST']);
 			expect(config.credentials).toBe(true);
 		});
@@ -38,7 +41,7 @@ describe('Security Utils', () => {
 		});
 
 		it('should default to production if environment is not set', () => {
-			const env = { ...createMockEnv('production'), ENVIRONMENT: '' };
+			const env = { ...createMockEnv('production'), ENVIRONMENT: '' } as Env;
 			const config = getCorsConfig(env);
 
 			expect(config.origin).toBe('https://cloudflare-rag-demo.stevenleve.com');
@@ -58,7 +61,7 @@ describe('Security Utils', () => {
 				expect(result.code).toBe('Error');
 				expect(result.message).toBe('Test error message');
 				expect(result.details).toBeDefined();
-				expect(result.details?.stack).toBe('Stack trace here');
+				expect(result.details?.['stack']).toBe('Stack trace here');
 			});
 
 			it('should return error name as code if available', () => {
@@ -77,7 +80,7 @@ describe('Security Utils', () => {
 
 				expect(result.code).toBe('UNKNOWN_ERROR');
 				expect(result.message).toBe('[object Object]');
-				expect(result.details?.raw).toEqual(error);
+				expect(result.details?.['raw']).toEqual(error);
 			});
 
 			it('should handle string errors', () => {
@@ -109,12 +112,18 @@ describe('Security Utils', () => {
 				const result = sanitizeError(error, env);
 
 				expect(result.code).toBe('INTERNAL_ERROR');
-				expect(result.message).toBe('An internal error occurred. Please try again later.');
+				expect(result.message).toBe(
+					'An internal error occurred. Please try again later.',
+				);
 				expect(result.details).toBeUndefined();
 			});
 
 			it('should expose AppError details in production', () => {
-				const error = new AppError('Validation failed', 'VALIDATION_ERROR', 400);
+				const error = new AppError(
+					'Validation failed',
+					'VALIDATION_ERROR',
+					400,
+				);
 				const result = sanitizeError(error, env);
 
 				expect(result.code).toBe('VALIDATION_ERROR');
@@ -126,7 +135,9 @@ describe('Security Utils', () => {
 				const result = sanitizeError(error, env);
 
 				expect(result.code).toBe('INTERNAL_ERROR');
-				expect(result.message).toBe('An internal error occurred. Please try again later.');
+				expect(result.message).toBe(
+					'An internal error occurred. Please try again later.',
+				);
 				expect(result.details).toBeUndefined();
 			});
 
@@ -135,7 +146,9 @@ describe('Security Utils', () => {
 				const result = sanitizeError(error, env);
 
 				expect(result.code).toBe('INTERNAL_ERROR');
-				expect(result.message).toBe('An internal error occurred. Please try again later.');
+				expect(result.message).toBe(
+					'An internal error occurred. Please try again later.',
+				);
 			});
 
 			it('should handle AppError with custom status code', () => {
@@ -160,7 +173,9 @@ describe('Security Utils', () => {
 
 				for (const error of sensitiveErrors) {
 					const result = sanitizeError(error, env);
-					expect(result.message).toBe('An internal error occurred. Please try again later.');
+					expect(result.message).toBe(
+						'An internal error occurred. Please try again later.',
+					);
 					expect(result.message).not.toContain('postgres://');
 					expect(result.message).not.toContain('abc123');
 					expect(result.message).not.toContain('/etc/passwd');
