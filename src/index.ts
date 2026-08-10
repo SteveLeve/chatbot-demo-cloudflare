@@ -36,6 +36,8 @@ import {
 	validateContent,
 	validateMetadata,
 } from './utils/validation';
+import { getStaticEvalReport } from './eval/report-static';
+import { runEvalReport } from './eval/runner';
 import {
 	createTraceContext,
 	exportRequestSpan,
@@ -114,6 +116,8 @@ app.get('/', (c) => {
 			health: '/health',
 			query: '/api/v1/query',
 			ingest: '/api/v1/ingest',
+			evalReport: '/api/v1/eval/report',
+			evalRun: '/api/v1/eval/run',
 			docs: '/api/v1/docs',
 		},
 	});
@@ -562,6 +566,70 @@ app.get('/api/v1/agent/bootstrap', (c) => {
 });
 
 // ============================================================================
+// Eval Routes (Phase 4 / #35) — demo-scale only
+// ============================================================================
+
+/**
+ * Committed demo-scale eval report (deterministic; no Workers AI call)
+ * GET /api/v1/eval/report
+ */
+app.get('/api/v1/eval/report', (c) => {
+	const logger = createRequestLogger(c, { endpoint: 'eval-report' });
+	logger.info('Serving static demo-scale eval report');
+
+	const report = getStaticEvalReport();
+
+	return c.json<ApiResponse>({
+		success: true,
+		data: report,
+		metadata: {
+			timestamp: new Date().toISOString(),
+			requestId: c.get('requestId') as string | undefined,
+		},
+	});
+});
+
+/**
+ * Live demo-scale eval run (rate-limited; ephemeral — does not persist)
+ * POST /api/v1/eval/run
+ */
+app.post('/api/v1/eval/run', async (c) => {
+	const logger = createRequestLogger(c, { endpoint: 'eval-run' });
+	logger.info('Starting live demo-scale eval run');
+
+	const rateLimitResponse = await checkRateLimit(c, c.env.INGEST_RATE_LIMITER, {
+		limit: 5,
+		window: 60,
+		keyPrefix: 'eval-run',
+	});
+	if (rateLimitResponse) {
+		return rateLimitResponse;
+	}
+
+	try {
+		const report = await runEvalReport(c.env);
+		return c.json<ApiResponse>({
+			success: true,
+			data: report,
+			metadata: {
+				timestamp: new Date().toISOString(),
+				requestId: c.get('requestId') as string | undefined,
+			},
+		});
+	} catch (error) {
+		logger.error('Eval run failed', error);
+		const sanitizedError = sanitizeError(error, c.env);
+		return c.json<ApiResponse>(
+			{
+				success: false,
+				error: sanitizedError,
+			},
+			500,
+		);
+	}
+});
+
+// ============================================================================
 // Corpus Routes
 // ============================================================================
 
@@ -673,6 +741,20 @@ app.get('/api/v1/docs', (c) => {
 			endpoint: '/api/v1/corpus/:id',
 			method: 'GET',
 			note: 'Article list is static in the SPA manifest (ui/src/content/corpus-manifest.json)',
+		},
+		eval: {
+			description:
+				'Demo-scale eval reporting (faithfulness / groundedness / retrieval relevance). Not a production quality claim.',
+			report: {
+				endpoint: '/api/v1/eval/report',
+				method: 'GET',
+				note: 'Serves the committed snapshot in data/eval/report.json',
+			},
+			run: {
+				endpoint: '/api/v1/eval/run',
+				method: 'POST',
+				note: 'Optional live re-run against the gold set; rate-limited; ephemeral (does not write to disk)',
+			},
 		},
 		examples: {
 			query: {

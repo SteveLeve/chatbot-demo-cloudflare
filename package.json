@@ -33,7 +33,8 @@
     "lint": "eslint . && npm run lint --prefix ui",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test"
   },
   "keywords": [
     "cloudflare",
