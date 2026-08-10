@@ -9,10 +9,7 @@ import {
 } from '../../src/redteam/try-scenario';
 import { getRedteamScenarioById } from '../../src/redteam/scenarios-static';
 
-function mockContext(options: {
-	skipChatLogging?: boolean;
-	demoModeHeader?: string;
-}): Context<AppEnv> {
+function mockContext(options: { skipChatLogging?: boolean }): Context<AppEnv> {
 	const store = new Map<string, unknown>();
 	if (options.skipChatLogging) {
 		store.set('skipChatLogging', true);
@@ -26,12 +23,7 @@ function mockContext(options: {
 			store.set(key, value);
 		},
 		req: {
-			header: (name: string) => {
-				if (name.toLowerCase() === 'x-demo-mode') {
-					return options.demoModeHeader;
-				}
-				return undefined;
-			},
+			header: () => undefined,
 		},
 	} as unknown as Context<AppEnv>;
 }
@@ -69,14 +61,16 @@ describe('ChatLogger red-team skip', () => {
 		expect(env.DATABASE.prepare).not.toHaveBeenCalled();
 	});
 
-	it('disables logging when X-Demo-Mode: redteam header is set', async () => {
+	it('does not honor client X-Demo-Mode header as a logging bypass', () => {
 		const env = mockEnv();
-		const context = mockContext({ demoModeHeader: 'redteam' });
-		const logger = new ChatLogger(env, context);
+		const context = mockContext({});
+		// Simulate a client sending the header — ChatLogger must ignore it
+		(context.req as { header: (name: string) => string | undefined }).header = (
+			name: string,
+		) => (name.toLowerCase() === 'x-demo-mode' ? 'redteam' : undefined);
 
-		expect(logger.isLoggingEnabled()).toBe(false);
-		await logger.initializeSession();
-		expect(env.DATABASE.prepare).not.toHaveBeenCalled();
+		const logger = new ChatLogger(env, context);
+		expect(logger.isLoggingEnabled()).toBe(true);
 	});
 
 	it('keeps logging enabled for normal chat requests', () => {

@@ -244,7 +244,6 @@ export function RedteamPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Demo-Mode': 'redteam',
         },
         body: JSON.stringify({ scenarioId }),
       });
