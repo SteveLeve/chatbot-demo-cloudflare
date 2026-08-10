@@ -68,6 +68,10 @@ export const glossaryTerms: GlossaryTerm[] = [
     ],
     learnMore: [
       {
+        text: 'Red-team demo: hallucination pressure',
+        url: '/docs/redteam',
+      },
+      {
         text: 'Understanding LLM Hallucinations',
         url: 'https://arxiv.org/abs/2309.01219',
       },
@@ -103,6 +107,10 @@ export const glossaryTerms: GlossaryTerm[] = [
       'A security attack where malicious users craft prompts designed to manipulate language model behavior, bypass safety guidelines, or extract sensitive information. Examples include embedding hidden instructions in documents that the model retrieves and follows, or asking the model to ignore previous instructions. Defending against prompt injection requires input validation, instruction hierarchies, and careful system prompt design.',
     examplePrompts: ['What is a virus?', 'What is open source software?'],
     learnMore: [
+      {
+        text: 'Red-team demo: prompt injection',
+        url: '/docs/redteam',
+      },
       {
         text: 'OWASP LLM Top 10',
         url: 'https://owasp.org/www-project-top-10-for-large-language-model-applications/',

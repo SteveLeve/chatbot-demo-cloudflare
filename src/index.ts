@@ -38,6 +38,11 @@ import {
 } from './utils/validation';
 import { getStaticEvalReport } from './eval/report-static';
 import { runEvalReport } from './eval/runner';
+import { getStaticRedteamScenarios } from './redteam/scenarios-static';
+import {
+	tryRedteamScenario,
+	UnknownRedteamScenarioError,
+} from './redteam/try-scenario';
 import {
 	createTraceContext,
 	exportRequestSpan,
@@ -118,6 +123,8 @@ app.get('/', (c) => {
 			ingest: '/api/v1/ingest',
 			evalReport: '/api/v1/eval/report',
 			evalRun: '/api/v1/eval/run',
+			redteamScenarios: '/api/v1/redteam/scenarios',
+			redteamTry: '/api/v1/redteam/try',
 			docs: '/api/v1/docs',
 		},
 	});
@@ -630,6 +637,130 @@ app.post('/api/v1/eval/run', async (c) => {
 });
 
 // ============================================================================
+// Red-team Routes (Phase 5 / #36) — curated scenarios only; not attack tooling
+// ============================================================================
+
+/**
+ * Committed red-team scenario snapshot (deterministic; no Workers AI call)
+ * GET /api/v1/redteam/scenarios
+ */
+app.get('/api/v1/redteam/scenarios', (c) => {
+	const logger = createRequestLogger(c, { endpoint: 'redteam-scenarios' });
+	logger.info('Serving static red-team scenarios');
+
+	const scenarios = getStaticRedteamScenarios();
+
+	return c.json<ApiResponse>({
+		success: true,
+		data: scenarios,
+		metadata: {
+			timestamp: new Date().toISOString(),
+			requestId: c.get('requestId') as string | undefined,
+		},
+	});
+});
+
+/**
+ * Live try of a curated scenario by id only (rate-limited; skips D1 chat logging)
+ * POST /api/v1/redteam/try  body: { scenarioId: string }
+ */
+app.post('/api/v1/redteam/try', async (c) => {
+	const logger = createRequestLogger(c, { endpoint: 'redteam-try' });
+	logger.info('Starting live red-team scenario try');
+
+	const rateLimitResponse = await checkRateLimit(c, c.env.INGEST_RATE_LIMITER, {
+		limit: 10,
+		window: 60,
+		keyPrefix: 'redteam-try',
+	});
+	if (rateLimitResponse) {
+		return rateLimitResponse;
+	}
+
+	let body: { scenarioId?: unknown };
+	try {
+		body = await c.req.json();
+	} catch {
+		return c.json<ApiResponse>(
+			{
+				success: false,
+				error: {
+					code: 'INVALID_INPUT',
+					message: 'Request body must be JSON with scenarioId',
+				},
+			},
+			400,
+		);
+	}
+
+	const scenarioId =
+		typeof body.scenarioId === 'string' ? body.scenarioId.trim() : '';
+	if (!scenarioId || scenarioId.length > 128) {
+		return c.json<ApiResponse>(
+			{
+				success: false,
+				error: {
+					code: 'INVALID_INPUT',
+					message: 'scenarioId must be a non-empty string (max 128 chars)',
+					details: { field: 'scenarioId' },
+				},
+			},
+			400,
+		);
+	}
+
+	// Reject freeform prompts — only curated ids
+	if ('prompt' in body || 'question' in body) {
+		return c.json<ApiResponse>(
+			{
+				success: false,
+				error: {
+					code: 'FREEFORM_NOT_ALLOWED',
+					message:
+						'Red-team try accepts scenarioId only. Freeform adversarial prompts are not supported on this surface.',
+				},
+			},
+			400,
+		);
+	}
+
+	try {
+		const result = await tryRedteamScenario(scenarioId, c.env, c);
+		return c.json<ApiResponse>({
+			success: true,
+			data: result,
+			metadata: {
+				timestamp: new Date().toISOString(),
+				requestId: c.get('requestId') as string | undefined,
+			},
+		});
+	} catch (error) {
+		if (error instanceof UnknownRedteamScenarioError) {
+			return c.json<ApiResponse>(
+				{
+					success: false,
+					error: {
+						code: 'NOT_FOUND',
+						message: error.message,
+						details: { field: 'scenarioId' },
+					},
+				},
+				404,
+			);
+		}
+		logger.error('Red-team try failed', error);
+		const sanitizedError = sanitizeError(error, c.env);
+		return c.json<ApiResponse>(
+			{
+				success: false,
+				error: sanitizedError,
+			},
+			500,
+		);
+	}
+});
+
+// ============================================================================
 // Corpus Routes
 // ============================================================================
 
@@ -754,6 +885,21 @@ app.get('/api/v1/docs', (c) => {
 				endpoint: '/api/v1/eval/run',
 				method: 'POST',
 				note: 'Optional live re-run against the gold set; rate-limited; ephemeral (does not write to disk)',
+			},
+		},
+		redteam: {
+			description:
+				'Educational red-team scenarios (prompt injection, out-of-corpus, hallucination pressure). Curated list only — not attack tooling.',
+			scenarios: {
+				endpoint: '/api/v1/redteam/scenarios',
+				method: 'GET',
+				note: 'Serves committed scenarios + teaching notes in data/redteam/scenarios.json',
+			},
+			try: {
+				endpoint: '/api/v1/redteam/try',
+				method: 'POST',
+				body: { scenarioId: 'curated id from scenarios list' },
+				note: 'Optional live try by scenarioId only; rate-limited; skips D1 chat logging',
 			},
 		},
 		examples: {

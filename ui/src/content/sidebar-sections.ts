@@ -67,6 +67,18 @@ Similarity scores (typically shown as percentages from 0-100) indicate how close
     ],
   },
   {
+    id: 'redteam-defenses',
+    title: 'Red-team Defenses (Demo)',
+    content: `This demo includes a curated red-team surface: prompt-injection attempts are sanitized at the input boundary, out-of-corpus questions should refuse when retrieval is empty, and hallucination pressure should not invent unsupported details. Live tries use scenario IDs only and skip D1 chat logging so adversarial text does not silently accumulate.`,
+    defaultOpen: false,
+    links: [
+      {
+        text: 'Open red-team demo',
+        to: '/docs/redteam',
+      },
+    ],
+  },
+  {
     id: 'security-production',
     title: 'Security & Production',
     content: `Deploying RAG systems in production introduces security considerations. Prompt injection attacks occur when malicious users craft queries designed to manipulate the model's behavior or bypass safety guidelines. Data leakage is a risk if the knowledge base contains sensitive information—careful access controls and data governance are essential.
@@ -74,6 +86,10 @@ Similarity scores (typically shown as percentages from 0-100) indicate how close
 Production RAG systems require rate limiting to prevent abuse, authentication to restrict access, and comprehensive logging for security audits. Regular security reviews, input validation, and output filtering help mitigate risks. The knowledge base itself must be managed with appropriate permissions, versioning, and audit trails. Following industry best practices and security frameworks ensures RAG systems remain both powerful and safe.`,
     defaultOpen: false,
     links: [
+      {
+        text: 'Red-team demo (educational)',
+        to: '/docs/redteam',
+      },
       {
         text: 'OWASP LLM Top 10',
         to: 'https://owasp.org/www-project-top-10-for-large-language-model-applications/',
@@ -98,6 +114,10 @@ Production RAG systems require rate limiting to prevent abuse, authentication to
       {
         text: '📊 Demo-scale Eval Report',
         to: '/docs/eval',
+      },
+      {
+        text: '🛡️ Red-team Demo',
+        to: '/docs/redteam',
       },
     ],
   },

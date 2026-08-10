@@ -7,6 +7,7 @@ import { FaqPage } from './pages/FaqPage';
 import { GlossaryPage } from './pages/GlossaryPage';
 import { CorpusPage } from './pages/CorpusPage';
 import { EvalPage } from './pages/EvalPage';
+import { RedteamPage } from './pages/RedteamPage';
 import { applyTheme, getInitialTheme } from './lib/theme';
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Route path="/docs/corpus" element={<CorpusPage />} />
           <Route path="/docs/corpus/:id" element={<CorpusPage />} />
           <Route path="/docs/eval" element={<EvalPage />} />
+          <Route path="/docs/redteam" element={<RedteamPage />} />
         </Routes>
         {/* Footer removed - now per-page */}
       </div>
