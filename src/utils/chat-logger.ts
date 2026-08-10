@@ -46,7 +46,11 @@ export class ChatLogger {
 		this.env = env;
 		this.context = context;
 
-		this.loggingEnabled = env.CHAT_LOGGING_ENABLED !== false;
+		// Server-set only — never honor client headers for audit bypass (#36 review)
+		const skipDemoLogging = context.get('skipChatLogging') === true;
+
+		this.loggingEnabled =
+			env.CHAT_LOGGING_ENABLED !== false && !skipDemoLogging;
 
 		this.requestId = context.get('requestId');
 		this.trace = context.get('traceContext');
@@ -57,9 +61,19 @@ export class ChatLogger {
 				requestId: this.requestId,
 				traceId: this.trace?.traceId,
 				spanId: this.trace?.spanId,
+				skipChatLogging: skipDemoLogging,
 			},
 			env.LOG_LEVEL,
 		);
+
+		if (skipDemoLogging) {
+			this.logger.info('Chat logging skipped for red-team demo mode');
+		}
+	}
+
+	/** True when this logger will write sessions/messages to D1. */
+	isLoggingEnabled(): boolean {
+		return this.loggingEnabled;
 	}
 
 	/**

@@ -68,6 +68,20 @@ export function LandingPage() {
               limits on the page.
             </p>
           </Link>
+
+          <Link
+            to="/docs/redteam"
+            className="block p-6 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-md transition-all group bg-white dark:bg-gray-800"
+          >
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-2">
+              Red-team Demo
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Curated adversarial scenarios with expected defenses and teaching
+              notes — injection, out-of-corpus refusal, and hallucination
+              pressure. Not attack tooling.
+            </p>
+          </Link>
         </div>
 
         {/* Educational Resources */}
@@ -99,6 +113,12 @@ export function LandingPage() {
               className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               Eval
+            </Link>
+            <Link
+              to="/docs/redteam"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            >
+              Red-team
             </Link>
           </div>
         </div>

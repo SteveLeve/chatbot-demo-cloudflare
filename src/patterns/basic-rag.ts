@@ -36,10 +36,20 @@ export async function basicRAG(
 	const requestId = context?.get('requestId');
 	const trace = context?.get('traceContext');
 
+	const {
+		question: rawQuestion,
+		topK = env.DEFAULT_TOP_K,
+		minSimilarity,
+	} = request;
+
+	// Sanitize before retrieve, generate, log, and response — defense-in-depth
+	// (API routes also sanitize; red-team try may pass curated raw prompts)
+	const question = sanitizeQuestion(rawQuestion);
+
 	const logger = createLogger(
 		{
 			pattern: 'basic',
-			question: request.question,
+			question,
 			requestId,
 			traceId: trace?.traceId,
 			spanId: trace?.spanId,
@@ -49,8 +59,6 @@ export async function basicRAG(
 	logger.startTimer('basicRAG');
 	logger.info('Starting basic RAG query');
 
-	const { question, topK = env.DEFAULT_TOP_K, minSimilarity } = request;
-
 	// Initialize chat logger if context is provided
 	let chatLogger: ChatLogger | null = null;
 	let messageIndex = 0;
@@ -59,7 +67,7 @@ export async function basicRAG(
 		chatLogger = new ChatLogger(env, context);
 		await chatLogger.initializeSession();
 
-		// Log user message
+		// Log user message (sanitized)
 		messageIndex = 0;
 		await chatLogger.logMessage({
 			role: 'user',
@@ -94,12 +102,9 @@ export async function basicRAG(
 			);
 		}
 
-		// Defense-in-depth: Sanitize question (already sanitized at API boundary, but check again)
-		const sanitizedQuestion = sanitizeQuestion(question);
-
 		// Retrieve via shared corpus helper (embedding + Vectorize + D1)
 		logger.startTimer('retrieve');
-		const retrieval = await retrieveFromCorpus(sanitizedQuestion, env, {
+		const retrieval = await retrieveFromCorpus(question, env, {
 			topK,
 			minSimilarity,
 			traceId: trace?.traceId,
@@ -137,18 +142,18 @@ export async function basicRAG(
 			};
 		}
 
-		const context = retrieval.sources
+		const contextText = retrieval.sources
 			.map((source, idx) => `[${idx + 1}] ${source.chunkText}`)
 			.join('\n\n');
 
 		logger.debug('Context built', {
 			chunks: retrieval.chunks.length,
-			contextLength: context.length,
+			contextLength: contextText.length,
 		});
 
-		// Generate answer
+		// Generate answer — user turn is the sanitized question
 		logger.startTimer('generateAnswer');
-		const systemPrompt = buildSystemPrompt(context);
+		const systemPrompt = buildSystemPrompt(contextText);
 
 		const generationResult = (await env.AI.run(
 			GENERATION_MODEL,
