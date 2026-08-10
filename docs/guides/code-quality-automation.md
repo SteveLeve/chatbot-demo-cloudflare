@@ -76,7 +76,7 @@ Root `.lintstagedrc.json` and `ui/.lintstagedrc.json` — lint-staged picks near
 
 `.github/workflows/ci.yml`:
 
-- **root**: `npm ci` → lint → typecheck → `npm test -- --run`
+- **root**: `npm ci` → `npx eslint .` → typecheck → `npm test -- --run` (not `npm run lint` — that also hits `ui/` and needs a separate install)
 - **ui**: `npm ci` → lint → build (`ui/.npmrc` applies in CI)
 
 No `format:check` in CI (incremental formatting).

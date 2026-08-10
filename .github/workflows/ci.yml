@@ -18,7 +18,9 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - run: npm run lint
+      # Root-only: `npm run lint` also lints ui/ and needs ui/node_modules.
+      # UI lint runs in the ui job below.
+      - run: npx eslint .
       - run: npm run typecheck
       - run: npm test -- --run
 
