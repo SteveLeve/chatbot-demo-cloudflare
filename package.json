@@ -4,6 +4,9 @@
   "description": "Cloudflare-first agentic RAG portfolio demo — Agents SDK, Workers AI, Vectorize, D1, R2 (epic #30; pivoting from an earlier single-turn RAG demo)",
   "type": "module",
   "main": "src/index.ts",
+  "engines": {
+    "node": ">=24.11.0"
+  },
   "scripts": {
     "dev": "wrangler dev",
     "build": "npm run corpus:build && cd ui && npm run build",

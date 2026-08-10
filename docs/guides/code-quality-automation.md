@@ -1,6 +1,6 @@
 # Code Quality Automation — Implementation Guide
 
-**Current Status**: Complete (Phases 1–3). Tracked in [#40](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/40).
+**Current Status**: Phases 1–3 merged ([PR #42](https://github.com/SteveLeve/chatbot-demo-cloudflare/pull/42)). Post-merge: CI Node pin + lockfile/npm alignment in flight. Tracked in [#40](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/40).
 
 ## Overview
 
@@ -38,7 +38,14 @@ gh api repos/SteveLeve/chatbot-demo-cloudflare/rulesets
   - NO required status checks (CI is advisory until ruleset updated)
 ```
 
-Decision: ship CI without updating the ruleset to require the workflow (first PR only adds the check).
+Decision (at first merge): ship CI without updating the ruleset to require the workflow (first PR only adds the check).
+
+**Enforcement (2026-08-09):** keep **advisory** until CI is reliably green on `main`/PRs; then require `CI / root` + `CI / ui` on `protect-main`. Do not turn on required checks in this follow-up.
+
+### Post-merge CI fix (2026-08-09)
+
+- Merge push CI failed: `npm ci` under Node 20 / npm 10 reported `Missing: @cloudflare/workers-types@4.20260702.1` (optional peer; lockfile written with npm 11).
+- Fix: pin workflow to **Node 24** (npm 11) and set `package.json` `engines.node` to `>=24.11.0`.
 
 ## Pre-commit timing (measured 2026-08-09)
 
@@ -74,7 +81,7 @@ Root `.lintstagedrc.json` and `ui/.lintstagedrc.json` — lint-staged picks near
 
 ### Phase 3 — CI workflow
 
-`.github/workflows/ci.yml`:
+`.github/workflows/ci.yml` (Node **24**):
 
 - **root**: `npm ci` → `npx eslint .` → typecheck → `npm test -- --run` (not `npm run lint` — that also hits `ui/` and needs a separate install)
 - **ui**: `npm ci` → lint → build (`ui/.npmrc` applies in CI)
