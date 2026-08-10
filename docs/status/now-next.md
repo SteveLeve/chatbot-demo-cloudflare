@@ -5,7 +5,7 @@
 
 ## Now
 
-- Phase 5 red-team demo mode **in progress** (`feat/36-redteam-mode` / #36): curated scenarios, `GET /api/v1/redteam/scenarios` + optional `POST /try` by id, ChatLogger skip gate, `/docs/redteam` page, Playwright coverage.
+- Phase 5 red-team demo mode **in review** (PR #46 / #36): curated scenarios, `GET /api/v1/redteam/scenarios` + optional `POST /try` by id, ChatLogger skip gate, `/docs/redteam` page, Playwright coverage.
 - Phase 4 eval reporting **merged** (PR #45 / #35).
 - Phase 3 Agents SDK / trace UI **merged** (PR #41 / #34).
 - Code quality automation **complete** (#40): Phases 1–3 (PR #42), Node 24 CI pin (PR #43), `protect-main` requires `root` + `ui`.
