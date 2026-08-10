@@ -6,13 +6,12 @@
 ## Now
 
 - Phase 3 Agents SDK / trace UI **merged** (PR #41 / #34).
-- Code quality automation Phases 1–3 **merged** (PR #42 / #40): ESLint, Prettier, Husky+lint-staged, CI.
-- **Follow-up (#40)**: pin CI to Node 24 so `npm ci` matches the npm 11 lockfile. Ruleset stays **advisory** until CI is reliably green, then enforce.
+- Code quality automation **complete** (#40): Phases 1–3 (PR #42), Node 24 CI pin (PR #43), `protect-main` requires `root` + `ui`.
 - Prior hardening remains shipped: security (PRs #22/#23), perf (#28), observability phase 1 (#29); model refresh (#38), corpus (#39).
 
 ## Next
 
-- Close out #40 post-merge CI fix, then open phase branches in order:
+- Open epic #30 phase branches in order:
   - Phase 4 (#35): eval reporting. Phase 5 (#36): red-team demo mode.
 - Deprioritized vs reimagining: OTLP dashboards (#18).
 - **Coupled to Phase 5**: privacy endpoints (#19).
