@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "demoScale": true,
+  "description": "Demo-scale gold set over the curated ~37-article corpus. Teaching tool — not a quality claim.",
+  "topK": 3,
+  "methodologyLimits": "This gold set has a few dozen cases over ~37 Simple English Wikipedia articles. Scores teach faithfulness, groundedness, and retrieval relevance concepts. They do not support production quality claims, model comparisons, or leaderboard-style rankings.",
+  "cases": [
+    {
+      "id": "ai-definition",
+      "question": "What is artificial intelligence?",
+      "expectedArticleIds": ["artificial-intelligence"],
+      "expectedBehavior": "answer",
+      "notes": "Direct in-corpus definition"
+    },
+    {
+      "id": "turing-test",
+      "question": "What did Alan Turing propose about machine intelligence?",
+      "expectedArticleIds": ["alan-turing"],
+      "expectedBehavior": "answer",
+      "notes": "Turing test grounding"
+    },
+    {
+      "id": "einstein-who",
+      "question": "Who was Albert Einstein?",
+      "expectedArticleIds": ["albert-einstein"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "dna-made-of",
+      "question": "What is DNA made of?",
+      "expectedArticleIds": ["dna"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "photosynthesis",
+      "question": "How do plants make food using sunlight?",
+      "expectedArticleIds": ["photosynthesis"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "linux-os",
+      "question": "What is Linux?",
+      "expectedArticleIds": ["linux", "operating-system"],
+      "expectedBehavior": "answer",
+      "notes": "Multi-article expected set"
+    },
+    {
+      "id": "www-what",
+      "question": "What is the World Wide Web?",
+      "expectedArticleIds": ["world-wide-web"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "gravity",
+      "question": "How does gravity work?",
+      "expectedArticleIds": ["gravity"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "newton",
+      "question": "Who was Isaac Newton?",
+      "expectedArticleIds": ["isaac-newton"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "open-source",
+      "question": "What is open source software?",
+      "expectedArticleIds": ["open-source"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "html",
+      "question": "What is HTML used for?",
+      "expectedArticleIds": ["html"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "mars",
+      "question": "What is Mars?",
+      "expectedArticleIds": ["mars", "solar-system"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "protein",
+      "question": "What is a protein?",
+      "expectedArticleIds": ["protein"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "virus",
+      "question": "What is a virus?",
+      "expectedArticleIds": ["virus"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "linus-torvalds",
+      "question": "Who created Linux?",
+      "expectedArticleIds": ["linus-torvalds", "linux"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "internet",
+      "question": "What is the Internet?",
+      "expectedArticleIds": ["internet"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "atom",
+      "question": "What is an atom?",
+      "expectedArticleIds": ["atom"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "darwin",
+      "question": "Who was Charles Darwin?",
+      "expectedArticleIds": ["charles-darwin"],
+      "expectedBehavior": "answer"
+    },
+    {
+      "id": "refuse-stock-price",
+      "question": "What was Apple's closing stock price yesterday?",
+      "expectedArticleIds": [],
+      "expectedBehavior": "refuse",
+      "notes": "Out-of-corpus / time-sensitive; should refuse"
+    },
+    {
+      "id": "refuse-weather",
+      "question": "What is the weather in Tokyo right now?",
+      "expectedArticleIds": [],
+      "expectedBehavior": "refuse",
+      "notes": "Not in curated corpus"
+    },
+    {
+      "id": "refuse-recipe",
+      "question": "Give me a chocolate cake recipe with exact measurements.",
+      "expectedArticleIds": [],
+      "expectedBehavior": "refuse"
+    },
+    {
+      "id": "refuse-sports",
+      "question": "Who won the last FIFA World Cup final?",
+      "expectedArticleIds": [],
+      "expectedBehavior": "refuse"
+    },
+    {
+      "id": "refuse-crypto",
+      "question": "Should I buy Bitcoin this week?",
+      "expectedArticleIds": [],
+      "expectedBehavior": "refuse"
+    },
+    {
+      "id": "refuse-unrelated-person",
+      "question": "What is Marie Curie's birthday and favorite food?",
+      "expectedArticleIds": [],
+      "expectedBehavior": "refuse",
+      "notes": "Person not in corpus; detail-seeking should refuse"
+    }
+  ]
+}

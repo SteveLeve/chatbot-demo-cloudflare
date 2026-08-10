@@ -1,0 +1,706 @@
+{
+  "demoScale": true,
+  "generatedAt": "2026-08-10T18:00:00.000Z",
+  "source": "static",
+  "scoredPath": "basic-rag",
+  "generationModel": "@cf/meta/llama-4-scout-17b-16e-instruct",
+  "goldSetVersion": 1,
+  "methodologyLimits": "This gold set has a few dozen cases over ~37 Simple English Wikipedia articles. Scores teach faithfulness, groundedness, and retrieval relevance concepts. They do not support production quality claims, model comparisons, or leaderboard-style rankings.",
+  "aggregates": {
+    "caseCount": 24,
+    "passCount": 19,
+    "failCount": 5,
+    "retrievalRelevance": 0.86,
+    "faithfulness": 0.78,
+    "groundedness": 0.81,
+    "behaviorPassRate": 0.88
+  },
+  "metricExplainer": {
+    "retrievalRelevance": {
+      "means": "Whether the top-K retrieved articles include the gold expected article IDs (Hit@K / recall@K over article IDs).",
+      "doesNotMean": "Not a measure of answer quality, citation correctness, or how “smart” the model is — only whether retrieval found the right documents."
+    },
+    "faithfulness": {
+      "means": "Whether claims in the generated answer are supported by the retrieved context (LLM-as-judge, demo-scale).",
+      "doesNotMean": "Not human-verified truth, not completeness, and not a production accuracy SLA. A high score can still miss important caveats."
+    },
+    "groundedness": {
+      "means": "Whether the answer stays tied to retrieved context instead of free-floating general knowledge (LLM-as-judge, demo-scale).",
+      "doesNotMean": "Not the same as usefulness or style. An answer can be grounded and still incomplete, or refuse correctly with a low groundedness score."
+    }
+  },
+  "cases": [
+    {
+      "caseId": "ai-definition",
+      "question": "What is artificial intelligence?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["artificial-intelligence"],
+      "retrievedArticleIds": ["artificial-intelligence", "computer"],
+      "answer": "Artificial intelligence is the intelligence of machines or software [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00 (expected [artificial-intelligence], retrieved [artificial-intelligence, computer]).",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.92,
+        "rationale": "Answer claims match retrieved AI article context.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.9,
+        "rationale": "Stays within retrieved context.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 1200,
+      "notes": "Direct in-corpus definition | Expected an answer and model answered."
+    },
+    {
+      "caseId": "turing-test",
+      "question": "What did Alan Turing propose about machine intelligence?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["alan-turing"],
+      "retrievedArticleIds": ["alan-turing", "artificial-intelligence"],
+      "answer": "Turing proposed the Turing test to say when a machine could be called intelligent [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00 (expected [alan-turing], retrieved [alan-turing, artificial-intelligence]).",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.88,
+        "rationale": "Turing test claim supported by retrieved Alan Turing article.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.85,
+        "rationale": "Answer grounded in retrieved chunks.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 1100,
+      "notes": "Turing test grounding | Expected an answer and model answered."
+    },
+    {
+      "caseId": "einstein-who",
+      "question": "Who was Albert Einstein?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["albert-einstein"],
+      "retrievedArticleIds": ["albert-einstein"],
+      "answer": "Albert Einstein was a physicist known for work on relativity [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.8,
+        "rationale": "Supported by Einstein article context.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.82,
+        "rationale": "Grounded in retrieved context.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 980,
+      "notes": "Expected an answer and model answered."
+    },
+    {
+      "caseId": "dna-made-of",
+      "question": "What is DNA made of?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["dna"],
+      "retrievedArticleIds": ["dna", "gene"],
+      "answer": "DNA is a molecule that carries genetic instructions [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.75,
+        "rationale": "Mostly supported; composition detail thin in answer.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.78,
+        "rationale": "Tied to DNA context.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 1050,
+      "notes": "Expected an answer and model answered."
+    },
+    {
+      "caseId": "photosynthesis",
+      "question": "How do plants make food using sunlight?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["photosynthesis"],
+      "retrievedArticleIds": ["photosynthesis", "biology"],
+      "answer": "Photosynthesis uses sunlight to turn carbon dioxide into sugars [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.9,
+        "rationale": "Matches photosynthesis article.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.88,
+        "rationale": "Grounded in retrieved context.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 1020,
+      "notes": "Expected an answer and model answered."
+    },
+    {
+      "caseId": "linux-os",
+      "question": "What is Linux?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["linux", "operating-system"],
+      "retrievedArticleIds": ["linux", "linus-torvalds"],
+      "answer": "Linux is an operating system kernel started by Linus Torvalds [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 0.75,
+        "rationale": "Hit@K=1, recall@K=0.50 (expected [linux, operating-system], retrieved [linux, linus-torvalds]).",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.84,
+        "rationale": "Supported by Linux article.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.8,
+        "rationale": "Grounded in retrieved Linux context.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 1150,
+      "notes": "Multi-article expected set | Expected an answer and model answered."
+    },
+    {
+      "caseId": "www-what",
+      "question": "What is the World Wide Web?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["world-wide-web"],
+      "retrievedArticleIds": ["world-wide-web", "internet", "html"],
+      "answer": "The World Wide Web is a system of linked documents accessed via the Internet [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.86,
+        "rationale": "Supported by WWW article.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.84,
+        "rationale": "Grounded in retrieved context.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 990,
+      "notes": "Expected an answer and model answered."
+    },
+    {
+      "caseId": "gravity",
+      "question": "How does gravity work?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["gravity"],
+      "retrievedArticleIds": ["gravity", "isaac-newton", "physics"],
+      "answer": "Gravity is a force that attracts objects with mass toward each other [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.7,
+        "rationale": "Simplified but supported by gravity context.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.72,
+        "rationale": "Mostly grounded; light paraphrase.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 1010,
+      "notes": "Expected an answer and model answered."
+    },
+    {
+      "caseId": "newton",
+      "question": "Who was Isaac Newton?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["isaac-newton"],
+      "retrievedArticleIds": ["isaac-newton", "gravity"],
+      "answer": "Isaac Newton was a scientist who studied gravity and motion [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.83,
+        "rationale": "Supported by Newton article.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.81,
+        "rationale": "Grounded in retrieved context.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 970,
+      "notes": "Expected an answer and model answered."
+    },
+    {
+      "caseId": "open-source",
+      "question": "What is open source software?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["open-source"],
+      "retrievedArticleIds": ["open-source", "linux"],
+      "answer": "Open source software makes source code available for people to use and change [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.87,
+        "rationale": "Supported by open source article.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.85,
+        "rationale": "Grounded in retrieved context.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 940,
+      "notes": "Expected an answer and model answered."
+    },
+    {
+      "caseId": "html",
+      "question": "What is HTML used for?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["html"],
+      "retrievedArticleIds": ["html", "world-wide-web"],
+      "answer": "HTML is used to create web pages [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.9,
+        "rationale": "Supported by HTML article.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.88,
+        "rationale": "Grounded in retrieved context.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 900,
+      "notes": "Expected an answer and model answered."
+    },
+    {
+      "caseId": "mars",
+      "question": "What is Mars?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["mars", "solar-system"],
+      "retrievedArticleIds": ["mars", "solar-system", "earth"],
+      "answer": "Mars is a planet in the Solar System [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.91,
+        "rationale": "Supported by Mars article.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.89,
+        "rationale": "Grounded in retrieved context.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 930,
+      "notes": "Expected an answer and model answered."
+    },
+    {
+      "caseId": "protein",
+      "question": "What is a protein?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["protein"],
+      "retrievedArticleIds": ["protein", "enzyme", "gene"],
+      "answer": "Proteins are molecules made of amino acids that do many jobs in living things [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.82,
+        "rationale": "Supported by protein article.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.8,
+        "rationale": "Grounded in retrieved context.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 960,
+      "notes": "Expected an answer and model answered."
+    },
+    {
+      "caseId": "virus",
+      "question": "What is a virus?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["virus"],
+      "retrievedArticleIds": ["virus"],
+      "answer": "A virus is a tiny parasite that reproduces inside living cells [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.88,
+        "rationale": "Supported by virus article.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.86,
+        "rationale": "Grounded in retrieved context.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 910,
+      "notes": "Expected an answer and model answered."
+    },
+    {
+      "caseId": "linus-torvalds",
+      "question": "Who created Linux?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["linus-torvalds", "linux"],
+      "retrievedArticleIds": ["linus-torvalds", "linux"],
+      "answer": "Linus Torvalds started Linux [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.93,
+        "rationale": "Supported by Linus Torvalds / Linux articles.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.9,
+        "rationale": "Grounded in retrieved context.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 880,
+      "notes": "Expected an answer and model answered."
+    },
+    {
+      "caseId": "internet",
+      "question": "What is the Internet?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["internet"],
+      "retrievedArticleIds": ["internet", "world-wide-web"],
+      "answer": "The Internet is a global network of computers [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.85,
+        "rationale": "Supported by Internet article.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0.83,
+        "rationale": "Grounded in retrieved context.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 920,
+      "notes": "Expected an answer and model answered."
+    },
+    {
+      "caseId": "atom",
+      "question": "What is an atom?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["atom"],
+      "retrievedArticleIds": ["chemistry", "physics"],
+      "answer": "An atom is a basic unit of matter [1].",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 0,
+        "rationale": "Hit@K=0, recall@K=0.00 (expected [atom], retrieved [chemistry, physics]).",
+        "passed": false
+      },
+      "faithfulness": {
+        "score": 0.55,
+        "rationale": "Answer is plausible but retrieved wrong articles — judge marked weak support.",
+        "passed": false
+      },
+      "groundedness": {
+        "score": 0.5,
+        "rationale": "Weak grounding because expected atom article missing from top-K.",
+        "passed": false
+      },
+      "behaviorPass": true,
+      "overallPass": false,
+      "latencyMs": 1080,
+      "notes": "FAILURE EXAMPLE: retrieval missed atom article | Expected an answer and model answered."
+    },
+    {
+      "caseId": "darwin",
+      "question": "Who was Charles Darwin?",
+      "expectedBehavior": "answer",
+      "expectedArticleIds": ["charles-darwin"],
+      "retrievedArticleIds": ["charles-darwin", "biology"],
+      "answer": "Charles Darwin was a naturalist known for evolution by natural selection [1]. He also invented the telephone in 1876.",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Hit@K=1, recall@K=1.00",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0.35,
+        "rationale": "Telephone claim is not supported by retrieved Darwin context (failure example).",
+        "passed": false
+      },
+      "groundedness": {
+        "score": 0.4,
+        "rationale": "Mix of grounded biography plus unsupported invention claim.",
+        "passed": false
+      },
+      "behaviorPass": true,
+      "overallPass": false,
+      "latencyMs": 1120,
+      "notes": "FAILURE EXAMPLE: unfaithful claim mixed into otherwise grounded answer | Expected an answer and model answered."
+    },
+    {
+      "caseId": "refuse-stock-price",
+      "question": "What was Apple's closing stock price yesterday?",
+      "expectedBehavior": "refuse",
+      "expectedArticleIds": [],
+      "retrievedArticleIds": ["apple-inc"],
+      "answer": "I cannot answer this question based on the provided documents.",
+      "refused": true,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Out-of-corpus case: retrieval returned 1 article(s); expected none. Retrieval relevance is N/A for grounding targets — scored 1 for empty expected set.",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0,
+        "rationale": "Skipped LLM judge for refuse case — behavior check is primary.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0,
+        "rationale": "Skipped LLM judge for refuse case — behavior check is primary.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 800,
+      "notes": "Out-of-corpus / time-sensitive; should refuse | Expected refusal and model refused."
+    },
+    {
+      "caseId": "refuse-weather",
+      "question": "What is the weather in Tokyo right now?",
+      "expectedBehavior": "refuse",
+      "expectedArticleIds": [],
+      "retrievedArticleIds": [],
+      "answer": "I cannot answer this question based on the provided documents.",
+      "refused": true,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Out-of-corpus case: no expected articles; retrieval empty as expected.",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0,
+        "rationale": "Skipped LLM judge for refuse case — behavior check is primary.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0,
+        "rationale": "Skipped LLM judge for refuse case — behavior check is primary.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 750,
+      "notes": "Not in curated corpus | Expected refusal and model refused."
+    },
+    {
+      "caseId": "refuse-recipe",
+      "question": "Give me a chocolate cake recipe with exact measurements.",
+      "expectedBehavior": "refuse",
+      "expectedArticleIds": [],
+      "retrievedArticleIds": [],
+      "answer": "I cannot answer this question based on the provided documents.",
+      "refused": true,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Out-of-corpus case: no expected articles; retrieval empty as expected.",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0,
+        "rationale": "Skipped LLM judge for refuse case — behavior check is primary.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0,
+        "rationale": "Skipped LLM judge for refuse case — behavior check is primary.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 720,
+      "notes": "Expected refusal and model refused."
+    },
+    {
+      "caseId": "refuse-sports",
+      "question": "Who won the last FIFA World Cup final?",
+      "expectedBehavior": "refuse",
+      "expectedArticleIds": [],
+      "retrievedArticleIds": [],
+      "answer": "Argentina won the last FIFA World Cup final in a penalty shootout.",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Out-of-corpus case: no expected articles; retrieval empty as expected.",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0,
+        "rationale": "Skipped LLM judge for refuse case — behavior check is primary.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0,
+        "rationale": "Skipped LLM judge for refuse case — behavior check is primary.",
+        "passed": true
+      },
+      "behaviorPass": false,
+      "overallPass": false,
+      "latencyMs": 860,
+      "notes": "FAILURE EXAMPLE: expected refusal but model answered from parametric knowledge | Expected refusal but model produced a non-refusal answer."
+    },
+    {
+      "caseId": "refuse-crypto",
+      "question": "Should I buy Bitcoin this week?",
+      "expectedBehavior": "refuse",
+      "expectedArticleIds": [],
+      "retrievedArticleIds": [],
+      "answer": "I cannot answer this question based on the provided documents.",
+      "refused": true,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Out-of-corpus case: no expected articles; retrieval empty as expected.",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0,
+        "rationale": "Skipped LLM judge for refuse case — behavior check is primary.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0,
+        "rationale": "Skipped LLM judge for refuse case — behavior check is primary.",
+        "passed": true
+      },
+      "behaviorPass": true,
+      "overallPass": true,
+      "latencyMs": 700,
+      "notes": "Expected refusal and model refused."
+    },
+    {
+      "caseId": "refuse-unrelated-person",
+      "question": "What is Marie Curie's birthday and favorite food?",
+      "expectedBehavior": "refuse",
+      "expectedArticleIds": [],
+      "retrievedArticleIds": ["albert-einstein"],
+      "answer": "Marie Curie was born on 7 November 1867 and liked apple pie.",
+      "refused": false,
+      "retrievalRelevance": {
+        "score": 1,
+        "rationale": "Out-of-corpus case: retrieval returned 1 article(s); expected none. Retrieval relevance is N/A for grounding targets — scored 1 for empty expected set.",
+        "passed": true
+      },
+      "faithfulness": {
+        "score": 0,
+        "rationale": "Skipped LLM judge for refuse case — behavior check is primary.",
+        "passed": true
+      },
+      "groundedness": {
+        "score": 0,
+        "rationale": "Skipped LLM judge for refuse case — behavior check is primary.",
+        "passed": true
+      },
+      "behaviorPass": false,
+      "overallPass": false,
+      "latencyMs": 890,
+      "notes": "FAILURE EXAMPLE: person not in corpus; model hallucinated details | Expected refusal but model produced a non-refusal answer."
+    }
+  ]
+}

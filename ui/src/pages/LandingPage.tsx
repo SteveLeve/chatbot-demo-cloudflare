@@ -12,8 +12,8 @@ export function LandingPage() {
           Cloudflare RAG Portfolio
         </h1>
         <p className="text-gray-600 dark:text-gray-400 text-center mb-8">
-          A Cloudflare-first demo of retrieval-augmented generation and agentic architecture on
-          Workers AI, Vectorize, D1, and R2.
+          A Cloudflare-first demo of retrieval-augmented generation and agentic
+          architecture on Workers AI, Vectorize, D1, and R2.
         </p>
 
         <div className="grid gap-4">
@@ -25,8 +25,8 @@ export function LandingPage() {
               Basic RAG Chatbot
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Single-turn retrieval over a curated corpus. See vector search, context injection,
-              and cited answers.
+              Single-turn retrieval over a curated corpus. See vector search,
+              context injection, and cited answers.
             </p>
           </Link>
 
@@ -38,8 +38,8 @@ export function LandingPage() {
               Corpus Browser
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Inspect the ~37 committed articles this demo can retrieve — static manifest, no API
-              round-trip to see what the system knows.
+              Inspect the ~37 committed articles this demo can retrieve — static
+              manifest, no API round-trip to see what the system knows.
             </p>
           </Link>
 
@@ -49,11 +49,25 @@ export function LandingPage() {
                 Agentic RAG + Trace UI
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                Cloudflare Agents SDK runtime with a retrieve tool, streaming chat, and a step
-                trace panel correlated to Workers logs.
+                Cloudflare Agents SDK runtime with a retrieve tool, streaming
+                chat, and a step trace panel correlated to Workers logs.
               </p>
             </Link>
           </div>
+
+          <Link
+            to="/docs/eval"
+            className="block p-6 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-md transition-all group bg-white dark:bg-gray-800"
+          >
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-2">
+              Eval Reporting
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Demo-scale faithfulness, groundedness, and retrieval relevance
+              over a fixed gold set — with failure cases shown and methodology
+              limits on the page.
+            </p>
+          </Link>
         </div>
 
         {/* Educational Resources */}
@@ -79,6 +93,12 @@ export function LandingPage() {
               className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               Corpus
+            </Link>
+            <Link
+              to="/docs/eval"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            >
+              Eval
             </Link>
           </div>
         </div>

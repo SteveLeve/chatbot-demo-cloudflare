@@ -12,9 +12,9 @@ RAG works by converting user queries into semantic embeddings, searching a vecto
       {
         text: 'RAG Research Paper',
         to: 'https://arxiv.org/abs/2005.11401',
-        external: true
-      }
-    ]
+        external: true,
+      },
+    ],
   },
   {
     id: 'vector-embeddings-search',
@@ -27,9 +27,9 @@ Cosine similarity is the metric used to measure how related two embeddings are, 
       {
         text: 'Understanding Embeddings',
         to: 'https://platform.openai.com/docs/guides/embeddings',
-        external: true
-      }
-    ]
+        external: true,
+      },
+    ],
   },
   {
     id: 'limitations-failure-modes',
@@ -38,7 +38,7 @@ Cosine similarity is the metric used to measure how related two embeddings are, 
 
 Context window limits pose another challenge: when you have extensive relevant documents, not all can fit into the model's context window, forcing a choice about what to include. Retrieval failures can stem from poorly chunked documents, inadequate embeddings, or misaligned search queries. High-quality RAG requires continuous monitoring, regular knowledge base updates, and careful tuning of chunking strategies and similarity thresholds.`,
     defaultOpen: false,
-    links: []
+    links: [],
   },
   {
     id: 'citations-transparency',
@@ -47,7 +47,24 @@ Context window limits pose another challenge: when you have extensive relevant d
 
 Similarity scores (typically shown as percentages from 0-100) indicate how closely a retrieved document matches the query, with higher scores suggesting better relevance. However, these scores should be interpreted as confidence indicators, not certainty guarantees. Users should always verify critical information against the original sources, especially for high-stakes decisions. This human-in-the-loop approach transforms RAG from a black box into a transparent research tool.`,
     defaultOpen: false,
-    links: []
+    links: [
+      {
+        text: 'Demo-scale eval report',
+        to: '/docs/eval',
+      },
+    ],
+  },
+  {
+    id: 'eval-metrics',
+    title: 'Eval Metrics (Demo-scale)',
+    content: `Retrieval relevance checks whether the right corpus articles appear in top-K results. Faithfulness asks whether answer claims are supported by retrieved context. Groundedness asks whether the answer stays tied to that context instead of free-floating general knowledge. This demo reports those scores over a small gold set so you can see passes and failures — not to claim production quality.`,
+    defaultOpen: false,
+    links: [
+      {
+        text: 'Open eval report',
+        to: '/docs/eval',
+      },
+    ],
   },
   {
     id: 'security-production',
@@ -60,9 +77,9 @@ Production RAG systems require rate limiting to prevent abuse, authentication to
       {
         text: 'OWASP LLM Top 10',
         to: 'https://owasp.org/www-project-top-10-for-large-language-model-applications/',
-        external: true
-      }
-    ]
+        external: true,
+      },
+    ],
   },
   {
     id: 'learn-more',
@@ -72,12 +89,16 @@ Production RAG systems require rate limiting to prevent abuse, authentication to
     links: [
       {
         text: '📖 Frequently Asked Questions',
-        to: '/docs/faq'
+        to: '/docs/faq',
       },
       {
         text: '📚 Technical Glossary',
-        to: '/docs/glossary'
-      }
-    ]
-  }
+        to: '/docs/glossary',
+      },
+      {
+        text: '📊 Demo-scale Eval Report',
+        to: '/docs/eval',
+      },
+    ],
+  },
 ];

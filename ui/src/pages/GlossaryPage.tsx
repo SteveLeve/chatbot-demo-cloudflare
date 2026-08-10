@@ -5,9 +5,15 @@ import type { TechStackInfo } from '../types/sidebar';
 
 const TECH_STACK: TechStackInfo = {
   title: 'Built with',
-  technologies: ['Cloudflare Workers AI', 'Vectorize', 'D1', 'R2', 'React Router v7'],
+  technologies: [
+    'Cloudflare Workers AI',
+    'Vectorize',
+    'D1',
+    'R2',
+    'React Router v7',
+  ],
   description: 'Demonstrating RAG patterns on the edge with Cloudflare',
-  githubUrl: 'https://github.com/SteveLeve/chatbot-demo-cloudflare'
+  githubUrl: 'https://github.com/SteveLeve/chatbot-demo-cloudflare',
 };
 
 function GlossaryTermCard({
@@ -60,18 +66,30 @@ function GlossaryTermCard({
             Learn More
           </h4>
           <ul className="space-y-1">
-            {learnMore.map((link) => (
-              <li key={link.url}>
-                <a
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  {link.text} ↗
-                </a>
-              </li>
-            ))}
+            {learnMore.map((link) => {
+              const isInternal = link.url.startsWith('/');
+              return (
+                <li key={link.url}>
+                  {isInternal ? (
+                    <Link
+                      to={link.url}
+                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      {link.text}
+                    </Link>
+                  ) : (
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      {link.text} ↗
+                    </a>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -81,14 +99,17 @@ function GlossaryTermCard({
 
 export function GlossaryPage() {
   // Group terms by first letter
-  const termsByLetter = glossaryTerms.reduce((acc, term) => {
-    const firstLetter = term.term[0].toUpperCase();
-    if (!acc[firstLetter]) {
-      acc[firstLetter] = [];
-    }
-    acc[firstLetter].push(term);
-    return acc;
-  }, {} as Record<string, typeof glossaryTerms>);
+  const termsByLetter = glossaryTerms.reduce(
+    (acc, term) => {
+      const firstLetter = term.term[0].toUpperCase();
+      if (!acc[firstLetter]) {
+        acc[firstLetter] = [];
+      }
+      acc[firstLetter].push(term);
+      return acc;
+    },
+    {} as Record<string, typeof glossaryTerms>,
+  );
 
   const letters = Object.keys(termsByLetter).sort();
 
@@ -99,13 +120,15 @@ export function GlossaryPage() {
         <nav className="mb-6 text-sm text-gray-600 dark:text-gray-400">
           <Link to="/" className="hover:text-gray-900 dark:hover:text-gray-100">
             Home
-          </Link>
-          {' '}/{' '}
-          <Link to="/demos/basic-rag" className="hover:text-gray-900 dark:hover:text-gray-100">
+          </Link>{' '}
+          /{' '}
+          <Link
+            to="/demos/basic-rag"
+            className="hover:text-gray-900 dark:hover:text-gray-100"
+          >
             Basic RAG Demo
-          </Link>
-          {' '}/{' '}
-          <span className="text-gray-900 dark:text-gray-100">Glossary</span>
+          </Link>{' '}
+          / <span className="text-gray-900 dark:text-gray-100">Glossary</span>
         </nav>
 
         {/* Page header */}
@@ -114,14 +137,25 @@ export function GlossaryPage() {
             Technical Glossary
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
-            Key terms and concepts related to Retrieval-Augmented Generation and vector search.
+            Key terms and concepts related to Retrieval-Augmented Generation and
+            vector search.
           </p>
           <Link
             to="/demos/basic-rag"
             className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
             </svg>
             Try the Interactive Demo
           </Link>
@@ -148,7 +182,11 @@ export function GlossaryPage() {
         {/* Terms grouped by letter */}
         <div className="space-y-12">
           {letters.map((letter) => (
-            <section key={letter} id={`letter-${letter.toLowerCase()}`} className="scroll-mt-32">
+            <section
+              key={letter}
+              id={`letter-${letter.toLowerCase()}`}
+              className="scroll-mt-32"
+            >
               <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 pb-2 border-b-2 border-gray-200 dark:border-gray-700">
                 {letter}
               </h2>
