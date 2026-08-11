@@ -2,7 +2,11 @@
   "name": "cloudflare-rag-portfolio",
   "main": "src/index.ts",
   "compatibility_date": "2025-01-01",
-  "compatibility_flags": ["nodejs_compat"],
+  // assets_navigation_prefers_asset_serving: required for assets.not_found_handling
+  // (SPA fallback) to apply to browser navigation requests; defaults on only at
+  // compat date >= 2025-04-01, so must be set explicitly while pinned to 2025-01-01.
+  // https://developers.cloudflare.com/workers/configuration/compatibility-flags/#navigation-requests-prefer-asset-serving
+  "compatibility_flags": ["nodejs_compat", "assets_navigation_prefers_asset_serving"],
 
   // Static assets configuration
   // Serves built React app from public/ directory
