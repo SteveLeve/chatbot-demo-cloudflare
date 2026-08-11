@@ -5,7 +5,8 @@
 
 ## Now
 
-- Phase 5 red-team demo mode **in review** (PR #46 / #36): curated scenarios, `GET /api/v1/redteam/scenarios` + optional `POST /try` by id, ChatLogger skip gate, `/docs/redteam` page, Playwright coverage.
+- **Epic #30 (Cloudflare-first agentic RAG reimagine) complete** — all 5 phases merged to `main`.
+- Phase 5 red-team demo mode **merged** (PR #46 / #36): curated scenarios, `GET /api/v1/redteam/scenarios` + optional `POST /try` by id, ChatLogger skip gate, `/docs/redteam` page, Playwright coverage.
 - Phase 4 eval reporting **merged** (PR #45 / #35).
 - Phase 3 Agents SDK / trace UI **merged** (PR #41 / #34).
 - Code quality automation **complete** (#40): Phases 1–3 (PR #42), Node 24 CI pin (PR #43), `protect-main` requires `root` + `ui`.
@@ -13,7 +14,6 @@
 
 ## Next
 
-- Finish / merge Phase 5 (#36).
 - Privacy endpoints (#19) remain **open** — Phase 5 ships logging exclusion only (red-team tries skip D1 chat logs). Full export / delete / opt-out still tracked on #19.
 - Deprioritized vs reimagining: OTLP dashboards (#18).
 
@@ -35,4 +35,4 @@
 - Doc/code disposition audit: `docs/status/doc-audit-agentic-rag.md`
 - Rework cutover runbook: `docs/runbooks/rework-branch-cutover.md`
 - Prior issues: #18 (observability), #19 (compliance), #20/#21 (model & reranking — reconcile with #32), #6–#11 (security)
-- Prior PRs: #22, #23, #28, #29, #31, #37, #38, #41, #45
+- Prior PRs: #22, #23, #28, #29, #31, #37, #38, #41, #45, #46
