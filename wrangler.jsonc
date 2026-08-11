@@ -8,7 +8,8 @@
   // Serves built React app from public/ directory
   "assets": {
     "directory": "./public",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
   },
 
   // Environment variables (non-secret configuration)
