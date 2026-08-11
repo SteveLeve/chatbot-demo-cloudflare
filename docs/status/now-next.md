@@ -17,13 +17,19 @@
 - **P3 backlog:** D1 query optimizations (#17).
 - **P4 backlog:** BGE-Large upgrade (#20) and reranking agent tool (#21) — deferred post-#32; see issue comments.
 - Publish privacy policy page and consent flow (follow-on to #19).
+- **#50** — remove legacy Basic RAG path, converge demo naming on "RAG Demo" (follow-up from PR #49 review).
 - Deprioritized vs reimagining: OTLP dashboards (#18).
 
 ## Recently closed
 
 - #12, #13 — perf shipped in PR #28 (embedding cache, batch inserts).
-- #14, #15 — ingestion workflow timeouts + idempotent step IDs.
-- #19 — privacy export / delete / opt-out endpoints.
+- #14, #15 — ingestion workflow timeouts + idempotent step IDs; PR #49 review closed two
+  follow-on gaps: legacy (pre-deterministic-id) documents re-ingesting under a mismatched id, and
+  chunk/vector count shrinkage leaving stale D1 rows/Vectorize vectors behind.
+- #19 — privacy export / delete / opt-out endpoints; PR #49 review closed two follow-on gaps: a
+  session id could be echoed to the client even when session creation failed (phantom id), and
+  multi-turn conversations minted a new session per turn so only the latest turn was
+  exportable/deletable — sessions are now reused within the existing 30-minute self-service window.
 - #26, #27 — security test coverage gaps.
 
 ## Risks/Watch
@@ -43,5 +49,5 @@
 - Roadmap: `docs/roadmaps/agentic-rag.md`
 - Doc/code disposition audit: `docs/status/doc-audit-agentic-rag.md`
 - Rework cutover runbook: `docs/runbooks/rework-branch-cutover.md`
-- Prior issues: #18 (observability), #19 (compliance), #20/#21 (model & reranking — reconcile with #32), #6–#11 (security)
-- Prior PRs: #22, #23, #28, #29, #31, #37, #38, #41, #45, #46
+- Prior issues: #18 (observability), #19 (compliance), #20/#21 (model & reranking — reconcile with #32), #6–#11 (security), #50 (basic-rag removal/rename)
+- Prior PRs: #22, #23, #28, #29, #31, #37, #38, #41, #45, #46, #49

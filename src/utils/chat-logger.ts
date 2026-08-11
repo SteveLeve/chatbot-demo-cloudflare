@@ -7,7 +7,10 @@ import type { Context } from 'hono';
 import type { Env, DocumentSource } from '../types';
 import type { AppEnv } from '../types/app-env';
 import { hashIpAddress } from './privacy';
-import { isSessionLoggingOptedOut } from './privacy-data';
+import {
+	isSessionLoggingOptedOut,
+	isWithinPrivacyActionWindow,
+} from './privacy-data';
 import { extractCloudflareMetadata, extractIpAddress } from './metadata';
 import { createLogger, Logger } from './logger';
 import type { TraceContext } from './trace';
@@ -83,9 +86,11 @@ export class ChatLogger {
 	}
 
 	/**
-	 * Initialize session for the request
-	 * Always creates a new session; logs reuse attempts for visibility
-	 * Logs errors but does not throw (logging should not break chat)
+	 * Initialize session for the request.
+	 * Reuses a live, non-opted-out, non-expired incoming session id (so a
+	 * multi-turn conversation stays exportable/deletable as one unit);
+	 * otherwise creates a new session. Logs errors but does not throw
+	 * (logging should not break chat).
 	 */
 	async initializeSession(): Promise<void> {
 		if (!this.loggingEnabled || !this.env.DATABASE) {
@@ -108,16 +113,31 @@ export class ChatLogger {
 					return;
 				}
 
-				const reuseResult = await this.env.DATABASE.prepare(
-					'SELECT id FROM chat_sessions WHERE session_id = ?',
+				// Honor reuse so a multi-turn conversation shares one session row —
+				// otherwise export/delete can only ever reach the most recent turn.
+				// Bounded by the same window as self-service privacy actions: past
+				// that point a leaked/guessed session id is no longer trustworthy
+				// enough to append messages to.
+				const existing = await this.env.DATABASE.prepare(
+					'SELECT id, created_at FROM chat_sessions WHERE session_id = ?',
 				)
 					.bind(incomingSessionId)
-					.first();
+					.first<{ id: string; created_at: number }>();
 
-				if (reuseResult) {
+				if (existing && isWithinPrivacyActionWindow(existing.created_at)) {
+					this.sessionId = incomingSessionId;
+					this.sessionDbId = existing.id;
+					this.logger = this.logger.child({
+						sessionId: this.sessionId,
+						sessionDbId: this.sessionDbId,
+					});
+					return;
+				}
+
+				if (existing) {
 					const metadata = extractCloudflareMetadata(this.context);
-					this.logger.warn(
-						'Reused session ID detected; creating new session instead',
+					this.logger.info(
+						'Incoming session id outside the active window; starting a new session',
 						{
 							incomingSessionId,
 							ip: extractIpAddress(this.context),
@@ -137,7 +157,10 @@ export class ChatLogger {
 			this.logger.error('Failed to initialize session', error, {
 				sessionId: this.sessionId,
 			});
-			// Don't throw - logging failures shouldn't break chat functionality
+			// Don't throw - logging failures shouldn't break chat functionality.
+			// Reset sessionId too: without a DB row behind it, echoing it to the
+			// client as x-chat-session-id would be a phantom id (#49 review).
+			this.sessionId = null;
 			this.sessionDbId = null;
 		}
 	}

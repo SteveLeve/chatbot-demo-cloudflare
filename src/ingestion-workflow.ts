@@ -86,6 +86,20 @@ export class IngestionWorkflow extends WorkflowEntrypoint<
 				const docId = deterministicDocumentId(articleId);
 				const store = createDocumentStore(this.env, logger);
 
+				// A document ingested before deterministic IDs (#15) may still carry
+				// its old random-UUID id. createDocument's upsert will move the row's
+				// id to docId, so clean up chunks/vectors under the old id first —
+				// otherwise they're orphaned (document_id no longer matches any row).
+				const existing = await store.getDocumentByArticleId(articleId);
+				if (existing && existing.id !== docId) {
+					logger.warn(
+						'Re-ingesting article under legacy document id; migrating chunks/vectors to deterministic id',
+						{ legacyDocumentId: existing.id, documentId: docId },
+					);
+					await store.deleteVectorsByDocument(existing.id);
+					await store.deleteChunksByDocument(existing.id);
+				}
+
 				await store.createDocument({
 					id: docId,
 					articleId,
@@ -131,6 +145,16 @@ export class IngestionWorkflow extends WorkflowEntrypoint<
 				logger.info('Step 4: Storing chunks in D1', { count: chunks.length });
 
 				const store = createDocumentStore(this.env, logger);
+
+				// Idempotent re-ingest: wipe any chunks/vectors from a previous run
+				// before writing the current set. Chunk ids are deterministic by
+				// index, so upserting alone would leave stale rows/vectors behind
+				// when the new content produces fewer chunks than before. Vectors
+				// must be cleared first — deleteVectorsByDocument looks up chunk ids
+				// via the (about to be deleted) chunk rows.
+				await store.deleteVectorsByDocument(documentId);
+				await store.deleteChunksByDocument(documentId);
+
 				const chunkData: Omit<TextChunk, 'createdAt'>[] = chunks.map(
 					(chunk) => ({
 						id: deterministicChunkId(articleId, chunk.index),

@@ -132,6 +132,7 @@ export class DocumentStore {
           INSERT INTO documents (id, article_id, title, metadata, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?)
           ON CONFLICT(article_id) DO UPDATE SET
+            id = excluded.id,
             title = excluded.title,
             metadata = excluded.metadata,
             updated_at = excluded.updated_at
@@ -170,24 +171,57 @@ export class DocumentStore {
 				.bind(documentId)
 				.first<any>();
 
-			if (!result) {
-				return null;
-			}
-
-			return {
-				id: result.id,
-				articleId: result.article_id,
-				title: result.title,
-				metadata: JSON.parse(result.metadata),
-				createdAt: result.created_at,
-				updatedAt: result.updated_at,
-			};
+			return this.mapDocumentRow(result);
 		} catch (error) {
 			this.logger.error('Failed to get document metadata', error, {
 				documentId,
 			});
 			throw error;
 		}
+	}
+
+	/**
+	 * Get document metadata by article ID — used to detect a pre-existing
+	 * document row whose id predates deterministic ingestion IDs (#15 follow-up).
+	 */
+	async getDocumentByArticleId(
+		articleId: string,
+	): Promise<DocumentMetadata | null> {
+		this.logger.debug('Getting document metadata by article id', {
+			articleId,
+		});
+
+		try {
+			const result = await this.env.DATABASE.prepare(
+				'SELECT * FROM documents WHERE article_id = ?',
+			)
+				.bind(articleId)
+				.first<any>();
+
+			return this.mapDocumentRow(result);
+		} catch (error) {
+			this.logger.error(
+				'Failed to get document metadata by article id',
+				error,
+				{ articleId },
+			);
+			throw error;
+		}
+	}
+
+	private mapDocumentRow(row: any): DocumentMetadata | null {
+		if (!row) {
+			return null;
+		}
+
+		return {
+			id: row.id,
+			articleId: row.article_id,
+			title: row.title,
+			metadata: JSON.parse(row.metadata),
+			createdAt: row.created_at,
+			updatedAt: row.updated_at,
+		};
 	}
 
 	/**

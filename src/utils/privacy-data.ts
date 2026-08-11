@@ -51,8 +51,12 @@ const SESSION_ID_MAX_LENGTH = 128;
  * /api/v1/query response for chat correlation, so it's a weaker credential
  * than a real auth token. Bounding how long it grants export/delete access
  * limits the damage if one leaks via logs, proxies, or shared screenshots.
+ *
+ * ChatLogger also uses this window to decide whether to reuse an incoming
+ * session id for a multi-turn conversation vs. starting a new session — the
+ * same "how long is this id still trustworthy" boundary applies to both.
  */
-const PRIVACY_ACTION_WINDOW_MS = 30 * 60 * 1000;
+export const PRIVACY_ACTION_WINDOW_MS = 30 * 60 * 1000;
 
 /**
  * Extract session id from privacy-related headers (supports app + compliance aliases).
@@ -66,8 +70,12 @@ export function extractPrivacySessionId(c: Context<AppEnv>): string | null {
 	return header;
 }
 
+export function isWithinPrivacyActionWindow(createdAt: number): boolean {
+	return Date.now() - createdAt <= PRIVACY_ACTION_WINDOW_MS;
+}
+
 function assertWithinPrivacyActionWindow(createdAt: number): void {
-	if (Date.now() - createdAt > PRIVACY_ACTION_WINDOW_MS) {
+	if (!isWithinPrivacyActionWindow(createdAt)) {
 		throw new AppError(
 			'This session is no longer eligible for self-service export or deletion. Session ids are only valid for self-service actions for 30 minutes after the chat exchange.',
 			'SESSION_EXPIRED',
