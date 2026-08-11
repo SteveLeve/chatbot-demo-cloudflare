@@ -131,6 +131,10 @@ export class DocumentStore {
 				`
           INSERT INTO documents (id, article_id, title, metadata, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?)
+          ON CONFLICT(article_id) DO UPDATE SET
+            title = excluded.title,
+            metadata = excluded.metadata,
+            updated_at = excluded.updated_at
         `,
 			)
 				.bind(doc.id, doc.articleId, doc.title, metadata, now, now)
@@ -225,7 +229,7 @@ export class DocumentStore {
 			const statements = chunks.map((chunk) =>
 				this.env.DATABASE.prepare(
 					`
-          INSERT INTO chunks (id, document_id, text, chunk_index, metadata, created_at)
+          INSERT OR REPLACE INTO chunks (id, document_id, text, chunk_index, metadata, created_at)
           VALUES (?, ?, ?, ?, ?, ?)
         `,
 				).bind(

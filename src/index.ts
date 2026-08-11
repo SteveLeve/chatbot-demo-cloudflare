@@ -17,7 +17,7 @@ import type {
 	ApiResponse,
 	IngestionWorkflowParams,
 } from './types';
-import type { AppEnv } from './types/app-env';
+import { AppError } from './types';
 import { basicRAG } from './patterns/basic-rag';
 import { createLogger, createRequestLogger } from './utils/logger';
 import { checkRateLimit, checkRequestRateLimit } from './utils/rate-limiter';
@@ -49,9 +49,28 @@ import {
 	buildTraceparent,
 } from './utils/trace';
 import { createDocumentStore } from './utils/document-store';
+import {
+	exportUserData,
+	deleteUserData,
+	optOutOfLogging,
+	extractPrivacySessionId,
+} from './utils/privacy-data';
+
+import type { AppEnv } from './types/app-env';
 
 // Export workflows and agents
 export { IngestionWorkflow, RAGAgent };
+
+function attachChatSessionHeader(
+	c: import('hono').Context<AppEnv>,
+	response: Response,
+): Response {
+	const chatSessionId = c.get('chatSessionId');
+	if (chatSessionId) {
+		response.headers.set('x-chat-session-id', chatSessionId);
+	}
+	return response;
+}
 
 // Create Hono application
 const app = new Hono<AppEnv>();
@@ -234,7 +253,7 @@ app.get('/api/v1/query', async (c) => {
 			},
 		});
 
-		return response;
+		return attachChatSessionHeader(c, response);
 	} catch (error) {
 		logger.error('Query failed', error);
 
@@ -339,7 +358,7 @@ app.post('/api/v1/query', async (c) => {
 			},
 		});
 
-		return response;
+		return attachChatSessionHeader(c, response);
 	} catch (error) {
 		logger.error('Query failed', error);
 
@@ -541,6 +560,178 @@ app.get('/api/v1/ingest/:workflowId', async (c) => {
 			},
 			500,
 		);
+	}
+});
+
+// ============================================================================
+// Privacy Routes (#19) — GDPR/CCPA user data rights
+// ============================================================================
+
+/**
+ * Export all chat data for a session
+ * GET /api/privacy/export
+ * Header: x-chat-session-id or X-Session-ID
+ */
+app.get('/api/privacy/export', async (c) => {
+	const logger = createRequestLogger(c, { endpoint: 'privacy-export' });
+
+	const rateLimitResponse = await checkRateLimit(c, c.env.QUERY_RATE_LIMITER, {
+		limit: 10,
+		window: 60,
+		keyPrefix: 'privacy-export',
+	});
+	if (rateLimitResponse) {
+		return rateLimitResponse;
+	}
+
+	const sessionId = extractPrivacySessionId(c);
+	if (!sessionId) {
+		return c.json<ApiResponse>(
+			{
+				success: false,
+				error: {
+					code: 'MISSING_SESSION_ID',
+					message:
+						'Session ID required via x-chat-session-id or X-Session-ID header',
+				},
+			},
+			400,
+		);
+	}
+
+	try {
+		const data = await exportUserData(sessionId, c.env);
+		logger.info('Privacy data export completed', { sessionId });
+
+		return c.json(data, {
+			headers: {
+				'Content-Disposition': `attachment; filename="chat-data-${sessionId}.json"`,
+			},
+		});
+	} catch (error) {
+		logger.error('Privacy export failed', error);
+		if (error instanceof AppError) {
+			return c.json<ApiResponse>(
+				{ success: false, error: { code: error.code, message: error.message } },
+				error.statusCode as 404,
+			);
+		}
+		const sanitizedError = sanitizeError(error, c.env);
+		return c.json<ApiResponse>({ success: false, error: sanitizedError }, 500);
+	}
+});
+
+/**
+ * Delete all chat data for a session
+ * DELETE /api/privacy/delete
+ * Header: x-chat-session-id or X-Session-ID
+ */
+app.delete('/api/privacy/delete', async (c) => {
+	const logger = createRequestLogger(c, { endpoint: 'privacy-delete' });
+
+	const rateLimitResponse = await checkRateLimit(c, c.env.QUERY_RATE_LIMITER, {
+		limit: 5,
+		window: 60,
+		keyPrefix: 'privacy-delete',
+	});
+	if (rateLimitResponse) {
+		return rateLimitResponse;
+	}
+
+	const sessionId = extractPrivacySessionId(c);
+	if (!sessionId) {
+		return c.json<ApiResponse>(
+			{
+				success: false,
+				error: {
+					code: 'MISSING_SESSION_ID',
+					message:
+						'Session ID required via x-chat-session-id or X-Session-ID header',
+				},
+			},
+			400,
+		);
+	}
+
+	try {
+		await deleteUserData(sessionId, c.env);
+		logger.info('Privacy data deletion completed', { sessionId });
+
+		return c.json<ApiResponse>({
+			success: true,
+			data: {
+				message: 'Your data has been permanently deleted',
+				session_id: sessionId,
+				deleted_at: new Date().toISOString(),
+			},
+		});
+	} catch (error) {
+		logger.error('Privacy deletion failed', error);
+		if (error instanceof AppError) {
+			return c.json<ApiResponse>(
+				{ success: false, error: { code: error.code, message: error.message } },
+				error.statusCode as 404,
+			);
+		}
+		const sanitizedError = sanitizeError(error, c.env);
+		return c.json<ApiResponse>({ success: false, error: sanitizedError }, 500);
+	}
+});
+
+/**
+ * Opt out of chat logging for a session
+ * POST /api/privacy/opt-out
+ * Header: x-chat-session-id or X-Session-ID
+ */
+app.post('/api/privacy/opt-out', async (c) => {
+	const logger = createRequestLogger(c, { endpoint: 'privacy-opt-out' });
+
+	const rateLimitResponse = await checkRateLimit(c, c.env.QUERY_RATE_LIMITER, {
+		limit: 10,
+		window: 60,
+		keyPrefix: 'privacy-opt-out',
+	});
+	if (rateLimitResponse) {
+		return rateLimitResponse;
+	}
+
+	const sessionId = extractPrivacySessionId(c);
+	if (!sessionId) {
+		return c.json<ApiResponse>(
+			{
+				success: false,
+				error: {
+					code: 'MISSING_SESSION_ID',
+					message:
+						'Session ID required via x-chat-session-id or X-Session-ID header',
+				},
+			},
+			400,
+		);
+	}
+
+	try {
+		await optOutOfLogging(sessionId, c.env);
+		logger.info('Privacy opt-out recorded', { sessionId });
+
+		return c.json<ApiResponse>({
+			success: true,
+			data: {
+				message: 'Chat logging has been disabled for this session',
+				session_id: sessionId,
+				opted_out_at: new Date().toISOString(),
+			},
+		});
+	} catch (error) {
+		logger.error('Privacy opt-out failed', error);
+		if (error instanceof AppError) {
+			return c.json<ApiResponse>(
+				{ success: false, error: { code: error.code, message: error.message } },
+				error.statusCode as 404,
+			);
+		}
+		const sanitizedError = sanitizeError(error, c.env);
+		return c.json<ApiResponse>({ success: false, error: sanitizedError }, 500);
 	}
 });
 

@@ -29,6 +29,12 @@ import { createLogger } from './utils/logger';
 import { createDocumentStore } from './utils/document-store';
 import { EMBEDDING_MODEL } from './config/models';
 import { chunkWikipediaArticle } from './utils/chunking';
+import {
+	deterministicDocumentId,
+	deterministicChunkId,
+	withTimeout,
+	EMBEDDING_BATCH_TIMEOUT_MS,
+} from './utils/ingestion-ids';
 
 export class IngestionWorkflow extends WorkflowEntrypoint<
 	Env,
@@ -73,11 +79,11 @@ export class IngestionWorkflow extends WorkflowEntrypoint<
 				return { success: true };
 			});
 
-			// Step 2: Create document metadata in D1
+			// Step 2: Create document metadata in D1 (idempotent by articleId)
 			const documentId = await step.do('create-document', async () => {
 				logger.info('Step 2: Creating document metadata');
 
-				const docId = crypto.randomUUID();
+				const docId = deterministicDocumentId(articleId);
 				const store = createDocumentStore(this.env, logger);
 
 				await store.createDocument({
@@ -127,7 +133,7 @@ export class IngestionWorkflow extends WorkflowEntrypoint<
 				const store = createDocumentStore(this.env, logger);
 				const chunkData: Omit<TextChunk, 'createdAt'>[] = chunks.map(
 					(chunk) => ({
-						id: crypto.randomUUID(),
+						id: deterministicChunkId(articleId, chunk.index),
 						documentId,
 						text: chunk.text,
 						chunkIndex: chunk.index,
@@ -153,16 +159,21 @@ export class IngestionWorkflow extends WorkflowEntrypoint<
 
 				for (let i = 0; i < texts.length; i += batchSize) {
 					const batch = texts.slice(i, i + batchSize);
-					const result = (await this.env.AI.run(
-						EMBEDDING_MODEL,
-						{
-							text: batch,
-						},
-						this.env.USE_AI_GATEWAY && this.env.AI_GATEWAY_ID
-							? {
-									gateway: { id: this.env.AI_GATEWAY_ID },
-								}
-							: undefined,
+					const batchIndex = Math.floor(i / batchSize);
+					const result = (await withTimeout(
+						this.env.AI.run(
+							EMBEDDING_MODEL,
+							{
+								text: batch,
+							},
+							this.env.USE_AI_GATEWAY && this.env.AI_GATEWAY_ID
+								? {
+										gateway: { id: this.env.AI_GATEWAY_ID },
+									}
+								: undefined,
+						),
+						EMBEDDING_BATCH_TIMEOUT_MS,
+						`embedding-batch-${batchIndex}`,
 					)) as EmbeddingResponse;
 
 					allEmbeddings.push(...result.data);

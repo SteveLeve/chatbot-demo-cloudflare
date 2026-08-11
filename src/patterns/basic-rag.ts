@@ -66,6 +66,10 @@ export async function basicRAG(
 	if (context) {
 		chatLogger = new ChatLogger(env, context);
 		await chatLogger.initializeSession();
+		const publicSessionId = chatLogger.getPublicSessionId();
+		if (publicSessionId) {
+			context.set('chatSessionId', publicSessionId);
+		}
 
 		// Log user message (sanitized)
 		messageIndex = 0;

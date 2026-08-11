@@ -14,8 +14,17 @@
 
 ## Next
 
-- Privacy endpoints (#19) remain **open** — Phase 5 ships logging exclusion only (red-team tries skip D1 chat logs). Full export / delete / opt-out still tracked on #19.
+- **P3 backlog:** D1 query optimizations (#17).
+- **P4 backlog:** BGE-Large upgrade (#20) and reranking agent tool (#21) — deferred post-#32; see issue comments.
+- Publish privacy policy page and consent flow (follow-on to #19).
 - Deprioritized vs reimagining: OTLP dashboards (#18).
+
+## Recently closed
+
+- #12, #13 — perf shipped in PR #28 (embedding cache, batch inserts).
+- #14, #15 — ingestion workflow timeouts + idempotent step IDs.
+- #19 — privacy export / delete / opt-out endpoints.
+- #26, #27 — security test coverage gaps.
 
 ## Risks/Watch
 

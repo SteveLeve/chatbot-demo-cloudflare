@@ -7,6 +7,7 @@ import type { Context } from 'hono';
 import type { Env, DocumentSource } from '../types';
 import type { AppEnv } from '../types/app-env';
 import { hashIpAddress } from './privacy';
+import { isSessionLoggingOptedOut } from './privacy-data';
 import { extractCloudflareMetadata, extractIpAddress } from './metadata';
 import { createLogger, Logger } from './logger';
 import type { TraceContext } from './trace';
@@ -76,6 +77,11 @@ export class ChatLogger {
 		return this.loggingEnabled;
 	}
 
+	/** Public session id stored in D1 (for privacy export/delete/opt-out). */
+	getPublicSessionId(): string | null {
+		return this.sessionId;
+	}
+
 	/**
 	 * Initialize session for the request
 	 * Always creates a new session; logs reuse attempts for visibility
@@ -90,6 +96,18 @@ export class ChatLogger {
 			const incomingSessionId = this.extractIncomingSessionId();
 
 			if (incomingSessionId) {
+				const optedOut = await isSessionLoggingOptedOut(
+					incomingSessionId,
+					this.env,
+				);
+				if (optedOut) {
+					this.loggingEnabled = false;
+					this.logger.info('Chat logging disabled — session opted out', {
+						incomingSessionId,
+					});
+					return;
+				}
+
 				const reuseResult = await this.env.DATABASE.prepare(
 					'SELECT id FROM chat_sessions WHERE session_id = ?',
 				)
@@ -342,8 +360,8 @@ export class ChatLogger {
 				await this.env.DATABASE.prepare(
 					`INSERT INTO message_chunks (
             id, message_id, document_id, chunk_id, chunk_text,
-            similarity_score, rank_position, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            similarity_score, rank_position, document_title, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				)
 					.bind(
 						crypto.randomUUID(), // id
@@ -353,6 +371,7 @@ export class ChatLogger {
 						source.chunkText, // chunk_text
 						source.similarity, // similarity_score (stored as REAL/numeric)
 						i + 1, // rank_position
+						source.title || null, // document_title
 						new Date().getTime(), // created_at
 					)
 					.run();
