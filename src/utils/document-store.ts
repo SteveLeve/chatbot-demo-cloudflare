@@ -141,14 +141,15 @@ export class DocumentStore {
 				.bind(doc.id, doc.articleId, doc.title, metadata, now, now)
 				.run();
 
-			const result: DocumentMetadata = {
-				...doc,
-				createdAt: now,
-				updatedAt: now,
-			};
+			const stored = await this.getDocumentByArticleId(doc.articleId);
+			if (!stored) {
+				throw new Error(
+					`Document row missing after upsert for article ${doc.articleId}`,
+				);
+			}
 
 			this.logger.endTimer('createDocument', { success: true });
-			return result;
+			return stored;
 		} catch (error) {
 			this.logger.endTimer('createDocument', { success: false });
 			this.logger.error('Failed to create document metadata', error, {

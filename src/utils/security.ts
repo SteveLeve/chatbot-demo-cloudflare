@@ -35,7 +35,7 @@ export function getCorsConfig(env: Env) {
 	if (environment === 'development') {
 		return {
 			origin: ['http://localhost:3000', 'http://localhost:8787'],
-			allowMethods: ['GET', 'POST'],
+			allowMethods: ['GET', 'POST', 'DELETE'],
 			credentials: true,
 		};
 	}
@@ -43,7 +43,7 @@ export function getCorsConfig(env: Env) {
 	// Production: restrict to specific domain
 	return {
 		origin: 'https://cloudflare-rag-demo.stevenleve.com',
-		allowMethods: ['GET', 'POST'],
+		allowMethods: ['GET', 'POST', 'DELETE'],
 		credentials: true,
 	};
 }

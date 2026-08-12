@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import {
 	getCorsConfig,
 	sanitizeError,
@@ -32,7 +33,7 @@ describe('Security Utils', () => {
 				'http://localhost:3000',
 				'http://localhost:8787',
 			]);
-			expect(config.allowMethods).toEqual(['GET', 'POST']);
+			expect(config.allowMethods).toEqual(['GET', 'POST', 'DELETE']);
 			expect(config.credentials).toBe(true);
 		});
 
@@ -41,7 +42,7 @@ describe('Security Utils', () => {
 			const config = getCorsConfig(env);
 
 			expect(config.origin).toBe('https://cloudflare-rag-demo.stevenleve.com');
-			expect(config.allowMethods).toEqual(['GET', 'POST']);
+			expect(config.allowMethods).toEqual(['GET', 'POST', 'DELETE']);
 			expect(config.credentials).toBe(true);
 		});
 
@@ -50,6 +51,29 @@ describe('Security Utils', () => {
 			const config = getCorsConfig(env);
 
 			expect(config.origin).toBe('https://cloudflare-rag-demo.stevenleve.com');
+		});
+
+		it('should allow DELETE preflight for privacy delete endpoint', async () => {
+			const env = createMockEnv('development');
+			const app = new Hono();
+			app.use('/*', async (c, next) => {
+				const corsConfig = getCorsConfig(env);
+				return cors(corsConfig)(c, next);
+			});
+			app.delete('/api/privacy/delete', (c) => c.json({ success: true }));
+
+			const res = await app.request('/api/privacy/delete', {
+				method: 'OPTIONS',
+				headers: {
+					Origin: 'http://localhost:3000',
+					'Access-Control-Request-Method': 'DELETE',
+				},
+			});
+
+			expect(res.status).toBe(204);
+			expect(res.headers.get('Access-Control-Allow-Methods')).toContain(
+				'DELETE',
+			);
 		});
 	});
 
