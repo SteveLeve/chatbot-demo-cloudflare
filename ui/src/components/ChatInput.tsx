@@ -8,7 +8,13 @@ interface ChatInputProps {
   placeholder?: string;
 }
 
-export function ChatInput({ value, onChange, onSubmit, disabled, placeholder }: ChatInputProps) {
+export function ChatInput({
+  value,
+  onChange,
+  onSubmit,
+  disabled,
+  placeholder,
+}: ChatInputProps) {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (value.trim() && !disabled) {
@@ -22,7 +28,7 @@ export function ChatInput({ value, onChange, onSubmit, disabled, placeholder }: 
         <input
           className="w-full p-4 pr-24 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 outline-none transition-all shadow-sm"
           value={value}
-          placeholder={placeholder || "Type your question..."}
+          placeholder={placeholder || 'Type your question...'}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
         />

@@ -25,9 +25,17 @@ The process works in three steps: First, the user's query is converted into a ve
 
 This approach dramatically improves accuracy, factuality, and currency of responses, making RAG ideal for domains where correct information is critical—legal documents, medical information, customer support, and proprietary knowledge bases.`,
         relatedLinks: [
-          { text: 'Retrieval-Augmented Generation Paper', to: 'https://arxiv.org/abs/2005.11401', external: true },
-          { text: 'OpenAI RAG Overview', to: 'https://openai.com/index/retrieval-augmented-generation-for-knowledge-intensive-nlp-tasks/', external: true }
-        ]
+          {
+            text: 'Retrieval-Augmented Generation Paper',
+            to: 'https://arxiv.org/abs/2005.11401',
+            external: true,
+          },
+          {
+            text: 'OpenAI RAG Overview',
+            to: 'https://openai.com/index/retrieval-augmented-generation-for-knowledge-intensive-nlp-tasks/',
+            external: true,
+          },
+        ],
       },
       {
         id: 'rag-vs-finetuning',
@@ -38,9 +46,17 @@ RAG, by contrast, works with existing pre-trained models and lets you update you
 
 For rapidly changing information (news, market data, customer documents), regularly updated content (support articles, product documentation), or budget-conscious projects, RAG is typically the superior choice.`,
         relatedLinks: [
-          { text: 'Fine-tuning vs RAG Comparison', to: 'https://www.pinecone.io/learn/fine-tuning-vs-rag/', external: true },
-          { text: 'LangChain RAG Guide', to: 'https://python.langchain.com/docs/use_cases/question_answering/', external: true }
-        ]
+          {
+            text: 'Fine-tuning vs RAG Comparison',
+            to: 'https://www.pinecone.io/learn/fine-tuning-vs-rag/',
+            external: true,
+          },
+          {
+            text: 'LangChain RAG Guide',
+            to: 'https://python.langchain.com/docs/use_cases/question_answering/',
+            external: true,
+          },
+        ],
       },
       {
         id: 'problems-rag-solves',
@@ -57,8 +73,12 @@ For rapidly changing information (news, market data, customer documents), regula
 
 **Cost Efficiency**: Instead of fine-tuning or training custom models, RAG uses existing models with retrieval, dramatically reducing computational costs while maintaining quality.`,
         relatedLinks: [
-          { text: 'RAG Benefits and Use Cases', to: 'https://www.anthropic.com/research/large-language-models-as-tools', external: true }
-        ]
+          {
+            text: 'RAG Benefits and Use Cases',
+            to: 'https://www.anthropic.com/research/large-language-models-as-tools',
+            external: true,
+          },
+        ],
       },
       {
         id: 'when-not-rag',
@@ -76,9 +96,9 @@ For rapidly changing information (news, market data, customer documents), regula
 **Performance-Critical Applications**: RAG adds latency due to the retrieval step. For applications requiring <100ms responses, the retrieval overhead might be problematic.
 
 Consider your specific constraints—data sensitivity, performance requirements, and reasoning complexity—when deciding whether RAG is the right fit.`,
-        relatedLinks: []
-      }
-    ]
+        relatedLinks: [],
+      },
+    ],
   },
   {
     id: 'implementation-details',
@@ -95,9 +115,17 @@ When you send text to an embedding model, it produces a vector—essentially a l
 
 The quality of your embeddings directly impacts RAG performance. Using embeddings trained on domain-specific data (biomedical, legal, financial) typically produces better results than general-purpose embeddings for specialized knowledge bases.`,
         relatedLinks: [
-          { text: 'OpenAI Embeddings Guide', to: 'https://platform.openai.com/docs/guides/embeddings', external: true },
-          { text: 'Sentence Transformers Documentation', to: 'https://www.sbert.net/', external: true }
-        ]
+          {
+            text: 'OpenAI Embeddings Guide',
+            to: 'https://platform.openai.com/docs/guides/embeddings',
+            external: true,
+          },
+          {
+            text: 'Sentence Transformers Documentation',
+            to: 'https://www.sbert.net/',
+            external: true,
+          },
+        ],
       },
       {
         id: 'what-is-chunking',
@@ -110,9 +138,17 @@ Poor chunking destroys context. If you chunk a paragraph mid-sentence, splitting
 
 Optimal chunk size depends on your use case: technical documentation might use larger chunks (1000+ tokens) to preserve context, while FAQ databases might use smaller chunks (100-300 tokens). Overlapping chunks—where consecutive chunks share some content—preserve context continuity across chunk boundaries.`,
         relatedLinks: [
-          { text: 'LangChain Chunking Documentation', to: 'https://python.langchain.com/docs/modules/data_connection/document_loaders/', external: true },
-          { text: 'Pinecone Chunking Guide', to: 'https://www.pinecone.io/learn/chunking-strategies/', external: true }
-        ]
+          {
+            text: 'LangChain Chunking Documentation',
+            to: 'https://python.langchain.com/docs/modules/data_connection/document_loaders/',
+            external: true,
+          },
+          {
+            text: 'Pinecone Chunking Guide',
+            to: 'https://www.pinecone.io/learn/chunking-strategies/',
+            external: true,
+          },
+        ],
       },
       {
         id: 'choose-chunk-size',
@@ -130,8 +166,12 @@ Optimal chunk size depends on your use case: technical documentation might use l
 - Consider overlap: Overlapping chunks (10-20% overlap) often outperform non-overlapping chunks despite redundancy.
 - Start with 512-1024 tokens and iterate based on performance monitoring.`,
         relatedLinks: [
-          { text: 'Text Splitters in LangChain', to: 'https://python.langchain.com/docs/modules/data_connection/document_transformers/', external: true }
-        ]
+          {
+            text: 'Text Splitters in LangChain',
+            to: 'https://python.langchain.com/docs/modules/data_connection/document_transformers/',
+            external: true,
+          },
+        ],
       },
       {
         id: 'semantic-vs-keyword-search',
@@ -144,11 +184,19 @@ Semantic search uses embeddings to understand meaning. "Vehicle," "car," "automo
 
 Semantic search is slower than keyword search (calculating vector similarity is computationally expensive) but dramatically more effective for understanding user intent. Most modern RAG systems default to hybrid approaches to capture the strengths of both methods without their individual weaknesses.`,
         relatedLinks: [
-          { text: 'Weaviate Hybrid Search', to: 'https://weaviate.io/blog/hybrid-search-explained', external: true },
-          { text: 'Pinecone Hybrid Search', to: 'https://www.pinecone.io/learn/hybrid-search/', external: true }
-        ]
-      }
-    ]
+          {
+            text: 'Weaviate Hybrid Search',
+            to: 'https://weaviate.io/blog/hybrid-search-explained',
+            external: true,
+          },
+          {
+            text: 'Pinecone Hybrid Search',
+            to: 'https://www.pinecone.io/learn/hybrid-search/',
+            external: true,
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'accuracy-quality',
@@ -165,9 +213,17 @@ It's crucial to understand that accuracy is asymmetric: RAG is more likely to be
 
 Best practices for maintaining accuracy: Use domain-relevant embeddings, keep knowledge bases current and curated, monitor retrieval quality with human feedback, implement confidence scores for answers, and always require source citations for verification.`,
         relatedLinks: [
-          { text: 'RAGAS: RAG Evaluation Framework', to: 'https://github.com/explodinggradients/ragas', external: true },
-          { text: 'Evaluating RAG Systems', to: 'https://www.anthropic.com/research/measuring-faithfulness', external: true }
-        ]
+          {
+            text: 'RAGAS: RAG Evaluation Framework',
+            to: 'https://github.com/explodinggradients/ragas',
+            external: true,
+          },
+          {
+            text: 'Evaluating RAG Systems',
+            to: 'https://www.anthropic.com/research/measuring-faithfulness',
+            external: true,
+          },
+        ],
       },
       {
         id: 'when-fails',
@@ -188,8 +244,12 @@ Best practices for maintaining accuracy: Use domain-relevant embeddings, keep kn
 
 Mitigation strategies: Implement comprehensive monitoring, gather user feedback on answer quality, regularly audit retrieval quality, use confidence scores and explicit uncertainty statements, and maintain a feedback loop to continuously improve the knowledge base.`,
         relatedLinks: [
-          { text: 'LLM Hallucination Taxonomy', to: 'https://arxiv.org/abs/2309.01219', external: true }
-        ]
+          {
+            text: 'LLM Hallucination Taxonomy',
+            to: 'https://arxiv.org/abs/2309.01219',
+            external: true,
+          },
+        ],
       },
       {
         id: 'improve-retrieval',
@@ -212,9 +272,17 @@ Mitigation strategies: Implement comprehensive monitoring, gather user feedback 
 
 Start with hybrid search and chunking optimization, then move to more complex strategies like re-ranking and query expansion as needed.`,
         relatedLinks: [
-          { text: 'RAG Optimization Paper', to: 'https://arxiv.org/abs/2312.10997', external: true },
-          { text: 'Query Expansion Techniques', to: 'https://www.anthropic.com/research/finding-structure-in-time', external: true }
-        ]
+          {
+            text: 'RAG Optimization Paper',
+            to: 'https://arxiv.org/abs/2312.10997',
+            external: true,
+          },
+          {
+            text: 'Query Expansion Techniques',
+            to: 'https://www.anthropic.com/research/finding-structure-in-time',
+            external: true,
+          },
+        ],
       },
       {
         id: 'source-accuracy',
@@ -231,10 +299,14 @@ Start with hybrid search and chunking optimization, then move to more complex st
 
 Best practices: Always verify citations by checking the actual source documents, implement confidence scores that reflect uncertainty, use models that explicitly acknowledge when information isn't in sources, and implement human review for high-stakes decisions. The presence of sources is valuable but not sufficient—users must verify critical information independently.`,
         relatedLinks: [
-          { text: 'Faithful Reasoning with Language Models', to: 'https://www.anthropic.com/research/measuring-faithfulness', external: true }
-        ]
-      }
-    ]
+          {
+            text: 'Faithful Reasoning with Language Models',
+            to: 'https://www.anthropic.com/research/measuring-faithfulness',
+            external: true,
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'production-scaling',
@@ -257,9 +329,17 @@ Best practices: Always verify citations by checking the actual source documents,
 
 **Compliance and Governance**: Document data lineage and knowledge base sources. Implement access controls ensuring only authorized data enters the knowledge base. Maintain audit logs for compliance. Handle data deletion/retention in accordance with regulations (GDPR, CCPA).`,
         relatedLinks: [
-          { text: 'LangSmith Monitoring', to: 'https://docs.smith.langchain.com/', external: true },
-          { text: 'Evaluating RAG Systems', to: 'https://www.anthropic.com/research/measuring-faithfulness', external: true }
-        ]
+          {
+            text: 'LangSmith Monitoring',
+            to: 'https://docs.smith.langchain.com/',
+            external: true,
+          },
+          {
+            text: 'Evaluating RAG Systems',
+            to: 'https://www.anthropic.com/research/measuring-faithfulness',
+            external: true,
+          },
+        ],
       },
       {
         id: 'secure-rag',
@@ -280,9 +360,17 @@ Best practices: Always verify citations by checking the actual source documents,
 
 **Compliance**: Align your RAG system with relevant regulations (GDPR, HIPAA, etc.). Maintain audit logs and comply with data retention policies. Document security architecture for compliance audits.`,
         relatedLinks: [
-          { text: 'OWASP LLM Top 10', to: 'https://owasp.org/www-project-top-10-for-large-language-model-applications/', external: true },
-          { text: 'Prompt Injection Prevention', to: 'https://github.com/OWASP/LLM-based-Application-Security-Top-10', external: true }
-        ]
+          {
+            text: 'OWASP LLM Top 10',
+            to: 'https://owasp.org/www-project-top-10-for-large-language-model-applications/',
+            external: true,
+          },
+          {
+            text: 'Prompt Injection Prevention',
+            to: 'https://github.com/OWASP/LLM-based-Application-Security-Top-10',
+            external: true,
+          },
+        ],
       },
       {
         id: 'rate-limiting',
@@ -308,8 +396,12 @@ Best practices: Always verify citations by checking the actual source documents,
 
 **Cost Management**: Since RAG involves embedding and model API calls, rate limiting also controls costs. Implement budget alerts to prevent unexpected bills from high-traffic scenarios.`,
         relatedLinks: [
-          { text: 'API Rate Limiting Best Practices', to: 'https://cloud.google.com/architecture/rate-limiting-strategies-techniques', external: true }
-        ]
+          {
+            text: 'API Rate Limiting Best Practices',
+            to: 'https://cloud.google.com/architecture/rate-limiting-strategies-techniques',
+            external: true,
+          },
+        ],
       },
       {
         id: 'data-privacy',
@@ -328,11 +420,19 @@ Best practices: Always verify citations by checking the actual source documents,
 
 **Practical Implementation**: Use vendor platforms that comply with relevant regulations (Anthropic, OpenAI, Pinecone all offer compliance documentation). Implement privacy by design—consider privacy in architecture decisions, not as an afterthought. Conduct regular privacy impact assessments identifying and addressing new risks.`,
         relatedLinks: [
-          { text: 'GDPR Compliance Guide', to: 'https://gdpr-info.eu/', external: true },
-          { text: 'Anthropic Privacy Policy', to: 'https://www.anthropic.com/privacy', external: true }
-        ]
-      }
-    ]
+          {
+            text: 'GDPR Compliance Guide',
+            to: 'https://gdpr-info.eu/',
+            external: true,
+          },
+          {
+            text: 'Anthropic Privacy Policy',
+            to: 'https://www.anthropic.com/privacy',
+            external: true,
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'platform-specific',
@@ -355,9 +455,17 @@ Best practices: Always verify citations by checking the actual source documents,
 
 For applications requiring global reach, low latency, and operational simplicity, Vectorize offers compelling advantages over traditional vector databases.`,
         relatedLinks: [
-          { text: 'Cloudflare Vectorize Documentation', to: 'https://developers.cloudflare.com/vectorize/', external: true },
-          { text: 'Vectorize Pricing', to: 'https://developers.cloudflare.com/vectorize/platform/pricing/', external: true }
-        ]
+          {
+            text: 'Cloudflare Vectorize Documentation',
+            to: 'https://developers.cloudflare.com/vectorize/',
+            external: true,
+          },
+          {
+            text: 'Vectorize Pricing',
+            to: 'https://developers.cloudflare.com/vectorize/platform/pricing/',
+            external: true,
+          },
+        ],
       },
       {
         id: 'workers-ai-rag',
@@ -385,9 +493,17 @@ For applications requiring global reach, low latency, and operational simplicity
 
 **Practical Benefits**: No cold starts, automatic scaling, global distribution, and predictable pricing make Workers AI excellent for production RAG systems handling variable traffic.`,
         relatedLinks: [
-          { text: 'Workers AI Documentation', to: 'https://developers.cloudflare.com/workers-ai/', external: true },
-          { text: 'Workers AI Models', to: 'https://developers.cloudflare.com/workers-ai/models/', external: true }
-        ]
+          {
+            text: 'Workers AI Documentation',
+            to: 'https://developers.cloudflare.com/workers-ai/',
+            external: true,
+          },
+          {
+            text: 'Workers AI Models',
+            to: 'https://developers.cloudflare.com/workers-ai/models/',
+            external: true,
+          },
+        ],
       },
       {
         id: 'd1-rag',
@@ -419,9 +535,17 @@ For example: "Find documents about RAG published after 2023 that the user has pe
 - Maintain audit logs for compliance
 - Cache frequently retrieved results`,
         relatedLinks: [
-          { text: 'Cloudflare D1 Documentation', to: 'https://developers.cloudflare.com/d1/', external: true },
-          { text: 'D1 Getting Started', to: 'https://developers.cloudflare.com/d1/get-started/', external: true }
-        ]
+          {
+            text: 'Cloudflare D1 Documentation',
+            to: 'https://developers.cloudflare.com/d1/',
+            external: true,
+          },
+          {
+            text: 'D1 Getting Started',
+            to: 'https://developers.cloudflare.com/d1/get-started/',
+            external: true,
+          },
+        ],
       },
       {
         id: 'r2-rag',
@@ -455,10 +579,18 @@ For example: "Find documents about RAG published after 2023 that the user has pe
 
 **Practical Benefits**: S3-compatible API means existing tools and SDKs work with R2. Combined with zero egress fees and edge performance, R2 is ideal for document-heavy RAG applications requiring frequent access to source materials.`,
         relatedLinks: [
-          { text: 'Cloudflare R2 Documentation', to: 'https://developers.cloudflare.com/r2/', external: true },
-          { text: 'R2 Pricing', to: 'https://developers.cloudflare.com/r2/pricing/', external: true }
-        ]
-      }
-    ]
-  }
+          {
+            text: 'Cloudflare R2 Documentation',
+            to: 'https://developers.cloudflare.com/r2/',
+            external: true,
+          },
+          {
+            text: 'R2 Pricing',
+            to: 'https://developers.cloudflare.com/r2/pricing/',
+            external: true,
+          },
+        ],
+      },
+    ],
+  },
 ];

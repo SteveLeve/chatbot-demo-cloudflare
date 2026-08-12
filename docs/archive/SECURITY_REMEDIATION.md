@@ -1,5 +1,6 @@
 # Security Remediation Checklist (Archived)
-*Archived snapshot (moved 2026-02-06). See `../status/security.md` and ADR `docs/decisions/adr-20260206-security-hardening.md` for current view.*
+
+_Archived snapshot (moved 2026-02-06). See `../status/security.md` and ADR `docs/decisions/adr-20260206-security-hardening.md` for current view._
 
 **Status**: ✅ **Critical Issues Resolved - Ready for Production**
 **Completion Date**: 2026-01-18
@@ -10,12 +11,14 @@
 ## 🚨 Critical Issues (P0 - Deploy Blocker)
 
 ### Issue #6: Insecure IP Address Salt Configuration
+
 **Timeline**: Fix within 24 hours
 **Status**: ✅ **COMPLETED** (2026-01-18)
 **GitHub Issue**: [#6](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/6)
 **Pull Request**: [#22](https://github.com/SteveLeve/chatbot-demo-cloudflare/pull/22)
 
 **Checklist**:
+
 - [x] Generate cryptographically secure salt (`openssl rand -base64 32`)
 - [x] Store salt in Wrangler secrets (`wrangler secret put CHAT_LOG_IP_SALT`)
 - [x] Remove `CHAT_LOG_IP_SALT` from `wrangler.jsonc` vars section (line 24)
@@ -28,6 +31,7 @@
 - [x] Document salt rotation procedure
 
 **Verification Commands**:
+
 ```bash
 # Generate salt
 openssl rand -base64 32
@@ -44,12 +48,14 @@ curl https://cloudflare-rag-demo.stevenleve.com/health
 ---
 
 ### Issue #7: Missing Rate Limiting
+
 **Timeline**: Fix within 24 hours
 **Status**: ✅ **COMPLETED** (2026-01-18)
 **GitHub Issue**: [#7](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/7)
 **Pull Request**: [#22](https://github.com/SteveLeve/chatbot-demo-cloudflare/pull/22)
 
 **Checklist**:
+
 - [x] Add rate limiter configuration to `wrangler.jsonc`
   ```jsonc
   "ratelimits": [
@@ -75,6 +81,7 @@ curl https://cloudflare-rag-demo.stevenleve.com/health
 - [x] Document rate limits in API documentation
 
 **Test Script**:
+
 ```bash
 # Should succeed (within limit)
 for i in {1..99}; do
@@ -95,12 +102,14 @@ curl -H "X-Session-ID: test-user" \
 ## 🔴 High Priority Issues (This Week)
 
 ### Issue #8: Overly Permissive CORS
+
 **Timeline**: This week
 **Status**: ✅ **COMPLETED** (2026-01-18)
 **GitHub Issue**: [#8](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/8)
 **Pull Request**: [#TBD](https://github.com/SteveLeve/chatbot-demo-cloudflare/pull/TBD)
 
 **Checklist**:
+
 - [x] Update CORS configuration in `src/index.ts:38-44`
 - [x] Restrict to specific origins:
   - `https://cloudflare-rag-demo.stevenleve.com` (production)
@@ -117,12 +126,14 @@ curl -H "X-Session-ID: test-user" \
 ---
 
 ### Issue #9: Missing Input Validation
+
 **Timeline**: This week
 **Status**: ✅ **COMPLETED** (2026-01-18)
 **GitHub Issue**: [#9](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/9)
 **Pull Request**: [#TBD](https://github.com/SteveLeve/chatbot-demo-cloudflare/pull/TBD)
 
 **Checklist**:
+
 - [x] **Query Parameter Validation** (`src/index.ts`)
   - [x] Add topK bounds check (1-20)
   - [x] Add minSimilarity range check (0-1)
@@ -150,12 +161,14 @@ curl -H "X-Session-ID: test-user" \
 ---
 
 ### Issue #10: Missing Security Headers
+
 **Timeline**: This week
 **Status**: ✅ **COMPLETED** (2026-01-18)
 **GitHub Issue**: [#10](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/10)
 **Pull Request**: [#TBD](https://github.com/SteveLeve/chatbot-demo-cloudflare/pull/TBD)
 
 **Checklist**:
+
 - [x] Add security headers middleware in `src/index.ts:36`
 - [x] Implement headers:
   - [x] `X-Content-Type-Options: nosniff`
@@ -174,12 +187,14 @@ curl -H "X-Session-ID: test-user" \
 ---
 
 ### Issue #11: Error Information Disclosure
+
 **Timeline**: This week
 **Status**: ✅ **COMPLETED** (2026-01-18)
 **GitHub Issue**: [#11](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/11)
 **Pull Request**: [#TBD](https://github.com/SteveLeve/chatbot-demo-cloudflare/pull/TBD)
 
 **Checklist**:
+
 - [x] Create `sanitizeError()` function in `src/utils/security.ts`
 - [x] Check environment (development vs production)
 - [x] Return generic messages in production
@@ -211,6 +226,7 @@ curl -H "X-Session-ID: test-user" \
 ## Deployment Checklist
 
 Before deploying to production:
+
 - [x] All critical issues resolved (✅ Issues #6, #7)
 - [x] All high priority issues resolved (✅ Issues #8-11)
 - [x] Security headers verified (✅ All headers applied globally)
@@ -227,6 +243,7 @@ Before deploying to production:
 ## Post-Deployment Verification
 
 Within 24 hours of deployment:
+
 - [x] Monitor error rates (should not spike) - ✅ Tests passing
 - [x] Verify rate limiting working (check 429 responses) - ✅ Verified
 - [x] Check security headers on production - ✅ All headers applied
@@ -241,6 +258,7 @@ Within 24 hours of deployment:
 ## Security Monitoring
 
 Ongoing monitoring requirements:
+
 - **Daily**: Check error logs for security events
 - **Weekly**: Review rate limit violations
 - **Monthly**: Security audit of access patterns
@@ -255,6 +273,7 @@ Ongoing monitoring requirements:
 ## Completed Work
 
 ### PR #22: Critical Security Fixes (Issues #6, #7)
+
 - ✅ Secure IP salt configuration with Cloudflare secrets
 - ✅ Rate limiting implementation (100 req/min queries, 10 req/min ingestion)
 - ✅ Validation to prevent misconfiguration
@@ -263,6 +282,7 @@ Ongoing monitoring requirements:
 - ✅ All tests passing successfully
 
 **Commits:**
+
 1. `a6fb13b` - Security fixes implementation
 2. `70b50b1` - Wrangler types migration
 
@@ -271,6 +291,7 @@ Ongoing monitoring requirements:
 ---
 
 ### PR #TBD: Security Hardening (Issues #8-11)
+
 - ✅ Environment-aware CORS configuration (dev/prod origins)
 - ✅ Comprehensive input validation with 6 validation functions
 - ✅ Prompt injection prevention and sanitization
@@ -281,12 +302,14 @@ Ongoing monitoring requirements:
 - ✅ Unit tests for validation and security utilities (95%+ coverage)
 
 **Files Created:**
+
 - `src/utils/validation.ts` - Input validation and sanitization
 - `src/utils/security.ts` - Security middleware and error handling
 - `tests/utils/validation.test.ts` - Comprehensive validation tests
 - `tests/utils/security.test.ts` - Security utilities tests
 
 **Files Modified:**
+
 - `src/types/index.ts` - Added ValidationError class
 - `src/index.ts` - Integrated security middleware and validation
 - `src/patterns/basic-rag.ts` - Defense-in-depth validation

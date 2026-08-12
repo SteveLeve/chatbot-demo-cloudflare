@@ -5,7 +5,9 @@ import { chromium } from 'playwright';
   const page = await browser.newPage();
 
   console.log('Testing http://localhost:8787...');
-  const response = await page.goto('http://localhost:8787/', { waitUntil: 'networkidle' });
+  const response = await page.goto('http://localhost:8787/', {
+    waitUntil: 'networkidle',
+  });
 
   console.log(`Status: ${response.status()}`);
   console.log('Content-Type:', response.headers()['content-type']);

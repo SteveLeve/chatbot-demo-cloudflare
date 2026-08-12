@@ -11,8 +11,15 @@ const manifest = corpusManifest as CorpusManifest;
 
 const TECH_STACK: TechStackInfo = {
   title: 'Built with',
-  technologies: ['Cloudflare Workers AI', 'Vectorize', 'D1', 'R2', 'React Router v7'],
-  description: 'Curated corpus — inspect exactly what this RAG demo can retrieve',
+  technologies: [
+    'Cloudflare Workers AI',
+    'Vectorize',
+    'D1',
+    'R2',
+    'React Router v7',
+  ],
+  description:
+    'Curated corpus — inspect exactly what this RAG demo can retrieve',
   githubUrl: 'https://github.com/SteveLeve/chatbot-demo-cloudflare',
 };
 
@@ -36,7 +43,8 @@ function CorpusList() {
                 {article.title}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {formatCharCount(article.charCount)} · ~{article.chunkCount} chunks
+                {formatCharCount(article.charCount)} · ~{article.chunkCount}{' '}
+                chunks
               </p>
             </div>
             <span className="text-blue-600 dark:text-blue-400 text-sm shrink-0">
@@ -75,7 +83,9 @@ function CorpusArticleView({ articleId }: { articleId: string }) {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load article');
+          setError(
+            err instanceof Error ? err.message : 'Failed to load article',
+          );
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -89,7 +99,7 @@ function CorpusArticleView({ articleId }: { articleId: string }) {
   }, [articleId]);
 
   const askUrl = `/demos/basic-rag?q=${encodeURIComponent(
-    `What is ${manifestEntry?.title || articleId}?`
+    `What is ${manifestEntry?.title || articleId}?`,
   )}`;
 
   return (
@@ -109,7 +119,8 @@ function CorpusArticleView({ articleId }: { articleId: string }) {
         </h2>
         {manifestEntry && (
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {formatCharCount(manifestEntry.charCount)} · ~{manifestEntry.chunkCount} chunks
+            {formatCharCount(manifestEntry.charCount)} · ~
+            {manifestEntry.chunkCount} chunks
             {manifestEntry.sourceUrl && (
               <>
                 {' · '}
@@ -128,7 +139,9 @@ function CorpusArticleView({ articleId }: { articleId: string }) {
       </div>
 
       {loading && (
-        <p className="text-gray-500 dark:text-gray-400 animate-pulse">Loading article…</p>
+        <p className="text-gray-500 dark:text-gray-400 animate-pulse">
+          Loading article…
+        </p>
       )}
 
       {error && (
@@ -136,7 +149,8 @@ function CorpusArticleView({ articleId }: { articleId: string }) {
           <p className="font-medium mb-1">Article body not available yet</p>
           <p className="text-sm">{error}</p>
           <p className="text-sm mt-2 text-amber-800 dark:text-amber-300">
-            The manifest above is static (bundled with this app). Full text is served from R2 after ingest:
+            The manifest above is static (bundled with this app). Full text is
+            served from R2 after ingest:
             <code className="ml-1">npm run ingest:corpus</code>
           </p>
         </div>
@@ -171,13 +185,15 @@ export function CorpusPage() {
         <nav className="mb-6 text-sm text-gray-600 dark:text-gray-400">
           <Link to="/" className="hover:text-gray-900 dark:hover:text-gray-100">
             Home
-          </Link>
-          {' '}/{' '}
-          <Link to="/demos/basic-rag" className="hover:text-gray-900 dark:hover:text-gray-100">
+          </Link>{' '}
+          /{' '}
+          <Link
+            to="/demos/basic-rag"
+            className="hover:text-gray-900 dark:hover:text-gray-100"
+          >
             Basic RAG Demo
-          </Link>
-          {' '}/{' '}
-          <span className="text-gray-900 dark:text-gray-100">Corpus</span>
+          </Link>{' '}
+          / <span className="text-gray-900 dark:text-gray-100">Corpus</span>
         </nav>
 
         {!id ? (
@@ -187,12 +203,14 @@ export function CorpusPage() {
                 Demo Corpus
               </h1>
               <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">
-                This list is <strong>static</strong> — bundled with the app so you can see exactly
-                what knowledge the RAG system is designed to retrieve, with no API call.
+                This list is <strong>static</strong> — bundled with the app so
+                you can see exactly what knowledge the RAG system is designed to
+                retrieve, with no API call.
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {manifest.articleCount} curated articles · Simple English Wikipedia sources ·
-                thematic focus on computing, AI, and foundational science
+                {manifest.articleCount} curated articles · Simple English
+                Wikipedia sources · thematic focus on computing, AI, and
+                foundational science
               </p>
             </div>
             <CorpusList />

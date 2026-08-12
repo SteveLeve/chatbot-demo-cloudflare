@@ -1,4 +1,5 @@
 # ADR: Cloudflare Agents SDK as Agentic Runtime
+
 - **Date**: 2026-08-07
 - **Status**: Accepted
 - **Owners**: Project Maintainer
@@ -16,20 +17,20 @@ We need a durable decision for the **agentic runtime** so subsequent implementat
 - Keep the existing **Hono Worker** as the HTTP/API and static-assets shell.
 - Retain **Workers AI**, **Vectorize**, **D1**, **R2**, **KV**, and **Workflows** for inference, retrieval, persistence, cache, and ingestion.
 - Do **not** adopt LangChain agents, LlamaIndex agents, or external vendor agent platforms as the orchestration layer.
-- **Do** permit the Vercel AI SDK together with `workers-ai-provider` as the model-invocation and tool-calling layer *when used inside an Agents SDK Durable Object*. This is Cloudflare's documented and recommended pattern for Agents SDK model calls, and `AIChatAgent` depends on it; banning it would mean rejecting the platform-native path this ADR selects.
+- **Do** permit the Vercel AI SDK together with `workers-ai-provider` as the model-invocation and tool-calling layer _when used inside an Agents SDK Durable Object_. This is Cloudflare's documented and recommended pattern for Agents SDK model calls, and `AIChatAgent` depends on it; banning it would mean rejecting the platform-native path this ADR selects.
 
 ### The boundary
 
 Orchestration, state, and durability come from Cloudflare primitives (Agents SDK, Durable Objects, Workflows). Third-party libraries are permitted only as **thin, swappable adapters** confined to a single module:
 
-| Concern | Source | Rationale |
-|---------|--------|-----------|
-| Agent loop, session state, scheduling, durability | Agents SDK / Durable Objects | The decision |
-| Model invocation, tool-call plumbing, streaming | AI SDK + `workers-ai-provider` (or `env.AI` directly) | Cloudflare-recommended; adapter-confined |
-| Text splitting | `@langchain/textsplitters` | Pre-existing narrow utility |
-| Retrieval, storage, inference, ingestion | Vectorize / D1 / R2 / KV / Workers AI / Workflows | Platform |
+| Concern                                           | Source                                                | Rationale                                |
+| ------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------- |
+| Agent loop, session state, scheduling, durability | Agents SDK / Durable Objects                          | The decision                             |
+| Model invocation, tool-call plumbing, streaming   | AI SDK + `workers-ai-provider` (or `env.AI` directly) | Cloudflare-recommended; adapter-confined |
+| Text splitting                                    | `@langchain/textsplitters`                            | Pre-existing narrow utility              |
+| Retrieval, storage, inference, ingestion          | Vectorize / D1 / R2 / KV / Workers AI / Workflows     | Platform                                 |
 
-A dependency that wants to own the *loop* is out. A dependency that formats a model request is in, provided it lives behind one adapter module.
+A dependency that wants to own the _loop_ is out. A dependency that formats a model request is in, provided it lives behind one adapter module.
 
 ## Consequences
 
@@ -42,7 +43,7 @@ A dependency that wants to own the *loop* is out. A dependency that formats a mo
 ## Alternatives Considered
 
 - **Hand-rolled Worker tool loop (no Agents SDK)** — Rejected as primary showcase: workable, but underrepresents Cloudflare’s agentic product surface for a portfolio piece whose goal is platform agentic fluency.
-- **LangChain / LlamaIndex agent frameworks** — Rejected: they want to own the agent loop, which conflicts with the “no ad-hoc framework” north star and dilutes Cloudflare-first positioning. Note this rejects the *agent* abstractions, not model-provider adapters — see the boundary table above.
+- **LangChain / LlamaIndex agent frameworks** — Rejected: they want to own the agent loop, which conflicts with the “no ad-hoc framework” north star and dilutes Cloudflare-first positioning. Note this rejects the _agent_ abstractions, not model-provider adapters — see the boundary table above.
 - **External vendor agent platforms** — Rejected: off-platform orchestration undermines the edge architecture story.
 - **Banning the AI SDK outright and calling `env.AI.run` directly** — Rejected: it re-introduces the hand-crafted-vs-framework framing this reimagining retires, and diverges from Cloudflare's own documented Agents SDK patterns. Direct `env.AI` calls remain available behind the same adapter if the dependency ever becomes a liability.
 

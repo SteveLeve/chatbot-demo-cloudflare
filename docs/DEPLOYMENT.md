@@ -32,6 +32,7 @@ This project uses **Cloudflare Workers for full-stack deployment**:
 ```
 
 **Why this approach?**
+
 - ✅ Single deployment (`wrangler deploy`)
 - ✅ Same origin (no CORS issues)
 - ✅ Shared bindings (D1, Vectorize, R2, KV all available to both frontend and API)
@@ -119,6 +120,7 @@ wrangler deploy
 ```
 
 Your Worker will be available at:
+
 ```
 https://cloudflare-rag-portfolio.<your-subdomain>.workers.dev
 https://cloudflare-rag-demo.stevenleve.com (custom domain)
@@ -163,12 +165,13 @@ Key settings for full-stack deployment:
 {
   "assets": {
     "directory": "./public",
-    "binding": "ASSETS"
-  }
+    "binding": "ASSETS",
+  },
 }
 ```
 
 This tells Workers to:
+
 1. Serve files from `./public` directory as static assets
 2. Bind the assets to the `ASSETS` variable (for programmatic access if needed)
 3. Automatically handle routing: static files served, `/api/*` routes go to your Worker code
@@ -189,6 +192,7 @@ export default defineConfig({
 **Important**: The `public` directory should NOT be committed to git. It's generated during the build and deployed with the Worker.
 
 Add to `.gitignore`:
+
 ```
 public/
 .wrangler/
@@ -226,6 +230,7 @@ wrangler secret list
 This project uses a single production environment. The root configuration in `wrangler.jsonc` is used for production deployments.
 
 **Current setup:**
+
 - **Local development**: `wrangler dev` (uses remote resources)
 - **Production**: `wrangler deploy` (deploys to `cloudflare-rag-portfolio` worker)
 
@@ -240,11 +245,11 @@ If you need a staging environment in the future, you can add it to `wrangler.jso
       "routes": [
         {
           "pattern": "staging-cloudflare-rag-demo.stevenleve.com",
-          "custom_domain": true
-        }
-      ]
-    }
-  }
+          "custom_domain": true,
+        },
+      ],
+    },
+  },
 }
 ```
 
@@ -297,6 +302,7 @@ jobs:
 ```
 
 **Setup**:
+
 1. Go to GitHub repository → **Settings** → **Secrets and variables** → **Actions**
 2. Add `CLOUDFLARE_API_TOKEN`:
    - Go to Cloudflare Dashboard → **My Profile** → **API Tokens**
@@ -394,6 +400,7 @@ wrangler deploy
 **Symptoms**: Build fails, `public/` directory doesn't exist
 
 **Solution**:
+
 ```bash
 # Ensure frontend is built
 npm run build
@@ -407,6 +414,7 @@ ls -la public/
 **Symptoms**: Visiting worker URL shows 404, `/api/*` works but static files don't
 
 **Solutions**:
+
 1. Check `wrangler.jsonc` has `assets` configuration
 2. Verify `npm run build` ran successfully
 3. Check `public/index.html` exists
@@ -417,6 +425,7 @@ ls -la public/
 **Symptoms**: "binding DATABASE not found"
 
 **Solutions**:
+
 1. Verify D1 exists: `wrangler d1 list`
 2. Check `database_id` in `wrangler.jsonc` matches your D1
 3. Apply migrations: `wrangler d1 migrations apply wikipedia-db --remote`
@@ -426,6 +435,7 @@ ls -la public/
 **Symptoms**: "Migration error" or "SQL syntax error"
 
 **Solutions**:
+
 1. Check SQL syntax in migration files
 2. Verify migrations run in order (names start with 0001_, 0002_, etc.)
 3. Try applying locally first: `wrangler d1 migrations apply wikipedia-db --local`
@@ -436,6 +446,7 @@ ls -la public/
 **Symptoms**: Updated code not reflecting on live site
 
 **Solutions**:
+
 1. Ensure build succeeded: `npm run build`
 2. Verify files in `public/` updated: `ls -l public/`
 3. Clear browser cache (Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows)
@@ -446,13 +457,13 @@ ls -la public/
 
 For a production deployment with moderate usage (1000 queries/day):
 
-| Service | Cost | Notes |
-|---------|------|-------|
-| **Workers** | Free | 100k requests/day free tier |
-| **D1** | Free | < 5GB included |
-| **Vectorize** | Free | 5M vectors free tier |
-| **R2** | $0.015/GB/month | ~$0.30/month for 20MB |
-| **KV** | Free | Free tier adequate |
+| Service       | Cost            | Notes                       |
+| ------------- | --------------- | --------------------------- |
+| **Workers**   | Free            | 100k requests/day free tier |
+| **D1**        | Free            | < 5GB included              |
+| **Vectorize** | Free            | 5M vectors free tier        |
+| **R2**        | $0.015/GB/month | ~$0.30/month for 20MB       |
+| **KV**        | Free            | Free tier adequate          |
 
 **Estimated monthly cost**: < $1
 

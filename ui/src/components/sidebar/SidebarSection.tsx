@@ -5,7 +5,7 @@ export function SidebarSection({
   title,
   defaultOpen = false,
   children,
-  icon
+  icon,
 }: SidebarSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const contentId = useId();
@@ -19,12 +19,22 @@ export function SidebarSection({
         aria-controls={contentId}
       >
         <div className="flex items-center gap-2">
-          {icon && <span className="text-gray-500 dark:text-gray-400" aria-hidden="true">{icon}</span>}
+          {icon && (
+            <span
+              className="text-gray-500 dark:text-gray-400"
+              aria-hidden="true"
+            >
+              {icon}
+            </span>
+          )}
           <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
             {title}
           </h3>
         </div>
-        <span className="text-gray-500 dark:text-gray-400 text-sm" aria-hidden="true">
+        <span
+          className="text-gray-500 dark:text-gray-400 text-sm"
+          aria-hidden="true"
+        >
           {isOpen ? '▼' : '▶'}
         </span>
       </button>

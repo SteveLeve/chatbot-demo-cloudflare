@@ -1,12 +1,15 @@
 # Runbook: Enable Structured Logging & Tracing
+
 - **Last Updated**: 2026-02-06
 - **Owner**: Platform/Observability
 - **Prereqs**: Wrangler access; target observability backend creds (e.g., Honeycomb/Grafana agent endpoints)
 
 ## When to Run
+
 - Initial observability rollout or when rotating credentials/endpoints.
 
 ## Steps
+
 1. JSON logging is built-in: logs are emitted as single-line JSON with `requestId`, `traceId`, `spanId`, and `sessionId` context.
 2. Tracing sampler defaults to **5%**; configure OTLP export via env:
    - `TRACE_ENABLED=true` (default)
@@ -19,12 +22,15 @@
 5. Deploy to production.
 
 ## Validation
+
 - Logs visible with expected correlation IDs (requestId/traceId) and endpoint metadata.
 - Traces sampled at expected rate; no exporter errors in Wrangler logs.
 
 ## Rollback
+
 - Disable exporter feature flag or revert deployment to previous commit.
 
 ## Notes
+
 - Historical analysis: `../archive/OBSERVABILITY_ANALYSIS_REPORT.md` and `../archive/OBSERVABILITY_SETUP.md`.
 - Track work in issue #18.

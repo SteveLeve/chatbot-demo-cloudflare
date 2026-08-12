@@ -10,9 +10,15 @@ import { getApiUrl } from '../config';
 
 const TECH_STACK: TechStackInfo = {
   title: 'Built with',
-  technologies: ['Cloudflare Workers AI', 'Vectorize', 'D1', 'R2', 'React Router v7'],
+  technologies: [
+    'Cloudflare Workers AI',
+    'Vectorize',
+    'D1',
+    'R2',
+    'React Router v7',
+  ],
   description: 'Demonstrating RAG patterns on the edge with Cloudflare',
-  githubUrl: 'https://github.com/SteveLeve/chatbot-demo-cloudflare'
+  githubUrl: 'https://github.com/SteveLeve/chatbot-demo-cloudflare',
 };
 
 export function BasicChatPage() {
@@ -47,12 +53,14 @@ export function BasicChatPage() {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setLoading(true);
 
     try {
-      const response = await fetch(getApiUrl(`/api/v1/query?q=${encodeURIComponent(input)}`));
+      const response = await fetch(
+        getApiUrl(`/api/v1/query?q=${encodeURIComponent(input)}`),
+      );
       const data: ApiResponse<RAGQueryResponse> = await response.json();
 
       if (data.success && data.data) {
@@ -63,7 +71,7 @@ export function BasicChatPage() {
           sources: data.data.sources,
           timestamp: new Date(),
         };
-        setMessages(prev => [...prev, assistantMessage]);
+        setMessages((prev) => [...prev, assistantMessage]);
       } else {
         throw new Error(data.error?.message || 'Query failed');
       }
@@ -74,7 +82,7 @@ export function BasicChatPage() {
         content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setLoading(false);
     }
@@ -99,7 +107,10 @@ export function BasicChatPage() {
             <p className="text-lg">Ask about the curated demo corpus</p>
             <p className="text-sm mt-2">
               Try: &quot;What is artificial intelligence?&quot; or browse{' '}
-              <Link to="/docs/corpus" className="text-blue-600 dark:text-blue-400 hover:underline">
+              <Link
+                to="/docs/corpus"
+                className="text-blue-600 dark:text-blue-400 hover:underline"
+              >
                 what&apos;s in the corpus
               </Link>
             </p>
