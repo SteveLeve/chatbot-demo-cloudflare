@@ -1,28 +1,30 @@
 # Code Quality Automation — Implementation Guide
 
-**Current Status**: Complete (Phases 1–4). Tracked in [#40](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/40).
+**Current Status**: Complete (Phases 1–5). Tracked in [#40](https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/40).
 
 ## Overview
 
-Mechanical quality gates for this single-Worker + Vite-UI repo: ESLint, Prettier, a pre-commit hook, CI, and required status checks on `main`. Does **not** include Semgrep, dependency-graph analysis, or coverage gates — see [Explicitly out of scope](#explicitly-out-of-scope).
+Mechanical quality gates for this single-Worker + Vite-UI repo: ESLint, Prettier, a pre-commit hook, CI, required status checks on `main`, a coverage floor, and a Dependency Review gate on PRs. Does **not** include Semgrep or dependency-graph analysis — see [Explicitly out of scope](#explicitly-out-of-scope).
 
 ## What landed
 
-| Phase                         | Status | Artifacts                                                                                                                          |
-| ----------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 1 — Lint + format + typecheck | Done   | `eslint.config.js`, `ui/eslint.config.js`, `.prettierrc`, `.prettierignore`, root scripts                                          |
-| 2 — Pre-commit                | Done   | Husky, lint-staged, split `.lintstagedrc.json` (root + `ui/`)                                                                      |
-| 3 — CI                        | Done   | `.github/workflows/ci.yml` (Node 24); green on `main` after [PR #43](https://github.com/SteveLeve/chatbot-demo-cloudflare/pull/43) |
-| 4 — Enforce on merge          | Done   | `protect-main` ruleset requires status checks `root` + `ui`                                                                        |
+| Phase                                                         | Status | Artifacts                                                                                                                                   |
+| ------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 — Lint + format + typecheck                                 | Done   | `eslint.config.js`, `ui/eslint.config.js`, `.prettierrc`, `.prettierignore`, root scripts                                                   |
+| 2 — Pre-commit                                                | Done   | Husky, lint-staged, split `.lintstagedrc.json` (root + `ui/`)                                                                               |
+| 3 — CI                                                        | Done   | `.github/workflows/ci.yml` (Node 24); green on `main` after [PR #43](https://github.com/SteveLeve/chatbot-demo-cloudflare/pull/43)          |
+| 4 — Enforce on merge                                          | Done   | `protect-main` ruleset requires status checks `root` + `ui`                                                                                 |
+| 5 — Format/lint strictness, coverage floor, dependency review | Done   | `format:check` + coverage step in `ci.yml`, `--max-warnings 0` at root, `.github/workflows/dependency-review.yml`, `.github/dependabot.yml` |
 
-**Formatting policy**: incremental — Prettier runs on staged files via pre-commit, not a repo-wide format commit. `npm run format:check` may fail on untouched files until they are edited.
+**Formatting policy**: enforced — the repo was reformatted once (`npm run format`) and `format:check` now runs in the `root` CI job, so drift can't reaccumulate. Pre-commit (lint-staged) still auto-fixes staged files as before; CI is the backstop for anything that slips through.
 
 ## Commands (acceptance criteria)
 
 ```bash
-npm run lint       # exits 0 — root ESLint + ui lint
-npm run typecheck  # exits 0 — tsc --noEmit (src, scripts, tests)
-npm test -- --run  # exits 0 — vitest single pass (CI sets CI=true)
+npm run lint                  # exits 0 — root ESLint (--max-warnings 0) + ui lint
+npm run format:check          # exits 0 — repo-wide Prettier check
+npm run typecheck             # exits 0 — tsc --noEmit (src, scripts, tests)
+npm run test:coverage -- --run  # exits 0 — vitest single pass + coverage thresholds (CI sets CI=true)
 ```
 
 Pre-commit: stage a misformatted file → `git commit` auto-fixes via lint-staged.
@@ -98,20 +100,24 @@ Root `.lintstagedrc.json` and `ui/.lintstagedrc.json` — lint-staged picks near
 
 `.github/workflows/ci.yml` (Node **24**):
 
-- **root**: `npm ci` → `npx eslint .` → typecheck → `npm test -- --run` (not `npm run lint` — that also hits `ui/` and needs a separate install)
+- **root** (updated in Phase 5, see below): `npm ci` → `npx eslint . --max-warnings 0` → `npm run format:check` → typecheck → `npm run test:coverage -- --run` (not `npm run lint` — that also hits `ui/` and needs a separate install)
 - **ui**: `npm ci` → lint → build (`ui/.npmrc` applies in CI)
-
-No `format:check` in CI (incremental formatting).
 
 ### Phase 4 — Enforce CI on merge
 
 Required status checks on `protect-main` so PRs cannot merge to `main` unless `root` and `ui` succeed on the latest head (`strict_required_status_checks_policy: true`).
 
+### Phase 5 — Format/lint strictness, coverage floor, dependency review
+
+- `ci.yml` `root` job: `npx eslint . --max-warnings 0` (was previously warning-tolerant at root; `ui/` already enforced this), then `npm run format:check` (repo-wide, `.prettierignore` scopes out `node_modules`, build outputs, and `.remember`), then `npm run test:coverage -- --run` (was `npm test -- --run`).
+- `vitest.config.ts` gained a `coverage` block: `provider: 'v8'`, `include` scoped to `src/utils/**`, `src/ai/**`, `src/eval/**`, `src/redteam/**` (the pure-function areas the suite actually exercises — routes/DO/Workflows aren't unit-testable without Miniflare bindings) and `thresholds` set a few points below the measured baseline (~47% statements/lines, ~71% branches, ~73% functions at landing time) — a regression floor, not a coverage target. `@vitest/coverage-v8` added as a root devDependency (was missing; `test:coverage` was previously broken).
+- `.github/workflows/dependency-review.yml` (new): `actions/dependency-review-action@v4` on `pull_request`, `fail-on-severity: high`. No GHAS license needed.
+- `.github/dependabot.yml` (new): weekly `npm` update PRs for `/` and `/ui` (separate lockfiles), grouped by minor/patch; weekly `github-actions` updates.
+
 ## Explicitly out of scope
 
-- Security scanning (Semgrep)
-- Dependency-graph analysis (dependency-cruiser / knip)
-- Coverage gates (`test:coverage` still broken)
+- Security scanning (Semgrep) — Dependency Review (Phase 5) covers known-vulnerable _dependencies_ in PR diffs; it does not scan first-party source for security issues.
+- Dependency-graph analysis (dependency-cruiser / knip) — architectural/import-graph linting, distinct from the GitHub Dependency Review Action added in Phase 5.
 - `CONTRIBUTING.md`
 
 ## References
