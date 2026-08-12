@@ -131,19 +131,25 @@ export class DocumentStore {
 				`
           INSERT INTO documents (id, article_id, title, metadata, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?)
+          ON CONFLICT(article_id) DO UPDATE SET
+            id = excluded.id,
+            title = excluded.title,
+            metadata = excluded.metadata,
+            updated_at = excluded.updated_at
         `,
 			)
 				.bind(doc.id, doc.articleId, doc.title, metadata, now, now)
 				.run();
 
-			const result: DocumentMetadata = {
-				...doc,
-				createdAt: now,
-				updatedAt: now,
-			};
+			const stored = await this.getDocumentByArticleId(doc.articleId);
+			if (!stored) {
+				throw new Error(
+					`Document row missing after upsert for article ${doc.articleId}`,
+				);
+			}
 
 			this.logger.endTimer('createDocument', { success: true });
-			return result;
+			return stored;
 		} catch (error) {
 			this.logger.endTimer('createDocument', { success: false });
 			this.logger.error('Failed to create document metadata', error, {
@@ -166,24 +172,57 @@ export class DocumentStore {
 				.bind(documentId)
 				.first<any>();
 
-			if (!result) {
-				return null;
-			}
-
-			return {
-				id: result.id,
-				articleId: result.article_id,
-				title: result.title,
-				metadata: JSON.parse(result.metadata),
-				createdAt: result.created_at,
-				updatedAt: result.updated_at,
-			};
+			return this.mapDocumentRow(result);
 		} catch (error) {
 			this.logger.error('Failed to get document metadata', error, {
 				documentId,
 			});
 			throw error;
 		}
+	}
+
+	/**
+	 * Get document metadata by article ID — used to detect a pre-existing
+	 * document row whose id predates deterministic ingestion IDs (#15 follow-up).
+	 */
+	async getDocumentByArticleId(
+		articleId: string,
+	): Promise<DocumentMetadata | null> {
+		this.logger.debug('Getting document metadata by article id', {
+			articleId,
+		});
+
+		try {
+			const result = await this.env.DATABASE.prepare(
+				'SELECT * FROM documents WHERE article_id = ?',
+			)
+				.bind(articleId)
+				.first<any>();
+
+			return this.mapDocumentRow(result);
+		} catch (error) {
+			this.logger.error(
+				'Failed to get document metadata by article id',
+				error,
+				{ articleId },
+			);
+			throw error;
+		}
+	}
+
+	private mapDocumentRow(row: any): DocumentMetadata | null {
+		if (!row) {
+			return null;
+		}
+
+		return {
+			id: row.id,
+			articleId: row.article_id,
+			title: row.title,
+			metadata: JSON.parse(row.metadata),
+			createdAt: row.created_at,
+			updatedAt: row.updated_at,
+		};
 	}
 
 	/**
@@ -225,7 +264,7 @@ export class DocumentStore {
 			const statements = chunks.map((chunk) =>
 				this.env.DATABASE.prepare(
 					`
-          INSERT INTO chunks (id, document_id, text, chunk_index, metadata, created_at)
+          INSERT OR REPLACE INTO chunks (id, document_id, text, chunk_index, metadata, created_at)
           VALUES (?, ?, ?, ?, ?, ?)
         `,
 				).bind(

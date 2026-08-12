@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { getCorsConfig, sanitizeError } from '../../src/utils/security';
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import {
+	getCorsConfig,
+	sanitizeError,
+	securityHeaders,
+} from '../../src/utils/security';
 import { AppError } from '../../src/types';
 import type { Env } from '../../src/types';
 
@@ -27,7 +33,7 @@ describe('Security Utils', () => {
 				'http://localhost:3000',
 				'http://localhost:8787',
 			]);
-			expect(config.allowMethods).toEqual(['GET', 'POST']);
+			expect(config.allowMethods).toEqual(['GET', 'POST', 'DELETE']);
 			expect(config.credentials).toBe(true);
 		});
 
@@ -36,7 +42,7 @@ describe('Security Utils', () => {
 			const config = getCorsConfig(env);
 
 			expect(config.origin).toBe('https://cloudflare-rag-demo.stevenleve.com');
-			expect(config.allowMethods).toEqual(['GET', 'POST']);
+			expect(config.allowMethods).toEqual(['GET', 'POST', 'DELETE']);
 			expect(config.credentials).toBe(true);
 		});
 
@@ -45,6 +51,29 @@ describe('Security Utils', () => {
 			const config = getCorsConfig(env);
 
 			expect(config.origin).toBe('https://cloudflare-rag-demo.stevenleve.com');
+		});
+
+		it('should allow DELETE preflight for privacy delete endpoint', async () => {
+			const env = createMockEnv('development');
+			const app = new Hono();
+			app.use('/*', async (c, next) => {
+				const corsConfig = getCorsConfig(env);
+				return cors(corsConfig)(c, next);
+			});
+			app.delete('/api/privacy/delete', (c) => c.json({ success: true }));
+
+			const res = await app.request('/api/privacy/delete', {
+				method: 'OPTIONS',
+				headers: {
+					Origin: 'http://localhost:3000',
+					'Access-Control-Request-Method': 'DELETE',
+				},
+			});
+
+			expect(res.status).toBe(204);
+			expect(res.headers.get('Access-Control-Allow-Methods')).toContain(
+				'DELETE',
+			);
 		});
 	});
 
@@ -203,12 +232,38 @@ describe('Security Utils', () => {
 	});
 
 	describe('securityHeaders middleware', () => {
-		// Note: Testing middleware requires a Hono context mock
-		// This is a placeholder for integration testing
-		it('should be tested in integration tests', () => {
-			// Security headers middleware is tested via integration tests
-			// that verify actual HTTP response headers
-			expect(true).toBe(true);
+		it('should set all required security headers', async () => {
+			const app = new Hono();
+			app.use('/*', securityHeaders());
+			app.get('/test', (c) => c.text('OK'));
+
+			const res = await app.request('/test');
+
+			expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
+			expect(res.headers.get('X-Frame-Options')).toBe('DENY');
+			expect(res.headers.get('X-XSS-Protection')).toBe('1; mode=block');
+			expect(res.headers.get('Content-Security-Policy')).toBe(
+				"default-src 'self'",
+			);
+			expect(res.headers.get('Referrer-Policy')).toBe(
+				'strict-origin-when-cross-origin',
+			);
+			expect(res.headers.get('Permissions-Policy')).toBe(
+				'geolocation=(), microphone=(), camera=()',
+			);
+		});
+
+		it('should apply headers to GET and POST routes', async () => {
+			const app = new Hono();
+			app.use('/*', securityHeaders());
+			app.get('/api/v1/query', (c) => c.json({ test: true }));
+			app.post('/api/v1/ingest', (c) => c.json({ test: true }));
+
+			const getRes = await app.request('/api/v1/query');
+			const postRes = await app.request('/api/v1/ingest', { method: 'POST' });
+
+			expect(getRes.headers.get('X-Frame-Options')).toBe('DENY');
+			expect(postRes.headers.get('X-Frame-Options')).toBe('DENY');
 		});
 	});
 });

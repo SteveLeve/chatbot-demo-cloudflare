@@ -200,7 +200,9 @@ describe('Validation Utils', () => {
 	describe('validateMetadata', () => {
 		it('should accept valid metadata', () => {
 			expect(validateMetadata({ key: 'value' }).valid).toBe(true);
-			expect(validateMetadata({ foo: 'bar', nested: { a: 1 } }).valid).toBe(true);
+			expect(validateMetadata({ foo: 'bar', nested: { a: 1 } }).valid).toBe(
+				true,
+			);
 		});
 
 		it('should reject non-object types', () => {
@@ -218,7 +220,7 @@ describe('Validation Utils', () => {
 		});
 
 		it('should reject prototype pollution attempts', () => {
-		// Test 'constructor' and 'prototype' keys
+			// Test 'constructor' and 'prototype' keys
 			const pollutedObj2: Record<string, any> = {};
 			pollutedObj2['constructor'] = { polluted: true };
 			const result2 = validateMetadata(pollutedObj2);
@@ -230,6 +232,16 @@ describe('Validation Utils', () => {
 			const result3 = validateMetadata(pollutedObj3);
 			expect(result3.valid).toBe(false);
 			expect(result3.error?.code).toBe('INVALID_METADATA_KEYS');
+		});
+
+		it('should reject __proto__ pollution attempts', () => {
+			const jsonPollution = JSON.parse('{"__proto__": {"isAdmin": true}}');
+			const result = validateMetadata(jsonPollution);
+			expect(result.valid).toBe(false);
+			expect(result.error?.code).toBe('INVALID_METADATA_KEYS');
+
+			const testObj: Record<string, unknown> = {};
+			expect(testObj).not.toHaveProperty('isAdmin');
 		});
 
 		it('should reject metadata that is too large', () => {

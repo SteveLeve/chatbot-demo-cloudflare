@@ -7,6 +7,10 @@ import type { Context } from 'hono';
 import type { Env, DocumentSource } from '../types';
 import type { AppEnv } from '../types/app-env';
 import { hashIpAddress } from './privacy';
+import {
+	isSessionLoggingOptedOut,
+	isWithinPrivacyActionWindow,
+} from './privacy-data';
 import { extractCloudflareMetadata, extractIpAddress } from './metadata';
 import { createLogger, Logger } from './logger';
 import type { TraceContext } from './trace';
@@ -76,10 +80,17 @@ export class ChatLogger {
 		return this.loggingEnabled;
 	}
 
+	/** Public session id stored in D1 (for privacy export/delete/opt-out). */
+	getPublicSessionId(): string | null {
+		return this.sessionId;
+	}
+
 	/**
-	 * Initialize session for the request
-	 * Always creates a new session; logs reuse attempts for visibility
-	 * Logs errors but does not throw (logging should not break chat)
+	 * Initialize session for the request.
+	 * Reuses a live, non-opted-out, non-expired incoming session id (so a
+	 * multi-turn conversation stays exportable/deletable as one unit);
+	 * otherwise creates a new session. Logs errors but does not throw
+	 * (logging should not break chat).
 	 */
 	async initializeSession(): Promise<void> {
 		if (!this.loggingEnabled || !this.env.DATABASE) {
@@ -90,16 +101,43 @@ export class ChatLogger {
 			const incomingSessionId = this.extractIncomingSessionId();
 
 			if (incomingSessionId) {
-				const reuseResult = await this.env.DATABASE.prepare(
-					'SELECT id FROM chat_sessions WHERE session_id = ?',
+				const optedOut = await isSessionLoggingOptedOut(
+					incomingSessionId,
+					this.env,
+				);
+				if (optedOut) {
+					this.loggingEnabled = false;
+					this.logger.info('Chat logging disabled — session opted out', {
+						incomingSessionId,
+					});
+					return;
+				}
+
+				// Honor reuse so a multi-turn conversation shares one session row —
+				// otherwise export/delete can only ever reach the most recent turn.
+				// Bounded by the same window as self-service privacy actions: past
+				// that point a leaked/guessed session id is no longer trustworthy
+				// enough to append messages to.
+				const existing = await this.env.DATABASE.prepare(
+					'SELECT id, created_at FROM chat_sessions WHERE session_id = ?',
 				)
 					.bind(incomingSessionId)
-					.first();
+					.first<{ id: string; created_at: number }>();
 
-				if (reuseResult) {
+				if (existing && isWithinPrivacyActionWindow(existing.created_at)) {
+					this.sessionId = incomingSessionId;
+					this.sessionDbId = existing.id;
+					this.logger = this.logger.child({
+						sessionId: this.sessionId,
+						sessionDbId: this.sessionDbId,
+					});
+					return;
+				}
+
+				if (existing) {
 					const metadata = extractCloudflareMetadata(this.context);
-					this.logger.warn(
-						'Reused session ID detected; creating new session instead',
+					this.logger.info(
+						'Incoming session id outside the active window; starting a new session',
 						{
 							incomingSessionId,
 							ip: extractIpAddress(this.context),
@@ -119,7 +157,10 @@ export class ChatLogger {
 			this.logger.error('Failed to initialize session', error, {
 				sessionId: this.sessionId,
 			});
-			// Don't throw - logging failures shouldn't break chat functionality
+			// Don't throw - logging failures shouldn't break chat functionality.
+			// Reset sessionId too: without a DB row behind it, echoing it to the
+			// client as x-chat-session-id would be a phantom id (#49 review).
+			this.sessionId = null;
 			this.sessionDbId = null;
 		}
 	}
@@ -342,8 +383,8 @@ export class ChatLogger {
 				await this.env.DATABASE.prepare(
 					`INSERT INTO message_chunks (
             id, message_id, document_id, chunk_id, chunk_text,
-            similarity_score, rank_position, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            similarity_score, rank_position, document_title, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				)
 					.bind(
 						crypto.randomUUID(), // id
@@ -353,6 +394,7 @@ export class ChatLogger {
 						source.chunkText, // chunk_text
 						source.similarity, // similarity_score (stored as REAL/numeric)
 						i + 1, // rank_position
+						source.title || null, // document_title
 						new Date().getTime(), // created_at
 					)
 					.run();
