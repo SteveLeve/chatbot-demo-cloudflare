@@ -10,7 +10,8 @@ const TYPE_LABELS: Record<TraceEvent['type'], string> = {
 const TYPE_COLORS: Record<TraceEvent['type'], string> = {
   retrieve: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
   tool: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200',
-  generate: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
+  generate:
+    'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
   guard: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
 };
 
@@ -38,7 +39,9 @@ export function TracePanel({ events, traceId, spanId }: TracePanelProps) {
             </div>
             {spanId && (
               <div>
-                <span className="text-gray-400 dark:text-gray-500">spanId </span>
+                <span className="text-gray-400 dark:text-gray-500">
+                  spanId{' '}
+                </span>
                 {spanId}
               </div>
             )}
@@ -68,7 +71,9 @@ export function TracePanel({ events, traceId, spanId }: TracePanelProps) {
                 {new Date(event.timestamp).toLocaleTimeString()}
               </span>
             </div>
-            <p className="text-sm text-gray-800 dark:text-gray-200">{event.summary}</p>
+            <p className="text-sm text-gray-800 dark:text-gray-200">
+              {event.summary}
+            </p>
             {event.detail && Object.keys(event.detail).length > 0 && (
               <pre className="mt-2 text-xs text-gray-600 dark:text-gray-400 overflow-x-auto whitespace-pre-wrap">
                 {JSON.stringify(event.detail, null, 2)}

@@ -92,10 +92,12 @@ python scripts/fetch-wikipedia.py --size-mb 10 --output custom/path  # Custom ou
 ## What Gets Downloaded?
 
 The fetch script uses the `wikimedia/wikipedia` dataset from Hugging Face:
+
 - **Simple English** (default): Simpler language, good for demos
 - **English** (--lang en): Full English Wikipedia, more comprehensive
 
 Articles are filtered to exclude:
+
 - Very short articles (< 500 characters)
 - Empty or stub articles
 - Articles with insufficient content

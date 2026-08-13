@@ -1,4 +1,5 @@
 # Spec: Agentic RAG Portfolio Reimagining
+
 - **Date**: 2026-08-07
 - **Status**: In Review
 - **Owners**: Project Maintainer
@@ -9,6 +10,7 @@
 Reposition this portfolio demo as a **Cloudflare-first agentic RAG** showcase that teaches essential retrieval-augmented generation concepts while demonstrating production-shaped agentic architecture on the Cloudflare platform.
 
 **Success criteria**
+
 - Visitors understand what corpus knowledge is available and how answers are grounded in it.
 - Agent actions (tools, retrieval, generation) are visible and explained—not a black box.
 - Evaluation reporting and red-team concepts are first-class demo surfaces, not FAQ footnotes.
@@ -17,6 +19,7 @@ Reposition this portfolio demo as a **Cloudflare-first agentic RAG** showcase th
 ## Scope
 
 ### In scope
+
 - Curated, committed demo corpus (see **Corpus** below).
 - Browseable **static corpus** UI so users can inspect source documents.
 - **Glossary → example prompt** injection into the chat flow.
@@ -27,8 +30,9 @@ Reposition this portfolio demo as a **Cloudflare-first agentic RAG** showcase th
 - Living docs: vision (this spec), ADR, roadmap, now-next, README positioning.
 
 ### Out of scope
+
 - Unbounded / open-web retrieval.
-- LangChain / LlamaIndex agents or vendor agent platforms as the primary agent runtime. (The Vercel AI SDK + `workers-ai-provider` *is* permitted as an adapter-confined model/tool layer — see the ADR's boundary table.)
+- LangChain / LlamaIndex agents or vendor agent platforms as the primary agent runtime. (The Vercel AI SDK + `workers-ai-provider` _is_ permitted as an adapter-confined model/tool layer — see the ADR's boundary table.)
 - Full compliance productization beyond existing demo hardening (tracked separately, e.g. #19).
 - Multi-tenant SaaS packaging.
 
@@ -37,7 +41,7 @@ Reposition this portfolio demo as a **Cloudflare-first agentic RAG** showcase th
 Today `data/wikipedia/` holds ~2,364 fetched JSON articles, all gitignored (`.gitignore:59` — only `.gitkeep` and `README.md` are tracked). The demo's knowledge is therefore **not reproducible from a clone**, which directly undercuts the "see exactly what information is available" promise. This phase resolves that.
 
 - **Canonical corpus**: ~25–50 curated articles **committed to the repo** under a tracked path (proposed: `data/corpus/`), chosen for thematic coherence so that eval gold sets and red-team "out-of-corpus" cases are meaningful rather than arbitrary. A haystack of 2,364 Simple English stubs cannot be meaningfully inspected by a visitor, and makes "is this question in-corpus?" unanswerable.
-- **Build-time manifest**: a generated static JSON (`title`, `id`, `charCount`, `sourceUrl`, `chunkCount`) ships with the SPA bundle. *This* is what makes the corpus browser static content — no API round-trip to answer "what does this system know?"
+- **Build-time manifest**: a generated static JSON (`title`, `id`, `charCount`, `sourceUrl`, `chunkCount`) ships with the SPA bundle. _This_ is what makes the corpus browser static content — no API round-trip to answer "what does this system know?"
 - **Dynamic only for bodies**: `GET /api/v1/corpus/:id` serves full article text from R2 on demand, so the bundle stays small.
 - **Migration**: `scripts/fetch-wikipedia.py`, `scripts/ingest-wikipedia.js`, `src/ingestion-workflow.ts`, and the size guidance in `data/wikipedia/README.md` ("Quick demo: 5-10 MB (~1000-2000 articles)") all currently assume the large fetched set and must be re-pointed at the curated corpus.
 
@@ -45,12 +49,13 @@ Today `data/wikipedia/` holds ~2,364 fetched JSON articles, all gitignored (`.gi
 
 The demo's current models predate this reimagining and one of them is end-of-life. Selection is a **prerequisite for Phase 3**, because an agent loop needs a function-calling model.
 
-| Concern | Current | Status |
-|---------|---------|--------|
+| Concern    | Current                                                            | Status                                                                                                                   |
+| ---------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
 | Generation | `@cf/meta/llama-4-scout-17b-16e-instruct` (`src/config/models.ts`) | **Selected (Phase 0 / #32).** Function calling, 131k context, not deprecated. Replaces `@cf/meta/llama-3.1-8b-instruct`. |
-| Embeddings | `@cf/baai/bge-base-en-v1.5`, 768-dim (`src/config/models.ts`) | **Verified current.** Keep; changing requires recreating Vectorize (see #20). |
+| Embeddings | `@cf/baai/bge-base-en-v1.5`, 768-dim (`src/config/models.ts`)      | **Verified current.** Keep; changing requires recreating Vectorize (see #20).                                            |
 
 **Requirements for the replacement generation model**
+
 - Listed as supporting **function calling** in the Workers AI catalog (required by the Agents SDK tool loop).
 - Context window large enough for retrieved chunks + tool results + system prompt across multiple steps.
 - Not deprecated.
@@ -78,12 +83,14 @@ flowchart TB
 ```
 
 ### Primary demo flows
+
 1. **Ask** — User submits a question (typed or glossary-injected). Agent retrieves, generates, emits a step trace; UI shows answer + sources + trace.
 2. **Browse corpus** — User opens corpus browser, lists articles/chunks available to the system, optionally jumps to a related example prompt.
 3. **Evaluate** — User runs or views eval report against a fixed gold set; metrics and failure examples are explained.
 4. **Red-team** — User picks a curated adversarial prompt; system shows defense behavior and educational copy.
 
 ### Edge cases
+
 - Empty / insufficient retrieval → refuse or say “not in corpus,” with trace showing low similarity / no hits.
 - Out-of-corpus questions → explicit refusal path surfaced in red-team and normal modes.
 - Rate limits / model errors → structured error in UI; no silent hallucination.
@@ -92,14 +99,14 @@ flowchart TB
 
 Contracts for later implementation PRs (shapes may evolve; keep OpenAPI/types in sync):
 
-| Surface | Intent |
-|---------|--------|
-| `POST /api/v1/agent/query` (or Agents SDK websocket/HTTP per SDK patterns) | Run agent turn; stream or return answer + **trace events** |
-| Corpus manifest (**static**, bundled with the SPA) | Article list + metadata; no network call needed to see what the system knows |
-| `GET /api/v1/corpus/:id` | Full article body from R2, fetched on demand |
-| `GET /api/v1/eval/report` (and optional `POST .../run`) | Demo-scale eval report payload |
-| `GET /api/v1/redteam/scenarios` | Curated adversarial scenarios + expected defense notes |
-| Glossary content | Each term may include `examplePrompts[]` consumed by chat UI |
+| Surface                                                                    | Intent                                                                       |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `POST /api/v1/agent/query` (or Agents SDK websocket/HTTP per SDK patterns) | Run agent turn; stream or return answer + **trace events**                   |
+| Corpus manifest (**static**, bundled with the SPA)                         | Article list + metadata; no network call needed to see what the system knows |
+| `GET /api/v1/corpus/:id`                                                   | Full article body from R2, fetched on demand                                 |
+| `GET /api/v1/eval/report` (and optional `POST .../run`)                    | Demo-scale eval report payload                                               |
+| `GET /api/v1/redteam/scenarios`                                            | Curated adversarial scenarios + expected defense notes                       |
+| Glossary content                                                           | Each term may include `examplePrompts[]` consumed by chat UI                 |
 
 ### Trace event (UI contract)
 
@@ -110,6 +117,7 @@ Each step should be renderable as: `type` (`retrieve` | `tool` | `generate` | `g
 Note that `TRACE_SAMPLE_RATE` defaults to `0.05` in `wrangler.jsonc`; the trace panel needs per-request trace data regardless of the OTLP sampling decision, so Phase 3 must separate "emit UI trace events" from "export this trace to OTLP."
 
 ### UX surfaces
+
 - **Trace panel** — tool calls, retrieval hits, generation steps.
 - **Corpus browser** — static listing of ingested articles (and optionally chunks).
 - **Glossary → prompts** — terms inject example queries into the input.
@@ -120,16 +128,16 @@ Retain and extend: educational sidebar, FAQ, Sources card patterns in `ui/`.
 
 ## Risks & Trade-offs
 
-| Risk | Mitigation |
-|------|------------|
-| Agents SDK learning curve / API churn | Lock ADR; cite official Cloudflare docs; thin adapter layer |
-| Trace UI noise | Default to summarized steps; expand for detail |
-| Eval metrics overclaiming | Label as **demo-scale**; document methodology limits |
-| Red-team prompts misused | Curated list only; educational framing; no attack tooling |
-| **Red-team prompts persisted to chat logs** | `CHAT_LOGGING_ENABLED: true` and `src/utils/chat-logger.ts` write prompts plus hashed IPs to D1 (`chat_sessions`, `chat_messages`). Red-team mode will drive adversarial text into that same store. Tag or exclude red-team sessions from logging; this couples Phase 5 to the privacy endpoints in #19. |
-| **Generation model (was deprecated)** | Resolved in Phase 0 (#32): `@cf/meta/llama-4-scout-17b-16e-instruct`. |
-| **Durable Objects (Workers Free plan caps)** | Configured in Phase 3 (#34): `RAG_AGENT` binding + `v1-rag-agent` migration. SQLite-backed DOs capped at 100k requests/day and 5M row reads/day — monitor for a public demo. |
-| Migration from `basic-rag` route | Keep Phase 1 basic path until Agents SDK path is feature-complete; then deprecate. Note `src/types/index.ts:169` still types `pattern` as `'basic' \| 'reranking' \| 'refinement' \| 'agentic'` — that union encodes the retired taxonomy and should be refactored in Phase 3. |
+| Risk                                         | Mitigation                                                                                                                                                                                                                                                                                               |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agents SDK learning curve / API churn        | Lock ADR; cite official Cloudflare docs; thin adapter layer                                                                                                                                                                                                                                              |
+| Trace UI noise                               | Default to summarized steps; expand for detail                                                                                                                                                                                                                                                           |
+| Eval metrics overclaiming                    | Label as **demo-scale**; document methodology limits                                                                                                                                                                                                                                                     |
+| Red-team prompts misused                     | Curated list only; educational framing; no attack tooling                                                                                                                                                                                                                                                |
+| **Red-team prompts persisted to chat logs**  | `CHAT_LOGGING_ENABLED: true` and `src/utils/chat-logger.ts` write prompts plus hashed IPs to D1 (`chat_sessions`, `chat_messages`). Red-team mode will drive adversarial text into that same store. Tag or exclude red-team sessions from logging; this couples Phase 5 to the privacy endpoints in #19. |
+| **Generation model (was deprecated)**        | Resolved in Phase 0 (#32): `@cf/meta/llama-4-scout-17b-16e-instruct`.                                                                                                                                                                                                                                    |
+| **Durable Objects (Workers Free plan caps)** | Configured in Phase 3 (#34): `RAG_AGENT` binding + `v1-rag-agent` migration. SQLite-backed DOs capped at 100k requests/day and 5M row reads/day — monitor for a public demo.                                                                                                                             |
+| Migration from `basic-rag` route             | Keep Phase 1 basic path until Agents SDK path is feature-complete; then deprecate. Note `src/types/index.ts:169` still types `pattern` as `'basic' \| 'reranking' \| 'refinement' \| 'agentic'` — that union encodes the retired taxonomy and should be refactored in Phase 3.                           |
 
 ## Testing & Acceptance
 
@@ -148,6 +156,7 @@ Retain and extend: educational sidebar, FAQ, Sources card patterns in `ui/`.
 6. Monitor Workers logs / existing observability for agent latency, DO request volume against free-plan caps, and error rates.
 
 ## References
+
 - Epic: https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/30
 - ADR: `docs/decisions/adr-20260807-agents-sdk-runtime.md`
 - Roadmap: `docs/roadmaps/agentic-rag.md`

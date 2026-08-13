@@ -23,9 +23,12 @@ jobs:
       - run: npm ci
       # Root-only: `npm run lint` also lints ui/ and needs ui/node_modules.
       # UI lint runs in the ui job below.
-      - run: npx eslint .
+      - run: npx eslint . --max-warnings 0
+      # Covers ui/ too — .prettierignore excludes ui/node_modules and ui/dist,
+      # not ui/ source, and prettier is a root-only devDependency.
+      - run: npm run format:check
       - run: npm run typecheck
-      - run: npm test -- --run
+      - run: npm run test:coverage -- --run
 
   ui:
     runs-on: ubuntu-latest

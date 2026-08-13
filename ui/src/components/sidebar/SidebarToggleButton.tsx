@@ -1,6 +1,9 @@
 import type { SidebarToggleButtonProps } from '../../types/sidebar';
 
-export function SidebarToggleButton({ onClick, isOpen }: SidebarToggleButtonProps) {
+export function SidebarToggleButton({
+  onClick,
+  isOpen,
+}: SidebarToggleButtonProps) {
   return (
     <button
       onClick={onClick}

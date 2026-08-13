@@ -6,32 +6,30 @@
 export type TraceEventType = 'retrieve' | 'tool' | 'generate' | 'guard';
 
 export interface RetrieveTraceDetail {
-  titles?: string[];
-  scores?: number[];
-  chunkIds?: string[];
-  query?: string;
-  matchCount?: number;
+	titles?: string[];
+	scores?: number[];
+	chunkIds?: string[];
+	query?: string;
+	matchCount?: number;
 }
 
 export interface ToolTraceDetail {
-  toolName: string;
+	toolName: string;
 }
 
 export interface GenerateTraceDetail {
-  finishReason?: string;
-  steps?: number;
+	finishReason?: string;
+	steps?: number;
 }
 
 export type TraceEventDetail =
-  | RetrieveTraceDetail
-  | ToolTraceDetail
-  | GenerateTraceDetail;
+	RetrieveTraceDetail | ToolTraceDetail | GenerateTraceDetail;
 
 export interface TraceEvent {
-  type: TraceEventType;
-  summary: string;
-  detail?: TraceEventDetail;
-  timestamp: number;
-  traceId?: string;
-  spanId?: string;
+	type: TraceEventType;
+	summary: string;
+	detail?: TraceEventDetail;
+	timestamp: number;
+	traceId?: string;
+	spanId?: string;
 }

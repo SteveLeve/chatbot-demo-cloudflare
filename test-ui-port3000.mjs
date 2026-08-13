@@ -6,7 +6,9 @@ import { chromium } from 'playwright';
 
   console.log('Testing http://localhost:3000...');
   try {
-    const response = await page.goto('http://localhost:3000/', { waitUntil: 'networkidle' });
+    const response = await page.goto('http://localhost:3000/', {
+      waitUntil: 'networkidle',
+    });
 
     console.log(`Status: ${response.status()}`);
     console.log('Content-Type:', response.headers()['content-type']);
@@ -19,14 +21,15 @@ import { chromium } from 'playwright';
     console.log('\n=== Page Title ===');
     console.log(title);
 
-    const hasRoot = await page.evaluate(() => !!document.getElementById('root'));
+    const hasRoot = await page.evaluate(
+      () => !!document.getElementById('root'),
+    );
     console.log('\n=== Has #root element ===');
     console.log(hasRoot);
 
     const bodyText = await page.locator('body').textContent();
     console.log('\n=== Body Content Summary ===');
     console.log(bodyText ? bodyText.substring(0, 500) : 'No body text');
-
   } catch (err) {
     console.error('Error:', err.message);
   }

@@ -18,9 +18,12 @@ async function hashText(text: string): Promise<string> {
 export async function getCachedEmbedding(
 	text: string,
 	env: Env,
-	options?: { loggerContext?: Record<string, any> }
+	options?: { loggerContext?: Record<string, any> },
 ): Promise<number[] | null> {
-	const logger = createLogger({ cache: 'embeddings', ...(options?.loggerContext || {}) }, env.LOG_LEVEL);
+	const logger = createLogger(
+		{ cache: 'embeddings', ...(options?.loggerContext || {}) },
+		env.LOG_LEVEL,
+	);
 	if (!env.EMBEDDINGS_CACHE) {
 		logger.debug('Embeddings cache missing binding, skipping');
 		return null;
@@ -32,10 +35,18 @@ export async function getCachedEmbedding(
 	try {
 		const cached = await env.EMBEDDINGS_CACHE.get<number[]>(cacheKey, 'json');
 		const latencyMs = Date.now() - start;
-		logger.info('Embedding cache lookup', { cacheHit: !!cached, cacheKeyPrefix: cacheKey.slice(0, 12), cacheLatencyMs: latencyMs });
+		logger.info('Embedding cache lookup', {
+			cacheHit: !!cached,
+			cacheKeyPrefix: cacheKey.slice(0, 12),
+			cacheLatencyMs: latencyMs,
+		});
 		return cached || null;
 	} catch (error) {
-		logger.warn('Embedding cache read failed, falling back', { cacheKeyPrefix: cacheKey.slice(0, 12), cacheError: true, error });
+		logger.warn('Embedding cache read failed, falling back', {
+			cacheKeyPrefix: cacheKey.slice(0, 12),
+			cacheError: true,
+			error,
+		});
 		return null;
 	}
 }
@@ -44,9 +55,12 @@ export async function cacheEmbedding(
 	text: string,
 	embedding: number[],
 	env: Env,
-	options?: { loggerContext?: Record<string, any> }
+	options?: { loggerContext?: Record<string, any> },
 ): Promise<void> {
-	const logger = createLogger({ cache: 'embeddings', ...(options?.loggerContext || {}) }, env.LOG_LEVEL);
+	const logger = createLogger(
+		{ cache: 'embeddings', ...(options?.loggerContext || {}) },
+		env.LOG_LEVEL,
+	);
 	if (!env.EMBEDDINGS_CACHE) {
 		logger.debug('Embeddings cache missing binding, skipping write');
 		return;
@@ -54,10 +68,15 @@ export async function cacheEmbedding(
 
 	const cacheKey = `emb:${await hashText(text)}`;
 	try {
-		await env.EMBEDDINGS_CACHE.put(cacheKey, JSON.stringify(embedding), { expirationTtl: WEEK_IN_SECONDS });
+		await env.EMBEDDINGS_CACHE.put(cacheKey, JSON.stringify(embedding), {
+			expirationTtl: WEEK_IN_SECONDS,
+		});
 		logger.debug('Embedding cached', { cacheKeyPrefix: cacheKey.slice(0, 12) });
 	} catch (error) {
-		logger.warn('Embedding cache write failed (non-fatal)', { cacheKeyPrefix: cacheKey.slice(0, 12), cacheError: true, error });
+		logger.warn('Embedding cache write failed (non-fatal)', {
+			cacheKeyPrefix: cacheKey.slice(0, 12),
+			cacheError: true,
+			error,
+		});
 	}
 }
-

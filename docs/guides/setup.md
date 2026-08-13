@@ -11,6 +11,7 @@ A production-grade RAG (Retrieval-Augmented Generation) system built on Cloudfla
 ## What's Built ✅
 
 ### Core Components
+
 - **Basic RAG pattern** (`src/patterns/basic-rag.ts`): Query → Embedding → Vector search → LLM generation
 - **Ingestion workflow** (`src/ingestion-workflow.ts`): 6-step durable pipeline (R2 → D1 → chunks → embeddings → Vectorize)
 - **Document store** (`src/utils/document-store.ts`): Abstraction for R2/D1/Vectorize operations
@@ -18,6 +19,7 @@ A production-grade RAG (Retrieval-Augmented Generation) system built on Cloudfla
 - **React UI** (`ui/`): Demo interface with source citations and metrics
 
 ### Data Pipeline
+
 - **Fetch utility** (`scripts/fetch-wikipedia.py`): Downloads Wikipedia from `wikimedia/wikipedia`
   - Configurable: `--size-mb 10` or `--articles 2000`
   - Filters: Removes articles < 500 chars
@@ -25,6 +27,7 @@ A production-grade RAG (Retrieval-Augmented Generation) system built on Cloudfla
 - **Ingestion script** (`scripts/ingest-wikipedia.ts`): Uploads articles to Worker via HTTP
 
 ### Infrastructure
+
 - **3 D1 migrations**: documents, chunks, FTS5 tables
 - **TypeScript**: Strict mode throughout with comprehensive types
 - **Logging**: Structured logging with performance timers
@@ -137,19 +140,19 @@ Edit `wrangler.jsonc` and replace placeholders:
     {
       "binding": "DATABASE",
       "database_name": "wikipedia-db",
-      "database_id": "PASTE_D1_ID_HERE"  // From step 4
-    }
+      "database_id": "PASTE_D1_ID_HERE", // From step 4
+    },
   ],
   "kv_namespaces": [
     {
       "binding": "EMBEDDINGS_CACHE",
-      "id": "PASTE_EMBEDDINGS_KV_ID_HERE"  // From step 4
+      "id": "PASTE_EMBEDDINGS_KV_ID_HERE", // From step 4
     },
     {
       "binding": "RAG_CACHE",
-      "id": "PASTE_RAG_KV_ID_HERE"  // From step 4
-    }
-  ]
+      "id": "PASTE_RAG_KV_ID_HERE", // From step 4
+    },
+  ],
 }
 ```
 
@@ -195,6 +198,7 @@ npm run ingest ./data/wikipedia
 ## Architecture Quick Reference
 
 ### Data Flow (Query)
+
 ```
 User Question
   → Generate Embedding (bge-base-en-v1.5)
@@ -206,6 +210,7 @@ User Question
 ```
 
 ### Data Flow (Ingestion)
+
 ```
 Wikipedia Article
   → Store in R2 (full text)
@@ -217,6 +222,7 @@ Wikipedia Article
 ```
 
 ### Storage Strategy
+
 - **R2**: Full Wikipedia articles (blob storage)
 - **D1**: Document metadata + text chunks (queryable)
 - **Vectorize**: 768-dim embeddings (semantic search)
@@ -225,6 +231,7 @@ Wikipedia Article
 ## Configuration Reference
 
 ### Environment Variables (`wrangler.jsonc`)
+
 ```jsonc
 "vars": {
   "ENVIRONMENT": "development",
@@ -238,30 +245,36 @@ Wikipedia Article
 ```
 
 ### Models Used
+
 - **Embeddings**: `@cf/baai/bge-base-en-v1.5` (768 dimensions, cosine similarity)
 - **Generation**: `@cf/meta/llama-4-scout-17b-16e-instruct` (131K context, function calling, temp 0.0)
 
 ## Troubleshooting
 
 ### "Database not found"
+
 ```bash
 wrangler d1 migrations apply wikipedia-db --local
 ```
 
 ### "Vectorize index not found"
+
 Check `wrangler.jsonc` has correct binding name: `wikipedia-vectors`
 
 ### "R2 bucket not found"
+
 ```bash
 wrangler r2 bucket create wikipedia-articles
 ```
 
 ### Ingestion workflow fails
+
 - Check Worker is running (`npm run dev`)
 - Verify data files exist in `data/wikipedia/`
 - Check Worker logs in Terminal 1
 
 ### CORS errors in browser
+
 - Ensure both Worker (8787) and UI (3000) are running
 - Check proxy in `ui/vite.config.ts`
 
@@ -289,6 +302,7 @@ npm run deploy:production       # Deploy to Cloudflare
 ## Success Criteria
 
 After completing setup, you should be able to:
+
 - ✅ Ask questions via UI and get AI-generated answers
 - ✅ See source citations with similarity scores
 - ✅ View performance metrics (latency, chunks retrieved)

@@ -15,6 +15,7 @@
 ## ✅ Completed
 
 ### Core Implementation
+
 - [x] Basic single-turn RAG pattern with R2 + D1 + Vectorize
 - [x] Modular architecture (patterns/, utils/, types/)
 - [x] Hybrid storage strategy (R2 for articles, D1 for chunks, Vectorize for embeddings)
@@ -24,6 +25,7 @@
 - [x] Error handling and input validation
 
 ### Data Pipeline
+
 - [x] Wikipedia dataset localization utility (`scripts/fetch-wikipedia.py`)
   - Configurable size (--size-mb or --articles)
   - Streaming mode for memory efficiency
@@ -34,23 +36,27 @@
 - [x] Text chunking utilities (500 char chunks, 100 char overlap)
 
 ### Infrastructure
+
 - [x] Database migrations (D1 schema with FTS5 support)
 - [x] Document store abstraction layer
 - [x] KV caching strategy (embeddings + query results)
 - [x] API endpoints (/api/v1/query, /api/v1/ingest)
 
 ### UI
+
 - [x] React 18 + Vite + Tailwind CSS demo interface
 - [x] Query interface with source citations
 - [x] Similarity scores and performance metrics display
 
 ### Documentation
+
 - [x] Comprehensive README with quick start
 - [x] Architecture documentation (docs/ARCHITECTURE.md)
 - [x] Quick start guide (docs/QUICKSTART.md)
 - [x] Data localization guide (data/wikipedia/README.md)
 
 ### Git
+
 - [x] Repository initialized
 - [x] .gitignore configured (excludes data files, node_modules, etc.)
 - [x] Two commits:
@@ -60,12 +66,14 @@
 ## 📋 Next Steps (In Order)
 
 ### 1. Data Preparation
+
 ```bash
 pip install -r requirements.txt
 python scripts/fetch-wikipedia.py --size-mb 10
 ```
 
 ### 2. Cloudflare Resource Setup
+
 ```bash
 wrangler login
 wrangler d1 create wikipedia-db
@@ -76,14 +84,17 @@ wrangler kv:namespace create RAG_CACHE
 ```
 
 ### 3. Configuration
+
 - Update `wrangler.jsonc` with resource IDs
 
 ### 4. Database Migration
+
 ```bash
 wrangler d1 migrations apply wikipedia-db --local
 ```
 
 ### 5. Local Development & Testing
+
 ```bash
 # Terminal 1
 npm run dev
@@ -96,6 +107,7 @@ npm run ingest ./data/wikipedia
 ```
 
 ### 6. Validate Basic RAG
+
 - Open http://localhost:3000
 - Test queries like "What is artificial intelligence?"
 - Verify source citations appear
@@ -104,18 +116,21 @@ npm run ingest ./data/wikipedia
 ## 🎯 Phase 2 Goals (Future)
 
 ### Advanced RAG Patterns
+
 - [ ] Reranking (using @cf/baai/bge-reranker-base)
 - [ ] Refinement (iterative answer improvement)
 - [ ] Agentic search (question decomposition)
 - [ ] Hybrid search (vector + FTS5 keyword matching)
 
 ### Performance Enhancements
+
 - [ ] Streaming responses (SSE)
 - [ ] Adaptive top-K selection
 - [ ] AI Gateway integration
 - [ ] Prefix caching for LLM
 
 ### Quality Improvements
+
 - [ ] Citation validation
 - [ ] Confidence scoring
 - [ ] Hallucination detection
@@ -124,6 +139,7 @@ npm run ingest ./data/wikipedia
 ## 📊 Current Architecture
 
 ### Technology Stack
+
 - **Runtime**: Cloudflare Workers
 - **Framework**: Hono
 - **AI Models**:
@@ -134,6 +150,7 @@ npm run ingest ./data/wikipedia
 - **Language**: TypeScript (strict mode)
 
 ### Key Design Decisions
+
 1. **Modular architecture** - Avoid monolithic index.ts
 2. **Workflow-based ingestion** - Durable, observable, retry-able
 3. **Hybrid storage** - Right tool for each data type
@@ -143,10 +160,12 @@ npm run ingest ./data/wikipedia
 ## 🔧 Configuration Files
 
 ### Critical Files to Update
+
 - `wrangler.jsonc` - Add Cloudflare resource IDs
 - `.env` (optional) - API keys for enhanced features
 
 ### Pre-configured
+
 - `tsconfig.json` - Strict TypeScript
 - `package.json` - All scripts ready
 - `ui/vite.config.ts` - Proxy to Worker
@@ -155,6 +174,7 @@ npm run ingest ./data/wikipedia
 ## 📝 Notes
 
 ### What Makes This Different
+
 - **Original work**: Not based on tutorial or existing demo
 - **Portfolio quality**: Production patterns, comprehensive docs
 - **Reproducible**: Anyone can run fetch-wikipedia.py
@@ -162,12 +182,14 @@ npm run ingest ./data/wikipedia
 - **Scalable**: Designed for Phase 2 enhancements
 
 ### Dataset Strategy
+
 - Simple English Wikipedia by default (easier to understand)
 - ~10MB = ~2000 articles (good demo size)
 - Automatic quality filtering
 - Fully reproducible with one command
 
 ### Known Limitations
+
 - Vectorize requires remote connection (no local dev)
 - D1 local database separate from remote
 - Workflows observable only in dashboard
@@ -176,6 +198,7 @@ npm run ingest ./data/wikipedia
 ## 🎓 Key Learnings Applied
 
 From reference project (`cloudflare-retrieval-augmented-generation-example`):
+
 1. Hybrid storage strategy works well
 2. Workflows provide excellent observability
 3. Structured logging is essential
@@ -183,6 +206,7 @@ From reference project (`cloudflare-retrieval-augmented-generation-example`):
 5. ADRs help future developers
 
 Improvements made:
+
 1. Modular architecture (vs 727-line monolith)
 2. User-friendly data acquisition
 3. Better documentation structure
@@ -190,6 +214,7 @@ Improvements made:
 5. Preparation for advanced patterns
 
 ## 📂 File Count
+
 - **TypeScript files**: 9
 - **Documentation files**: 4
 - **Migration files**: 3
@@ -200,6 +225,7 @@ Improvements made:
 **Total**: ~3,700 lines of code + documentation
 
 ## Ready for Next Phase
+
 ✅ All scaffolding complete
 ✅ Data localization utility ready
 ✅ Documentation comprehensive

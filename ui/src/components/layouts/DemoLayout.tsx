@@ -20,7 +20,7 @@ export function DemoLayout({
   backTo = '/',
   techStack,
   children,
-  footer
+  footer,
 }: DemoLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -67,9 +67,7 @@ export function DemoLayout({
       {/* Main content + Sidebar */}
       <div className="flex flex-1 overflow-hidden">
         {/* Main content area */}
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto">{children}</main>
 
         {/* Educational Sidebar */}
         <EducationalSidebar

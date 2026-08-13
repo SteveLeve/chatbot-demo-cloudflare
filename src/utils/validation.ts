@@ -219,7 +219,11 @@ export function validateContent(content: string): ValidationResult {
  */
 export function validateMetadata(metadata: unknown): ValidationResult {
 	// Type check
-	if (typeof metadata !== 'object' || metadata === null || Array.isArray(metadata)) {
+	if (
+		typeof metadata !== 'object' ||
+		metadata === null ||
+		Array.isArray(metadata)
+	) {
 		return {
 			valid: false,
 			error: {

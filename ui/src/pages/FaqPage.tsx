@@ -6,16 +6,22 @@ import type { TechStackInfo } from '../types/sidebar';
 
 const TECH_STACK: TechStackInfo = {
   title: 'Built with',
-  technologies: ['Cloudflare Workers AI', 'Vectorize', 'D1', 'R2', 'React Router v7'],
+  technologies: [
+    'Cloudflare Workers AI',
+    'Vectorize',
+    'D1',
+    'R2',
+    'React Router v7',
+  ],
   description: 'Demonstrating RAG patterns on the edge with Cloudflare',
-  githubUrl: 'https://github.com/SteveLeve/chatbot-demo-cloudflare'
+  githubUrl: 'https://github.com/SteveLeve/chatbot-demo-cloudflare',
 };
 
 function FaqQuestion({
   question,
   answer,
   relatedLinks,
-  questionId
+  questionId,
 }: {
   question: string;
   answer: string;
@@ -53,7 +59,10 @@ function FaqQuestion({
                 if (match) {
                   const [, boldText, remainingText] = match;
                   return (
-                    <p key={idx} className="mb-3 text-gray-700 dark:text-gray-300">
+                    <p
+                      key={idx}
+                      className="mb-3 text-gray-700 dark:text-gray-300"
+                    >
                       <strong className="font-semibold text-gray-900 dark:text-gray-100">
                         {boldText}
                       </strong>
@@ -109,10 +118,10 @@ function FaqQuestion({
 function FaqCategory({
   title,
   questions,
-  categoryId
+  categoryId,
 }: {
   title: string;
-  questions: typeof faqCategories[0]['questions'];
+  questions: (typeof faqCategories)[0]['questions'];
   categoryId: string;
 }) {
   return (
@@ -143,13 +152,15 @@ export function FaqPage() {
         <nav className="mb-6 text-sm text-gray-600 dark:text-gray-400">
           <Link to="/" className="hover:text-gray-900 dark:hover:text-gray-100">
             Home
-          </Link>
-          {' '}/{' '}
-          <Link to="/demos/basic-rag" className="hover:text-gray-900 dark:hover:text-gray-100">
+          </Link>{' '}
+          /{' '}
+          <Link
+            to="/demos/basic-rag"
+            className="hover:text-gray-900 dark:hover:text-gray-100"
+          >
             Basic RAG Demo
-          </Link>
-          {' '}/{' '}
-          <span className="text-gray-900 dark:text-gray-100">FAQ</span>
+          </Link>{' '}
+          / <span className="text-gray-900 dark:text-gray-100">FAQ</span>
         </nav>
 
         {/* Page header */}
@@ -158,14 +169,25 @@ export function FaqPage() {
             Frequently Asked Questions
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
-            Learn more about Retrieval-Augmented Generation, implementation details, and best practices.
+            Learn more about Retrieval-Augmented Generation, implementation
+            details, and best practices.
           </p>
           <Link
             to="/demos/basic-rag"
             className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
             </svg>
             Try the Interactive Demo
           </Link>

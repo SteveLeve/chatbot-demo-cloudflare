@@ -1,6 +1,6 @@
 # Status: Now & Next
 
-- **Last Updated**: 2026-08-10
+- **Last Updated**: 2026-08-11
 - **Owner**: Project Maintainer
 
 ## Now
@@ -9,7 +9,8 @@
 - Phase 5 red-team demo mode **merged** (PR #46 / #36): curated scenarios, `GET /api/v1/redteam/scenarios` + optional `POST /try` by id, ChatLogger skip gate, `/docs/redteam` page, Playwright coverage.
 - Phase 4 eval reporting **merged** (PR #45 / #35).
 - Phase 3 Agents SDK / trace UI **merged** (PR #41 / #34).
-- Code quality automation **complete** (#40): Phases 1–3 (PR #42), Node 24 CI pin (PR #43), `protect-main` requires `root` + `ui`.
+- Code quality automation **complete** (#40): Phases 1–3 (PR #42), Node 24 CI pin (PR #43), `protect-main` requires `root` + `ui`; Phase 5 follow-up landed a coverage floor, root `--max-warnings 0`, `format:check` in CI, and a Dependency Review Action.
+- Dependency housekeeping: minor/patch bumps applied across root and `ui/` (closed all 13 `ui/` npm-audit findings via in-range `postcss`/`react-router-dom`/`vite` bumps); `.github/dependabot.yml` added for ongoing automation; major bumps (Vitest 4, ESLint 10, TypeScript 7, React 19, Vite 8, Tailwind 4) tracked in #54.
 - Prior hardening remains shipped: security (PRs #22/#23), perf (#28), observability phase 1 (#29); model refresh (#38), corpus (#39).
 
 ## Next
@@ -18,6 +19,7 @@
 - **P4 backlog:** BGE-Large upgrade (#20) and reranking agent tool (#21) — deferred post-#32; see issue comments.
 - Publish privacy policy page and consent flow (follow-on to #19).
 - **#50** — remove legacy Basic RAG path, converge demo naming on "RAG Demo" (follow-up from PR #49 review).
+- **#54** — deferred major dependency bumps (Vitest 4 + `@cloudflare/vitest-pool-workers` 0.21, ESLint 10, TypeScript 7, React 19, Vite 8, Tailwind 4); `@cloudflare/vitest-pool-workers` is the priority (fixes 7 high-severity dev-tooling `npm audit` findings).
 - Deprioritized vs reimagining: OTLP dashboards (#18).
 
 ## Recently closed
@@ -49,5 +51,6 @@
 - Roadmap: `docs/roadmaps/agentic-rag.md`
 - Doc/code disposition audit: `docs/status/doc-audit-agentic-rag.md`
 - Rework cutover runbook: `docs/runbooks/rework-branch-cutover.md`
-- Prior issues: #18 (observability), #19 (compliance), #20/#21 (model & reranking — reconcile with #32), #6–#11 (security), #50 (basic-rag removal/rename)
+- Prior issues: #18 (observability), #19 (compliance), #20/#21 (model & reranking — reconcile with #32), #6–#11 (security), #50 (basic-rag removal/rename), #54 (deferred major dependency bumps)
+- Code quality guide: `docs/guides/code-quality-automation.md` (Phase 5: format/lint strictness, coverage floor, dependency review)
 - Prior PRs: #22, #23, #28, #29, #31, #37, #38, #41, #45, #46, #49

@@ -1,5 +1,6 @@
 # GDPR/CCPA Compliance Roadmap (Archived)
-*Archived snapshot (moved 2026-02-06). See `../roadmaps/compliance.md` for current summary and GitHub issue #19 for active work.*
+
+_Archived snapshot (moved 2026-02-06). See `../roadmaps/compliance.md` for current summary and GitHub issue #19 for active work._
 
 **Goal**: Full privacy compliance for user data handling
 **Status**: Foundational privacy features implemented, missing user rights endpoints
@@ -11,6 +12,7 @@
 ## Current Privacy Posture
 
 ### ✅ Implemented
+
 - IP address hashing (SHA-256 with salt) ⚠️ **Salt needs fixing (Issue #6)**
 - 90-day data retention policy (schema configured)
 - Minimal data collection (no PII beyond IP hash)
@@ -18,6 +20,7 @@
 - Privacy-conscious logging
 
 ### ❌ Missing
+
 - User data access endpoint (GDPR Article 15)
 - User data deletion endpoint (GDPR Article 17)
 - User data portability endpoint (GDPR Article 20)
@@ -35,6 +38,7 @@
 **Requirement**: Users can request a copy of their personal data.
 
 **Data Collected**:
+
 - Hashed IP address (SHA-256)
 - Session ID (random UUID)
 - User agent string
@@ -52,6 +56,7 @@
 **Requirement**: Users can request deletion of their personal data.
 
 **Data to Delete**:
+
 - Chat sessions (cascades to messages and chunks)
 - Audit logs referencing session
 - Any cached data
@@ -77,6 +82,7 @@
 **Requirement**: Disclose categories of personal information collected.
 
 **Categories Collected**:
+
 1. **Identifiers**: Hashed IP, session ID, user agent
 2. **Geolocation**: Country, region, city (approximate)
 3. **Internet Activity**: Chat messages, query timestamps, AI interactions
@@ -115,42 +121,55 @@
 **Endpoint**: `GET /api/privacy/export`
 
 **Implementation**:
+
 ```typescript
 // src/routes/privacy.ts
 
 export async function exportUserData(
   sessionId: string,
-  env: Env
+  env: Env,
 ): Promise<UserDataExport> {
   // Fetch session data
-  const session = await env.DATABASE.prepare(`
+  const session = await env.DATABASE.prepare(
+    `
     SELECT session_id, created_at, expires_at, country, region, city,
            message_count, is_active
     FROM chat_sessions
     WHERE session_id = ?
-  `).bind(sessionId).first();
+  `,
+  )
+    .bind(sessionId)
+    .first();
 
   if (!session) {
     throw new Error('Session not found');
   }
 
   // Fetch messages
-  const messages = await env.DATABASE.prepare(`
+  const messages = await env.DATABASE.prepare(
+    `
     SELECT id, role, content, created_at, model_name, has_error
     FROM chat_messages
     WHERE session_id = (SELECT id FROM chat_sessions WHERE session_id = ?)
     ORDER BY created_at ASC
-  `).bind(sessionId).all();
+  `,
+  )
+    .bind(sessionId)
+    .all();
 
   // Fetch RAG chunks (audit trail)
-  const chunks = await env.DATABASE.prepare(`
+  const chunks = await env.DATABASE.prepare(
+    `
     SELECT mc.chunk_text, mc.similarity_score, mc.document_title,
            mc.rank_position, mc.created_at
     FROM message_chunks mc
     JOIN chat_messages cm ON mc.message_id = cm.id
     WHERE cm.session_id = (SELECT id FROM chat_sessions WHERE session_id = ?)
     ORDER BY mc.created_at ASC
-  `).bind(sessionId).all();
+  `,
+  )
+    .bind(sessionId)
+    .all();
 
   return {
     request_date: new Date().toISOString(),
@@ -161,36 +180,36 @@ export async function exportUserData(
       location: {
         country: session.country,
         region: session.region,
-        city: session.city
+        city: session.city,
       },
       message_count: session.message_count,
-      is_active: session.is_active === 1
+      is_active: session.is_active === 1,
     },
-    messages: messages.results.map(m => ({
+    messages: messages.results.map((m) => ({
       id: m.id,
       role: m.role,
       content: m.content,
       timestamp: new Date(m.created_at).toISOString(),
       model: m.model_name,
-      had_error: m.has_error === 1
+      had_error: m.has_error === 1,
     })),
-    retrieved_context: chunks.results.map(c => ({
+    retrieved_context: chunks.results.map((c) => ({
       chunk_text: c.chunk_text,
       similarity_score: c.similarity_score,
       document_title: c.document_title,
       rank: c.rank_position,
-      timestamp: new Date(c.created_at).toISOString()
+      timestamp: new Date(c.created_at).toISOString(),
     })),
     metadata: {
       data_categories: [
         'identifiers',
         'geolocation',
         'internet_activity',
-        'inferences'
+        'inferences',
       ],
       retention_period: '90 days',
-      ip_address_handling: 'SHA-256 hashed with salt (not reversible)'
-    }
+      ip_address_handling: 'SHA-256 hashed with salt (not reversible)',
+    },
   };
 }
 
@@ -206,8 +225,8 @@ app.get('/api/privacy/export', async (c) => {
     const data = await exportUserData(sessionId, c.env);
     return c.json(data, {
       headers: {
-        'Content-Disposition': `attachment; filename="chat-data-${sessionId}.json"`
-      }
+        'Content-Disposition': `attachment; filename="chat-data-${sessionId}.json"`,
+      },
     });
   } catch (error) {
     return c.json({ error: 'Data export failed' }, 500);
@@ -216,6 +235,7 @@ app.get('/api/privacy/export', async (c) => {
 ```
 
 **Checklist**:
+
 - [ ] Implement `exportUserData()` function
 - [ ] Add `/api/privacy/export` route
 - [ ] Handle missing session gracefully
@@ -234,32 +254,45 @@ app.get('/api/privacy/export', async (c) => {
 **Endpoint**: `DELETE /api/privacy/delete`
 
 **Implementation**:
+
 ```typescript
 // src/routes/privacy.ts
 
 export async function deleteUserData(
   sessionId: string,
-  env: Env
+  env: Env,
 ): Promise<void> {
   // Verify session exists
-  const session = await env.DATABASE.prepare(`
+  const session = await env.DATABASE.prepare(
+    `
     SELECT id FROM chat_sessions WHERE session_id = ?
-  `).bind(sessionId).first();
+  `,
+  )
+    .bind(sessionId)
+    .first();
 
   if (!session) {
     throw new Error('Session not found');
   }
 
   // Delete session (cascades to messages and chunks via FOREIGN KEY)
-  await env.DATABASE.prepare(`
+  await env.DATABASE.prepare(
+    `
     DELETE FROM chat_sessions WHERE session_id = ?
-  `).bind(sessionId).run();
+  `,
+  )
+    .bind(sessionId)
+    .run();
 
   // Log deletion for audit (required for compliance)
-  await env.DATABASE.prepare(`
+  await env.DATABASE.prepare(
+    `
     INSERT INTO deletion_log (session_id, deleted_at, reason)
     VALUES (?, ?, 'user_request')
-  `).bind(sessionId, Date.now()).run();
+  `,
+  )
+    .bind(sessionId, Date.now())
+    .run();
 
   // Clear any cached data (if applicable)
   // await env.SESSION_CACHE.delete(sessionId);
@@ -278,7 +311,7 @@ app.delete('/api/privacy/delete', async (c) => {
     return c.json({
       message: 'Your data has been permanently deleted',
       session_id: sessionId,
-      deleted_at: new Date().toISOString()
+      deleted_at: new Date().toISOString(),
     });
   } catch (error) {
     return c.json({ error: 'Data deletion failed' }, 500);
@@ -287,6 +320,7 @@ app.delete('/api/privacy/delete', async (c) => {
 ```
 
 **Additional Schema** (deletion audit log):
+
 ```sql
 -- migrations/0006_add_deletion_log.sql
 CREATE TABLE IF NOT EXISTS deletion_log (
@@ -301,6 +335,7 @@ CREATE INDEX idx_deletion_log_deleted_at ON deletion_log(deleted_at);
 ```
 
 **Checklist**:
+
 - [ ] Create deletion_log table migration
 - [ ] Implement `deleteUserData()` function
 - [ ] Add `/api/privacy/delete` route
@@ -322,20 +357,25 @@ CREATE INDEX idx_deletion_log_deleted_at ON deletion_log(deleted_at);
 **Endpoint**: `POST /api/privacy/opt-out`
 
 **Implementation**:
+
 ```typescript
 // src/routes/privacy.ts
 
 export async function optOutOfLogging(
   sessionId: string,
-  env: Env
+  env: Env,
 ): Promise<void> {
   // Add opt-out flag to session (requires schema update)
-  await env.DATABASE.prepare(`
+  await env.DATABASE.prepare(
+    `
     UPDATE chat_sessions
     SET logging_enabled = 0,
         updated_at = ?
     WHERE session_id = ?
-  `).bind(Date.now(), sessionId).run();
+  `,
+  )
+    .bind(Date.now(), sessionId)
+    .run();
 }
 
 // Route handler
@@ -352,7 +392,7 @@ app.post('/api/privacy/opt-out', async (c) => {
       message: 'You have opted out of data collection',
       session_id: sessionId,
       effective_at: new Date().toISOString(),
-      note: 'Future interactions will not be logged'
+      note: 'Future interactions will not be logged',
     });
   } catch (error) {
     return c.json({ error: 'Opt-out failed' }, 500);
@@ -361,6 +401,7 @@ app.post('/api/privacy/opt-out', async (c) => {
 ```
 
 **Schema Update**:
+
 ```sql
 -- migrations/0007_add_logging_enabled.sql
 ALTER TABLE chat_sessions ADD COLUMN logging_enabled INTEGER DEFAULT 1;
@@ -368,6 +409,7 @@ CREATE INDEX idx_chat_sessions_logging_enabled ON chat_sessions(logging_enabled)
 ```
 
 **Update Chat Logger** to respect opt-out:
+
 ```typescript
 // src/utils/chat-logger.ts
 
@@ -388,6 +430,7 @@ async initializeSession(): Promise<void> {
 ```
 
 **Checklist**:
+
 - [ ] Add logging_enabled column to schema
 - [ ] Implement `optOutOfLogging()` function
 - [ ] Add `/api/privacy/opt-out` route
@@ -408,35 +451,44 @@ async initializeSession(): Promise<void> {
 **Current State**: 90-day retention in schema, but no cleanup job.
 
 **Implementation**:
+
 ```typescript
 // src/scheduled/cleanup.ts
 
 export async function cleanupExpiredData(
   env: Env,
-  ctx: ExecutionContext
+  ctx: ExecutionContext,
 ): Promise<void> {
   const now = Date.now();
 
   // Delete expired sessions (and cascading data)
-  const result = await env.DATABASE.prepare(`
+  const result = await env.DATABASE.prepare(
+    `
     DELETE FROM chat_sessions WHERE expires_at < ?
-  `).bind(now).run();
+  `,
+  )
+    .bind(now)
+    .run();
 
-  console.log(JSON.stringify({
-    level: 'info',
-    event: 'cleanup_completed',
-    sessions_deleted: result.meta?.changes || 0,
-    timestamp: new Date().toISOString()
-  }));
+  console.log(
+    JSON.stringify({
+      level: 'info',
+      event: 'cleanup_completed',
+      sessions_deleted: result.meta?.changes || 0,
+      timestamp: new Date().toISOString(),
+    }),
+  );
 
   // Vacuum database monthly (first day of month)
   if (new Date().getDate() === 1) {
     await env.DATABASE.prepare('VACUUM').run();
-    console.log(JSON.stringify({
-      level: 'info',
-      event: 'database_vacuumed',
-      timestamp: new Date().toISOString()
-    }));
+    console.log(
+      JSON.stringify({
+        level: 'info',
+        event: 'database_vacuumed',
+        timestamp: new Date().toISOString(),
+      }),
+    );
   }
 }
 
@@ -444,15 +496,16 @@ export async function cleanupExpiredData(
 export default {
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     switch (event.cron) {
-      case '0 2 * * *':  // Daily at 2 AM UTC
+      case '0 2 * * *': // Daily at 2 AM UTC
         await cleanupExpiredData(env, ctx);
         break;
     }
-  }
+  },
 };
 ```
 
 **Checklist**:
+
 - [ ] Implement cleanup function
 - [ ] Verify cron schedule in wrangler.jsonc (line 29)
 - [ ] Add logging for audit trail
@@ -471,6 +524,7 @@ export default {
 ### Privacy Policy Requirements
 
 **Must Document**:
+
 1. **What data we collect**
    - Hashed IP addresses
    - Session IDs
@@ -512,6 +566,7 @@ export default {
    - Data protection officer (if applicable)
 
 **Checklist**:
+
 - [ ] Draft privacy policy
 - [ ] Review with legal team
 - [ ] Publish on website
@@ -527,17 +582,20 @@ export default {
 ## User Consent Flow
 
 ### Initial Visit
+
 1. Display privacy notice with link to full policy
 2. Obtain consent for data collection
 3. Store consent flag in session
 4. Allow opt-out at any time
 
 ### Returning Users
+
 1. Check for existing consent
 2. Re-prompt if policy updated
 3. Honor opt-out preferences
 
 **Implementation** (frontend):
+
 ```typescript
 // Show consent banner on first visit
 if (!localStorage.getItem('privacy-consent')) {
@@ -551,15 +609,16 @@ if (!localStorage.getItem('privacy-consent')) {
     onOptOut: () => {
       fetch('/api/privacy/opt-out', {
         method: 'POST',
-        headers: { 'X-Session-ID': sessionId }
+        headers: { 'X-Session-ID': sessionId },
       });
       localStorage.setItem('privacy-consent', 'opt-out');
-    }
+    },
   });
 }
 ```
 
 **Checklist**:
+
 - [ ] Implement consent banner (frontend)
 - [ ] Add privacy policy page
 - [ ] Implement opt-out UI
@@ -576,6 +635,7 @@ if (!localStorage.getItem('privacy-consent')) {
 ### Test Scenarios
 
 **1. Data Export Test**
+
 ```bash
 # Request data export
 SESSION_ID="test-session-123"
@@ -588,6 +648,7 @@ jq '.session, .messages, .retrieved_context' export.json
 ```
 
 **2. Data Deletion Test**
+
 ```bash
 # Delete user data
 curl -X DELETE https://cloudflare-rag-demo.stevenleve.com/api/privacy/delete \
@@ -600,6 +661,7 @@ wrangler d1 execute wikipedia-db --remote --command \
 ```
 
 **3. Opt-Out Test**
+
 ```bash
 # Opt out of logging
 curl -X POST https://cloudflare-rag-demo.stevenleve.com/api/privacy/opt-out \
@@ -617,6 +679,7 @@ wrangler d1 execute wikipedia-db --remote --command \
 ```
 
 **4. Retention Test**
+
 ```bash
 # Create session with past expiry
 wrangler d1 execute wikipedia-db --remote --command \
@@ -632,6 +695,7 @@ wrangler d1 execute wikipedia-db --remote --command \
 ```
 
 **Checklist**:
+
 - [ ] Test data export endpoint
 - [ ] Test data deletion endpoint
 - [ ] Test opt-out mechanism
@@ -647,6 +711,7 @@ wrangler d1 execute wikipedia-db --remote --command \
 ### Ongoing Requirements
 
 **Monthly**:
+
 - [ ] Review privacy policy for accuracy
 - [ ] Audit data retention compliance
 - [ ] Review deletion requests log
@@ -654,12 +719,14 @@ wrangler d1 execute wikipedia-db --remote --command \
 - [ ] Verify opt-out mechanisms working
 
 **Quarterly**:
+
 - [ ] Full privacy audit
 - [ ] Update documentation if needed
 - [ ] Review consent flow effectiveness
 - [ ] Legal compliance review
 
 **Annual**:
+
 - [ ] GDPR/CCPA compliance review
 - [ ] Update privacy policy
 - [ ] Re-train team on privacy requirements
@@ -670,32 +737,38 @@ wrangler d1 execute wikipedia-db --remote --command \
 ## Success Criteria
 
 **Phase 1 Complete** (Data Access):
+
 - ✅ Export endpoint functional
 - ✅ Returns all user data in JSON
 - ✅ Properly formatted and documented
 
 **Phase 2 Complete** (Data Deletion):
+
 - ✅ Deletion endpoint functional
 - ✅ Cascade deletion verified
 - ✅ Audit logging implemented
 
 **Phase 3 Complete** (Opt-Out):
+
 - ✅ Opt-out endpoint functional
 - ✅ Chat logger respects flag
 - ✅ No logs created after opt-out
 
 **Phase 4 Complete** (Retention):
+
 - ✅ Cleanup cron job running daily
 - ✅ Expired data automatically deleted
 - ✅ Audit logging functional
 
 **Phase 5 Complete** (Documentation):
+
 - ✅ Privacy policy published
 - ✅ Consent flow implemented
 - ✅ User rights documented
 - ✅ Legal review completed
 
 **Overall Compliance**:
+
 - ✅ GDPR Articles 15, 17, 20 implemented
 - ✅ CCPA rights implemented
 - ✅ Privacy policy comprehensive

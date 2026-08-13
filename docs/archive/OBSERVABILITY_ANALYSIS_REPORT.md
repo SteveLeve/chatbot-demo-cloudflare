@@ -1,5 +1,7 @@
 # Cloudflare Worker Production Observability Analysis Report (Archived)
-*Archived snapshot (moved 2026-02-06). See `../roadmaps/observability.md` and issue #18 for current plan.*
+
+_Archived snapshot (moved 2026-02-06). See `../roadmaps/observability.md` and issue #18 for current plan._
+
 ## Worker: cloudflare-rag-portfolio (cloudflare-rag-demo.stevenleve.com)
 
 **Generated**: 2026-01-17
@@ -23,12 +25,14 @@ This report provides a comprehensive production observability analysis framework
 ### 1. Configuration Status
 
 **Worker Details:**
+
 - **Name**: cloudflare-rag-portfolio
 - **Domain**: cloudflare-rag-demo.stevenleve.com
 - **Observability Enabled**: Yes (wrangler.jsonc line 94-96)
 - **Wrangler Version**: 4.50.0 (Note: Latest version 4.57.0 available)
 
 **Key Configuration:**
+
 ```jsonc
 "observability": {
   "enabled": true
@@ -40,12 +44,14 @@ This report provides a comprehensive production observability analysis framework
 The Worker has comprehensive structured logging:
 
 **Logger Implementation** (`src/utils/logger.ts`):
+
 - Log levels: DEBUG, INFO, WARN, ERROR
 - Contextual logging with timers
 - Performance metrics tracking
 - Automatic timestamp and context injection
 
 **Chat Logger** (`src/utils/chat-logger.ts`):
+
 - Session tracking with D1 database
 - Message logging (user/assistant)
 - RAG chunk retrieval logging
@@ -54,6 +60,7 @@ The Worker has comprehensive structured logging:
 - Privacy-preserving IP hashing
 
 **Scheduled Job** (`src/index.ts`, lines 405-430):
+
 - Cron schedule: 2 AM UTC daily (0 2 * * *)
 - Purpose: Cleanup expired chat sessions
 - Logs execution results and errors
@@ -61,6 +68,7 @@ The Worker has comprehensive structured logging:
 ### 3. Endpoints and Routes
 
 **API Endpoints:**
+
 - `/` - Service info
 - `/health` - Health check
 - `/api/v1/query` (GET/POST) - RAG queries
@@ -69,6 +77,7 @@ The Worker has comprehensive structured logging:
 - `/api/v1/docs` - API documentation
 
 **Bindings:**
+
 - AI: Workers AI (@cf/baai/bge-base-en-v1.5, @cf/meta/llama-3.1-8b-instruct)
 - DATABASE: D1 database (wikipedia-db)
 - VECTOR_INDEX: Vectorize (wikipedia-vectors)
@@ -88,12 +97,14 @@ Since MCP tools are unavailable, here are the recommended approaches:
 **Access**: https://dash.cloudflare.com/
 
 **Navigation Path:**
+
 1. Workers & Pages > Overview
 2. Select "cloudflare-rag-portfolio"
 3. Metrics tab for analytics
 4. Logs tab for real-time logs
 
 **Available Metrics:**
+
 - Request count and rate
 - Error rate
 - CPU time
@@ -102,6 +113,7 @@ Since MCP tools are unavailable, here are the recommended approaches:
 - Status code distribution
 
 **Time Ranges:**
+
 - Last 30 minutes
 - Last 6 hours
 - Last 24 hours
@@ -111,11 +123,13 @@ Since MCP tools are unavailable, here are the recommended approaches:
 ### Method 2: Wrangler Tail (Real-time Logs)
 
 **Command:**
+
 ```bash
 wrangler tail cloudflare-rag-portfolio --format json > logs.json
 ```
 
 **Filtering Options:**
+
 ```bash
 # Filter by status
 wrangler tail cloudflare-rag-portfolio --status error
@@ -135,11 +149,13 @@ wrangler tail cloudflare-rag-portfolio --format json
 The Worker logs to D1, providing rich analytics data:
 
 **Access Database:**
+
 ```bash
 wrangler d1 execute wikipedia-db --remote --command "SELECT * FROM chat_sessions LIMIT 10"
 ```
 
 **Available Tables:**
+
 - `chat_sessions` - Session metadata
 - `chat_messages` - User/assistant messages
 - `message_chunks` - RAG retrieval chunks
@@ -151,17 +167,20 @@ wrangler d1 execute wikipedia-db --remote --command "SELECT * FROM chat_sessions
 ### Step 1.1: Worker Discovery
 
 **Method: Cloudflare Dashboard**
+
 1. Navigate to Workers & Pages
 2. Verify "cloudflare-rag-portfolio" is active
 3. Check deployment status and version
 
 **Expected Configuration:**
+
 - Custom domain: cloudflare-rag-demo.stevenleve.com
 - Environment: production
 - Compatibility date: 2025-01-01
 - Node.js compatibility: enabled
 
 **Verification Checklist:**
+
 - [ ] Worker status: Active
 - [ ] Custom domain routing: Configured
 - [ ] AI binding: Connected
@@ -176,17 +195,20 @@ wrangler d1 execute wikipedia-db --remote --command "SELECT * FROM chat_sessions
 **Method: Dashboard Metrics + wrangler tail**
 
 **Dashboard Navigation:**
+
 1. Workers & Pages > cloudflare-rag-portfolio > Metrics
 2. Set time range: Last 24 hours
 
 **Key Metrics to Collect:**
 
 **Request Metrics:**
+
 - Total requests
 - Requests per second (peak/average)
 - Geographic distribution
 
 **Performance Metrics:**
+
 - P50 latency (median)
 - P99 latency
 - Average latency
@@ -194,6 +216,7 @@ wrangler d1 execute wikipedia-db --remote --command "SELECT * FROM chat_sessions
 - Wall time distribution
 
 **Error Metrics:**
+
 - Total errors
 - Error rate (errors / total requests * 100)
 - 5xx errors
@@ -201,11 +224,13 @@ wrangler d1 execute wikipedia-db --remote --command "SELECT * FROM chat_sessions
 - Uncaught exceptions
 
 **Success Rate Formula:**
+
 ```
 Success Rate = ((Total Requests - Errors) / Total Requests) * 100
 ```
 
 **Expected Ranges (Healthy):**
+
 - P99 latency: < 2000ms (RAG queries are complex)
 - Average latency: 500-1000ms
 - Error rate: < 1%
@@ -217,6 +242,7 @@ Success Rate = ((Total Requests - Errors) / Total Requests) * 100
 **Method: wrangler tail + Dashboard logs**
 
 **Command:**
+
 ```bash
 wrangler tail cloudflare-rag-portfolio --status error --format json | jq .
 ```
@@ -224,6 +250,7 @@ wrangler tail cloudflare-rag-portfolio --status error --format json | jq .
 **Error Categorization:**
 
 **1. Application Errors (src/index.ts):**
+
 - MISSING_QUESTION (400) - Missing query parameter
 - QUERY_FAILED (500) - RAG query execution failed
 - INVALID_INPUT (400) - Invalid ingestion input
@@ -234,27 +261,32 @@ wrangler tail cloudflare-rag-portfolio --status error --format json | jq .
 - NOT_FOUND (404) - Endpoint not found
 
 **2. AI Binding Errors:**
+
 - Embedding generation timeout
 - LLM inference timeout
 - Model unavailable
 - Rate limiting
 
 **3. Database Errors (D1):**
+
 - Query timeout
 - Connection errors
 - Schema violations
 
 **4. Vectorize Errors:**
+
 - Index not found
 - Query timeout
 - Dimension mismatch
 
 **5. Workflow Errors:**
+
 - Workflow creation failed
 - Step execution failed
 - Timeout
 
 **Error Frequency Analysis:**
+
 ```sql
 -- Query via D1 (requires wrangler d1 execute)
 SELECT
@@ -274,11 +306,13 @@ LIMIT 10;
 **Method: wrangler tail (real-time) or D1 query**
 
 **Tail Command:**
+
 ```bash
 wrangler tail cloudflare-rag-portfolio --status error --format json | head -n 10
 ```
 
 **D1 Query:**
+
 ```sql
 SELECT
   m.id,
@@ -299,6 +333,7 @@ LIMIT 10;
 ```
 
 **Key Information to Capture:**
+
 - Error timestamp
 - Error message and stack trace
 - Request ID (from headers)
@@ -311,11 +346,13 @@ LIMIT 10;
 **Method: Log analysis + Dashboard filtering**
 
 **Approach:**
+
 1. Stream logs with wrangler tail
 2. Filter by endpoint using search parameter
 3. Calculate P99 latency per endpoint
 
 **Analysis Script Concept:**
+
 ```bash
 # Example: Capture 1000 requests and analyze
 wrangler tail cloudflare-rag-portfolio --format json | head -n 1000 > sample.json
@@ -328,18 +365,19 @@ cat sample.json | jq -r 'select(.url != null) | "\(.url) \(.duration)"' |
 
 **Expected Endpoint Performance:**
 
-| Endpoint | Expected P99 (ms) | Expected Avg (ms) | Notes |
-|----------|-------------------|-------------------|-------|
-| `/` | < 50 | < 20 | Static JSON response |
-| `/health` | < 50 | < 20 | Simple health check |
-| `/api/v1/query` (GET) | < 2000 | 800-1200 | Full RAG pipeline |
-| `/api/v1/query` (POST) | < 2000 | 800-1200 | Full RAG pipeline |
-| `/api/v1/ingest` | < 500 | 200-300 | Workflow creation only |
-| `/api/v1/ingest/:id` | < 200 | 50-100 | Status lookup |
-| `/api/v1/docs` | < 50 | < 20 | Static JSON response |
-| Static assets | < 100 | < 50 | Served from /public |
+| Endpoint               | Expected P99 (ms) | Expected Avg (ms) | Notes                  |
+| ---------------------- | ----------------- | ----------------- | ---------------------- |
+| `/`                    | < 50              | < 20              | Static JSON response   |
+| `/health`              | < 50              | < 20              | Simple health check    |
+| `/api/v1/query` (GET)  | < 2000            | 800-1200          | Full RAG pipeline      |
+| `/api/v1/query` (POST) | < 2000            | 800-1200          | Full RAG pipeline      |
+| `/api/v1/ingest`       | < 500             | 200-300           | Workflow creation only |
+| `/api/v1/ingest/:id`   | < 200             | 50-100            | Status lookup          |
+| `/api/v1/docs`         | < 50              | < 20              | Static JSON response   |
+| Static assets          | < 100             | < 50              | Served from /public    |
 
 **Slowest Routes Investigation:**
+
 - RAG queries should be slowest (expected)
 - If health check is slow: Database connection issue
 - If static assets are slow: CDN/caching issue
@@ -349,6 +387,7 @@ cat sample.json | jq -r 'select(.url != null) | "\(.url) \(.duration)"' |
 **Method: wrangler tail with duration filtering**
 
 **Approach:**
+
 ```bash
 # Stream logs and filter for slow requests
 wrangler tail cloudflare-rag-portfolio --format json |
@@ -357,6 +396,7 @@ wrangler tail cloudflare-rag-portfolio --format json |
 ```
 
 **D1 Query for RAG Performance:**
+
 ```sql
 SELECT
   m.content as question,
@@ -377,6 +417,7 @@ LIMIT 10;
 **Root Cause Analysis for Slow Requests:**
 
 **1. RAG Pipeline Breakdown (Expected: 800-1200ms):**
+
 - Embedding generation: 100-200ms
 - Vectorize query: 50-150ms
 - D1 chunk fetch: 50-100ms
@@ -384,6 +425,7 @@ LIMIT 10;
 - LLM inference: 500-800ms
 
 **2. Slow Request Causes:**
+
 - Cold start (first request after idle)
 - Large question (> 500 chars)
 - High topK value (> 5)
@@ -392,6 +434,7 @@ LIMIT 10;
 - Network latency to bindings
 
 **3. Investigation Steps:**
+
 1. Check log timers (logger.startTimer/endTimer)
 2. Identify which step is slow
 3. Look for error recovery or retries
@@ -402,6 +445,7 @@ LIMIT 10;
 **Method: D1 database queries**
 
 **Session Statistics (Last 24 Hours):**
+
 ```sql
 -- Total sessions created
 SELECT COUNT(*) as total_sessions,
@@ -413,6 +457,7 @@ WHERE created_at >= (strftime('%s', 'now', '-24 hours') * 1000);
 ```
 
 **Message Counts by Role:**
+
 ```sql
 SELECT
   role,
@@ -425,6 +470,7 @@ GROUP BY role;
 ```
 
 **Session Activity Distribution:**
+
 ```sql
 SELECT
   message_count,
@@ -436,6 +482,7 @@ ORDER BY message_count;
 ```
 
 **Geographic Distribution:**
+
 ```sql
 SELECT
   country,
@@ -452,6 +499,7 @@ LIMIT 10;
 **Logging Pipeline Health Checks:**
 
 **1. IP Hashing:**
+
 ```sql
 -- Check for NULL ip_hash (should be 0)
 SELECT COUNT(*) as null_ip_hash_count
@@ -461,6 +509,7 @@ WHERE ip_hash IS NULL
 ```
 
 **2. Session Expiration:**
+
 ```sql
 -- Check expired sessions
 SELECT
@@ -471,6 +520,7 @@ WHERE expires_at < (strftime('%s', 'now') * 1000);
 ```
 
 **3. Message Chunk Logging:**
+
 ```sql
 -- Verify chunk logging integrity
 SELECT
@@ -488,6 +538,7 @@ WHERE m.role = 'assistant'
 ```
 
 **Expected Metrics:**
+
 - Session creation rate: Varies by traffic
 - Average messages per session: 2-10
 - User/assistant message ratio: ~1:1
@@ -500,6 +551,7 @@ WHERE m.role = 'assistant'
 **Method: wrangler tail + D1 validation**
 
 **Cron Job Configuration:**
+
 - Schedule: `0 2 * * *` (2 AM UTC daily)
 - Function: `handleScheduled` (src/index.ts:405-430)
 - Purpose: Mark expired sessions as inactive
@@ -507,12 +559,14 @@ WHERE m.role = 'assistant'
 **Monitoring Approach:**
 
 **1. Real-time Monitoring (at 2 AM UTC):**
+
 ```bash
 # Stream logs during scheduled execution
 wrangler tail cloudflare-rag-portfolio --format json --search "scheduled-cleanup"
 ```
 
 **2. Post-Execution Verification:**
+
 ```sql
 -- Check last cleanup execution (look for updated_at changes around 2 AM UTC)
 SELECT
@@ -525,6 +579,7 @@ WHERE is_active = 0
 ```
 
 **3. Job Success Indicators:**
+
 ```sql
 -- Verify no expired active sessions exist
 SELECT COUNT(*) as expired_active_sessions
@@ -534,12 +589,14 @@ WHERE is_active = 1
 ```
 
 **Expected Results:**
+
 - Execution time: < 1000ms
 - Changed rows: Varies (depends on expired sessions)
 - Errors: 0
 - Expired active sessions after cleanup: 0
 
 **Failure Scenarios:**
+
 1. Database unavailable: Logged as warning, no throw
 2. Query timeout: Logged as error
 3. Job didn't execute: Check Cloudflare dashboard cron trigger logs
@@ -551,6 +608,7 @@ WHERE is_active = 1
 **Performance Timers in Code:**
 
 **Embedding Generation** (`src/patterns/basic-rag.ts:64-72`):
+
 ```typescript
 logger.startTimer('generateEmbedding');
 const embeddingResult = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
@@ -560,6 +618,7 @@ logger.endTimer('generateEmbedding', { dimensions: queryEmbedding?.length });
 ```
 
 **LLM Inference** (`src/patterns/basic-rag.ts:136-149`):
+
 ```typescript
 logger.startTimer('generateAnswer');
 const generationResult = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
@@ -573,6 +632,7 @@ logger.endTimer('generateAnswer', { answerLength: answer.length });
 **Analysis Queries:**
 
 **1. Embedding Performance (via logs):**
+
 ```bash
 wrangler tail cloudflare-rag-portfolio --format json --search "generateEmbedding" |
   jq 'select(.message.context.durationMs != null) |
@@ -580,6 +640,7 @@ wrangler tail cloudflare-rag-portfolio --format json --search "generateEmbedding
 ```
 
 **2. LLM Performance (via logs):**
+
 ```bash
 wrangler tail cloudflare-rag-portfolio --format json --search "generateAnswer" |
   jq 'select(.message.context.durationMs != null) |
@@ -587,18 +648,20 @@ wrangler tail cloudflare-rag-portfolio --format json --search "generateAnswer" |
 ```
 
 **3. AI Errors:**
+
 ```bash
 wrangler tail cloudflare-rag-portfolio --status error --search "AI.run"
 ```
 
 **Expected Performance:**
 
-| AI Operation | Model | Expected Latency | Notes |
-|--------------|-------|------------------|-------|
-| Embedding Generation | @cf/baai/bge-base-en-v1.5 | 100-200ms | 768 dimensions |
-| LLM Inference | @cf/meta/llama-3.1-8b-instruct | 500-800ms | Max 1024 tokens |
+| AI Operation         | Model                          | Expected Latency | Notes           |
+| -------------------- | ------------------------------ | ---------------- | --------------- |
+| Embedding Generation | @cf/baai/bge-base-en-v1.5      | 100-200ms        | 768 dimensions  |
+| LLM Inference        | @cf/meta/llama-3.1-8b-instruct | 500-800ms        | Max 1024 tokens |
 
 **Common AI Errors:**
+
 - Model timeout (> 30s)
 - Model unavailable
 - Rate limiting (unlikely on free tier)
@@ -606,6 +669,7 @@ wrangler tail cloudflare-rag-portfolio --status error --search "AI.run"
 - Token limit exceeded
 
 **Performance Degradation Indicators:**
+
 - Embedding > 500ms: Model cold start or overload
 - LLM > 2000ms: Complex prompt or model issue
 - Frequent timeouts: Need to implement retry logic
@@ -617,6 +681,7 @@ wrangler tail cloudflare-rag-portfolio --status error --search "AI.run"
 **D1 Performance Monitoring:**
 
 **1. Query Execution Times (via logs):**
+
 ```bash
 wrangler tail cloudflare-rag-portfolio --format json --search "fetchChunks" |
   jq 'select(.message.context.durationMs != null) |
@@ -624,6 +689,7 @@ wrangler tail cloudflare-rag-portfolio --format json --search "fetchChunks" |
 ```
 
 **2. Database Error Analysis:**
+
 ```sql
 -- Check for database errors in logs
 SELECT
@@ -639,31 +705,36 @@ GROUP BY error_message;
 **3. Slow Queries:**
 
 **Session Creation** (`src/utils/chat-logger.ts:119-146`):
+
 - Expected: < 50ms
 - 13 field INSERT with RETURNING clause
 
 **Message Logging** (`src/utils/chat-logger.ts:174-198`):
+
 - Expected: < 50ms
 - 14 field INSERT with RETURNING clause
 
 **Chunk Retrieval** (`src/utils/document-store.ts`):
+
 - Expected: < 100ms
 - IN clause query for multiple chunk IDs
 
 **4. Vectorize Performance:**
 
 **Query Timing** (`src/patterns/basic-rag.ts:79-88`):
+
 ```typescript
 logger.startTimer('retrieveVectors');
 const vectorMatches = await store.queryVectors(
   queryEmbedding,
   topK,
-  minSimilarity
+  minSimilarity,
 );
 logger.endTimer('retrieveVectors', { matches: vectorMatches.length });
 ```
 
 **Expected Performance:**
+
 - Vectorize query: 50-150ms
 - TopK=3: ~50ms
 - TopK=10: ~150ms
@@ -671,6 +742,7 @@ logger.endTimer('retrieveVectors', { matches: vectorMatches.length });
 **Common Database Issues:**
 
 **D1 Errors:**
+
 - Query timeout (> 30s)
 - Connection pool exhausted
 - Schema mismatch
@@ -678,12 +750,14 @@ logger.endTimer('retrieveVectors', { matches: vectorMatches.length });
 - NULL values in NOT NULL columns
 
 **Vectorize Errors:**
+
 - Index not found
 - Query timeout
 - Dimension mismatch (expected: 768)
 - Invalid similarity threshold
 
 **Connection Issues:**
+
 - Binding not available
 - Remote database unreachable
 - Rate limiting (D1 limits: 50,000 reads/day free tier)
@@ -719,21 +793,25 @@ FROM chat_sessions;
 ### Current Limitations
 
 **1. No Structured Metrics Collection:**
+
 - Console logs only, no structured metrics
 - No performance counters
 - No custom metrics export
 
 **2. Limited Dashboard Visibility:**
+
 - Worker-level metrics only
 - No endpoint-specific breakdowns
 - No custom dimensions
 
 **3. No Alerting:**
+
 - No automated error alerts
 - No performance degradation alerts
 - No quota/limit alerts
 
 **4. No Distributed Tracing:**
+
 - Cannot trace request across AI/D1/Vectorize
 - No request correlation IDs
 - No timing breakdowns in Dashboard
@@ -759,6 +837,7 @@ app.use('*', async (c, next) => {
 ```
 
 **Benefits:**
+
 - Correlate errors across services
 - Track individual request performance
 - Debug complex issues
@@ -785,6 +864,7 @@ logger.info('rag_metrics', metrics);
 ```
 
 **Benefits:**
+
 - Detailed performance breakdown
 - Identify bottlenecks
 - Track cache effectiveness
@@ -802,17 +882,21 @@ app.get('/health', async (c) => {
     cache: await checkKVHealth(c.env.RAG_CACHE),
   };
 
-  const healthy = Object.values(checks).every(c => c.healthy);
+  const healthy = Object.values(checks).every((c) => c.healthy);
 
-  return c.json({
-    status: healthy ? 'healthy' : 'degraded',
-    checks,
-    timestamp: new Date().toISOString(),
-  }, healthy ? 200 : 503);
+  return c.json(
+    {
+      status: healthy ? 'healthy' : 'degraded',
+      checks,
+      timestamp: new Date().toISOString(),
+    },
+    healthy ? 200 : 503,
+  );
 });
 ```
 
 **Benefits:**
+
 - Quickly identify failing dependencies
 - Enable uptime monitoring
 - Support load balancer health checks
@@ -842,6 +926,7 @@ app.onError((err, c) => {
 ```
 
 **Benefits:**
+
 - Track error trends by category
 - Identify systematic issues
 - Prioritize fixes
@@ -852,11 +937,13 @@ app.onError((err, c) => {
 **Latest Version:** 4.57.0 (per wrangler.jsonc)
 
 **Upgrade Command:**
+
 ```bash
 npm install wrangler@4.57.0 --save-dev
 ```
 
 **Benefits:**
+
 - Access to latest observability features
 - Performance improvements
 - Bug fixes
@@ -881,13 +968,14 @@ export default {
       },
       async () => {
         return await app.fetch(request, env, ctx);
-      }
+      },
     );
   },
 };
 ```
 
 **Benefits:**
+
 - Error tracking and aggregation
 - Performance monitoring
 - Distributed tracing
@@ -910,6 +998,7 @@ await fetch('https://api.logflare.app/logs', {
 ```
 
 **Benefits:**
+
 - Persistent log storage
 - Advanced querying
 - Dashboards and visualization
@@ -930,11 +1019,12 @@ const metrics = {
 
 await env.METRICS_BUCKET.put(
   `metrics/${new Date().toISOString()}.json`,
-  JSON.stringify(metrics)
+  JSON.stringify(metrics),
 );
 ```
 
 **Benefits:**
+
 - Cost-effective storage
 - Custom analytics
 - Long-term retention
@@ -947,6 +1037,7 @@ await env.METRICS_BUCKET.put(
 ### To Perform the 10-Step Analysis Now:
 
 **1. Worker Discovery (Step 1.1):**
+
 ```bash
 # Verify worker is deployed
 curl https://cloudflare-rag-demo.stevenleve.com/health
@@ -956,12 +1047,14 @@ curl "https://cloudflare-rag-demo.stevenleve.com/api/v1/query?q=test"
 ```
 
 **2. Health Overview (Step 1.2):**
+
 - Login to Cloudflare Dashboard: https://dash.cloudflare.com/
 - Navigate to: Workers & Pages > cloudflare-rag-portfolio > Metrics
 - Set time range: Last 24 hours
 - Note: Total requests, errors, P99 latency, CPU time
 
 **3. Error Analysis (Step 1.3):**
+
 ```bash
 # Stream errors for 5 minutes
 timeout 300 wrangler tail cloudflare-rag-portfolio --status error --format json > errors_$(date +%Y%m%d_%H%M%S).json
@@ -971,12 +1064,14 @@ cat errors_*.json | jq -r '.exception.message' | sort | uniq -c | sort -rn
 ```
 
 **4. Recent Error Details (Step 1.4):**
+
 ```bash
 # Get last 10 errors with full context
 wrangler tail cloudflare-rag-portfolio --status error --format json | head -n 10 > recent_errors.json
 ```
 
 **5. Performance by Endpoint (Step 1.5):**
+
 ```bash
 # Sample 1000 requests
 timeout 600 wrangler tail cloudflare-rag-portfolio --format json | head -n 1000 > performance_sample.json
@@ -993,12 +1088,14 @@ cat performance_sample.json | jq -r 'select(.url != null) | "\(.url) \(.duration
 ```
 
 **6. Slow Request Investigation (Step 1.6):**
+
 ```bash
 # Filter slow requests
 cat performance_sample.json | jq 'select(.duration > 1000) | {url, duration, method, timestamp}'
 ```
 
 **7. Chat Logging Activity (Step 1.7):**
+
 ```bash
 # Session statistics
 wrangler d1 execute wikipedia-db --remote --command "
@@ -1021,6 +1118,7 @@ GROUP BY role;"
 ```
 
 **8. Scheduled Job Monitoring (Step 1.8):**
+
 ```bash
 # Check for expired active sessions (should be 0 after cleanup)
 wrangler d1 execute wikipedia-db --remote --command "
@@ -1035,6 +1133,7 @@ EOF
 ```
 
 **9. AI Binding Performance (Step 1.9):**
+
 ```bash
 # Analyze AI timing from logs
 cat performance_sample.json | jq 'select(.message.message | contains("Timer ended")) |
@@ -1045,6 +1144,7 @@ cat performance_sample.json | jq 'select(.message.message | contains("Timer ende
 ```
 
 **10. Database Performance (Step 1.10):**
+
 ```bash
 # Test D1 query performance
 time wrangler d1 execute wikipedia-db --remote --command "SELECT COUNT(*) FROM chat_sessions;"
@@ -1062,12 +1162,14 @@ cat performance_sample.json | jq 'select(.message.message | contains("fetchChunk
 ## Monitoring Checklist
 
 ### Daily Monitoring (5 minutes)
+
 - [ ] Check Cloudflare Dashboard for error spikes
 - [ ] Review P99 latency trends
 - [ ] Verify cron job execution (after 2 AM UTC)
 - [ ] Check for unusual traffic patterns
 
 ### Weekly Monitoring (30 minutes)
+
 - [ ] Analyze error trends by category
 - [ ] Review slow request patterns
 - [ ] Check database growth and performance
@@ -1075,6 +1177,7 @@ cat performance_sample.json | jq 'select(.message.message | contains("fetchChunk
 - [ ] Review geographic traffic distribution
 
 ### Monthly Monitoring (2 hours)
+
 - [ ] Deep dive error analysis
 - [ ] Performance optimization opportunities
 - [ ] Review AI model performance trends
@@ -1114,12 +1217,14 @@ The Worker has solid built-in logging infrastructure with structured logs, perfo
 ## References
 
 ### Documentation Links
+
 - Cloudflare Workers Observability: https://developers.cloudflare.com/workers/observability/
 - Wrangler Tail: https://developers.cloudflare.com/workers/wrangler/commands/#tail
 - D1 Database: https://developers.cloudflare.com/d1/
 - Workers AI: https://developers.cloudflare.com/workers-ai/
 
 ### Code References
+
 - Main handler: `/home/steve-leve/projects/chatbot-demo-cloudflare/src/index.ts`
 - Logger: `/home/steve-leve/projects/chatbot-demo-cloudflare/src/utils/logger.ts`
 - Chat logger: `/home/steve-leve/projects/chatbot-demo-cloudflare/src/utils/chat-logger.ts`
@@ -1127,7 +1232,9 @@ The Worker has solid built-in logging infrastructure with structured logs, perfo
 - Configuration: `/home/steve-leve/projects/chatbot-demo-cloudflare/wrangler.jsonc`
 
 ### Database Schema
+
 Relevant tables for analytics:
+
 - `chat_sessions`: Session metadata (IP hash, geolocation, timestamps)
 - `chat_messages`: User/assistant messages (content, latency, errors)
 - `message_chunks`: RAG retrieval chunks (similarity scores, rankings)

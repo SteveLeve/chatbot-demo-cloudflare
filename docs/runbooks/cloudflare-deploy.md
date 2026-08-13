@@ -1,12 +1,15 @@
 # Runbook: Cloudflare Deploy
+
 - **Last Updated**: 2026-02-06
 - **Purpose**: Safe deploy of the Worker + UI with remote resources.
 
 ## Prereqs
+
 - `wrangler` logged in; production bindings present in `wrangler.jsonc`.
 - Secrets set (e.g., `CHAT_LOG_IP_SALT`).
 
 ## Steps
+
 1. **Build UI**:
    ```bash
    npm run build
@@ -29,9 +32,10 @@
    - Check logs for errors; ensure cache hits (if embedding cache/AI Gateway enabled).
 
 ## Rollback
+
 - `wrangler deploy --env <prev>` if using staged envs; otherwise redeploy previous build artifact.
 
 ## Notes
+
 - Remote-only services (AI/Vectorize/D1) require working IDs; deploy will fail if missing.
 - If AI Gateway is enabled, confirm gateway ID set before deploy.
-

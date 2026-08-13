@@ -7,3 +7,4 @@ ui/dist
 .wrangler
 data/corpus
 public
+.remember

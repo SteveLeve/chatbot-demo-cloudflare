@@ -19,7 +19,9 @@ export function SourcesCard({ sources }: SourcesCardProps) {
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
           Sources ({sources.length})
         </h3>
-        <span className="text-gray-500 dark:text-gray-400">{isOpen ? '▼' : '▶'}</span>
+        <span className="text-gray-500 dark:text-gray-400">
+          {isOpen ? '▼' : '▶'}
+        </span>
       </button>
 
       {isOpen && (
@@ -34,7 +36,9 @@ export function SourcesCard({ sources }: SourcesCardProps) {
                   <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-medium">
                     {idx + 1}
                   </span>
-                  <span className="font-medium text-gray-900 dark:text-gray-100">{source.title}</span>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">
+                    {source.title}
+                  </span>
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">
                   {(source.similarity * 100).toFixed(1)}% match

@@ -74,19 +74,19 @@ Edit `wrangler.jsonc` and replace the placeholder IDs:
   "d1_databases": [
     {
       "binding": "DATABASE",
-      "database_id": "YOUR_D1_DATABASE_ID_HERE"  // From step 3
-    }
+      "database_id": "YOUR_D1_DATABASE_ID_HERE", // From step 3
+    },
   ],
   "kv_namespaces": [
     {
       "binding": "EMBEDDINGS_CACHE",
-      "id": "YOUR_EMBEDDINGS_CACHE_ID_HERE"  // From step 3
+      "id": "YOUR_EMBEDDINGS_CACHE_ID_HERE", // From step 3
     },
     {
       "binding": "RAG_CACHE",
-      "id": "YOUR_RAG_CACHE_ID_HERE"  // From step 3
-    }
-  ]
+      "id": "YOUR_RAG_CACHE_ID_HERE", // From step 3
+    },
+  ],
 }
 ```
 
@@ -101,6 +101,7 @@ wrangler d1 migrations apply wikipedia-db --remote
 ```
 
 You should see:
+
 ```
 ✅ Successfully applied 3 migrations.
 ```
@@ -120,6 +121,7 @@ python scripts/fetch-wikipedia.py --size-mb 10
 This will download ~2000 articles from the Simple English Wikipedia and save them to `data/wikipedia/`.
 
 **What happens:**
+
 - Downloads articles from `wikimedia/wikipedia` dataset
 - Filters out very short articles (< 500 chars)
 - Converts to required JSON format
@@ -127,6 +129,7 @@ This will download ~2000 articles from the Simple English Wikipedia and save the
 - Creates `_fetch_metadata.json` with statistics
 
 **Alternative options:**
+
 ```bash
 # Fetch specific number of articles
 python scripts/fetch-wikipedia.py --articles 1500
@@ -149,12 +152,14 @@ npm run dev
 ```
 
 This starts the Wrangler development server. You should see:
+
 ```
 ⎔ Starting local server...
 [wrangler:inf] Ready on http://localhost:8787
 ```
 
 The backend provides REST API endpoints:
+
 - `GET /` - API info
 - `GET /health` - Health check
 - `GET /api/v1/query?q=...` - Query the RAG system
@@ -169,6 +174,7 @@ npm run ui:dev
 ```
 
 This starts the Vite development server. You should see:
+
 ```
 VITE v6.4.1  ready in 308 ms
 
@@ -176,6 +182,7 @@ VITE v6.4.1  ready in 308 ms
 ```
 
 The frontend:
+
 - Serves HTML on `http://localhost:3000`
 - Automatically proxies API calls from `/api/*` to the backend on port 8787
 - Provides hot module reloading during development
@@ -189,6 +196,7 @@ npm run ingest ./data/wikipedia
 ```
 
 You should see:
+
 ```
 Starting Wikipedia data ingestion...
 Found 1 articles to ingest
@@ -202,11 +210,13 @@ Success: 1
 Open http://localhost:3000 in your browser.
 
 Try asking:
+
 - "What is artificial intelligence?"
 - "When was AI founded?"
 - "What are some applications of AI?"
 
 You should see:
+
 - The AI-generated answer
 - Source citations with similarity scores
 - Metadata about the query (latency, chunks retrieved)
@@ -242,6 +252,7 @@ KV uses local simulation in dev mode, but retains the IDs for production.
    - Frontend: Open browser to `http://localhost:3000` (should show HTML)
 
 2. Check Vite proxy configuration in `ui/vite.config.ts`:
+
    ```typescript
    server: {
      proxy: {
@@ -258,6 +269,7 @@ KV uses local simulation in dev mode, but retains the IDs for production.
 ### "Database not found"
 
 Make sure you ran migrations:
+
 ```bash
 wrangler d1 migrations apply wikipedia-db --local
 ```
@@ -265,6 +277,7 @@ wrangler d1 migrations apply wikipedia-db --local
 ### "Vectorize index not found"
 
 Vectorize requires a remote connection. Make sure you created the index:
+
 ```bash
 wrangler vectorize create wikipedia-vectors --preset @cf/baai/bge-base-en-v1.5
 ```
@@ -272,6 +285,7 @@ wrangler vectorize create wikipedia-vectors --preset @cf/baai/bge-base-en-v1.5
 ### "R2 bucket not found"
 
 Create the bucket:
+
 ```bash
 wrangler r2 bucket create wikipedia-articles
 ```
@@ -279,6 +293,7 @@ wrangler r2 bucket create wikipedia-articles
 ### Workflow fails during ingestion
 
 Check the Worker logs in Terminal 1. Common issues:
+
 - Text splitting enabled but no content to split
 - Invalid JSON in data files
 - Missing required fields (title, content)
@@ -325,6 +340,7 @@ npm run ui:build
 ### Monitor Performance
 
 Check logs in the Cloudflare dashboard:
+
 1. Go to Cloudflare Dashboard
 2. Select your account
 3. Click "Workers & Pages"

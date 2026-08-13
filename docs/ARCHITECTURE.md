@@ -42,6 +42,7 @@ The project uses **two separate dev servers** running in parallel:
 ```
 
 **Key Points**:
+
 - **Port 3000 (Frontend)**: React dev server with Vite hot reload
 - **Port 8787 (Backend)**: Wrangler dev server simulating a Cloudflare Worker
 - **API Proxy**: Vite automatically forwards `/api/*` requests to port 8787
@@ -55,6 +56,7 @@ The project uses **two separate dev servers** running in parallel:
 **Purpose**: Handle HTTP requests, orchestrate RAG pipeline, execute business logic
 
 **Key Responsibilities**:
+
 - Route incoming API requests
 - Execute RAG query logic
 - Coordinate between storage layers
@@ -85,19 +87,22 @@ The project uses **two separate dev servers** running in parallel:
 **Purpose**: Semantic similarity search over embedded text chunks
 
 **Configuration**:
+
 - Preset: `@cf/baai/bge-base-en-v1.5` (768 dimensions)
 - Distance metric: Cosine similarity
 - Capacity: 5M vectors (free tier)
 
 **Query Pattern**:
+
 ```typescript
 const results = await VECTOR_INDEX.query(queryEmbedding, {
   topK: 3,
-  returnMetadata: true
+  returnMetadata: true,
 });
 ```
 
 **Metadata Schema**:
+
 ```typescript
 {
   documentId: string,
@@ -114,6 +119,7 @@ const results = await VECTOR_INDEX.query(queryEmbedding, {
 **Schema**:
 
 **documents** table:
+
 ```sql
 CREATE TABLE documents (
   id TEXT PRIMARY KEY,
@@ -126,6 +132,7 @@ CREATE TABLE documents (
 ```
 
 **chunks** table:
+
 ```sql
 CREATE TABLE chunks (
   id TEXT PRIMARY KEY,
@@ -139,6 +146,7 @@ CREATE TABLE chunks (
 ```
 
 **chunks_fts** (FTS5 virtual table):
+
 ```sql
 CREATE VIRTUAL TABLE chunks_fts USING fts5(
   chunk_id UNINDEXED,
@@ -148,6 +156,7 @@ CREATE VIRTUAL TABLE chunks_fts USING fts5(
 ```
 
 **Indexes**:
+
 - `idx_documents_article_id` on `documents(article_id)`
 - `idx_chunks_document_id` on `chunks(document_id)`
 - `idx_chunks_document_index` on `chunks(document_id, chunk_index)`
@@ -159,6 +168,7 @@ CREATE VIRTUAL TABLE chunks_fts USING fts5(
 **Key Pattern**: `articles/{article_id}.json`
 
 **Object Structure**:
+
 ```json
 {
   "id": "uuid",
@@ -174,6 +184,7 @@ CREATE VIRTUAL TABLE chunks_fts USING fts5(
 ```
 
 **Why R2?**:
+
 - Store complete articles without size constraints
 - Zero egress fees (cost-effective)
 - Separation of hot (chunks in D1) and cold (archives in R2) data
@@ -208,6 +219,7 @@ CREATE VIRTUAL TABLE chunks_fts USING fts5(
 6. **insert-vectors**: Upload to Vectorize
 
 **Benefits**:
+
 - Automatic retries on failure
 - State persistence across steps
 - Observable in Cloudflare dashboard
@@ -278,21 +290,25 @@ CREATE VIRTUAL TABLE chunks_fts USING fts5(
 ### Why R2 + D1 + Vectorize?
 
 **R2 for Full Articles**:
+
 - Pros: No size limits, zero egress costs, versioning support
 - Cons: Not queryable
 - Use case: Archive full Wikipedia articles
 
 **D1 for Chunks & Metadata**:
+
 - Pros: Relational model, SQL queries, FTS5 support, fast joins
 - Cons: 10GB limit (acceptable for our use case)
 - Use case: Store text chunks, enable hybrid search, metadata queries
 
 **Vectorize for Embeddings**:
+
 - Pros: Purpose-built for vectors, fast similarity search, metadata filtering
 - Cons: No local development support
 - Use case: Semantic search over document chunks
 
 **Alternative Considered: KV-Only**
+
 - Rejected because: No relational queries, no FTS, harder to maintain consistency
 
 ## RAG Pattern: Basic Single-Turn
@@ -369,6 +385,7 @@ Remember: Only use the information provided in the context above.
 ### Example
 
 Input article (1500 chars) → 3 chunks:
+
 - Chunk 0: Characters 0-500 (metadata: `{ chunkSize: 500, section: "Introduction" }`)
 - Chunk 1: Characters 400-900 (overlap: 100, metadata: `{ chunkSize: 500, section: "History" }`)
 - Chunk 2: Characters 800-1300 (overlap: 100, metadata: `{ chunkSize: 500, section: "Applications" }`)
@@ -378,11 +395,13 @@ Input article (1500 chars) → 3 chunks:
 ### 1. Caching Strategy
 
 **Embedding Cache** (KV):
+
 - Key: SHA-256 hash of query text
 - Benefit: Avoid duplicate embedding generation
 - Hit rate: ~30-40% for common queries
 
 **Query Result Cache** (KV):
+
 - Key: Pattern + SHA-256 hash of question
 - Benefit: Instant responses for repeated questions
 - TTL: 1 hour (balance freshness vs. performance)
@@ -390,6 +409,7 @@ Input article (1500 chars) → 3 chunks:
 ### 2. Batch Operations
 
 **Database Queries**:
+
 ```typescript
 // Bad: N queries
 for (const id of chunkIds) {
@@ -398,10 +418,14 @@ for (const id of chunkIds) {
 
 // Good: 1 query with IN clause
 const placeholders = chunkIds.map(() => '?').join(',');
-await db.prepare(`SELECT * FROM chunks WHERE id IN (${placeholders})`).bind(...chunkIds).all();
+await db
+  .prepare(`SELECT * FROM chunks WHERE id IN (${placeholders})`)
+  .bind(...chunkIds)
+  .all();
 ```
 
 **Embedding Generation**:
+
 ```typescript
 // Bad: N API calls
 for (const text of texts) {
@@ -418,7 +442,7 @@ await AI.run(model, { text: texts });
 // Run independent operations in parallel
 const [embeddings, documentMetadata] = await Promise.all([
   generateEmbedding(question),
-  fetchRecentDocuments()
+  fetchRecentDocuments(),
 ]);
 ```
 
@@ -427,12 +451,14 @@ const [embeddings, documentMetadata] = await Promise.all([
 ### Structured Logging
 
 **Log Levels**:
+
 - DEBUG: Detailed execution info
 - INFO: Normal operations
 - WARN: Recoverable issues
 - ERROR: Failures requiring attention
 
 **Performance Timers**:
+
 ```typescript
 logger.startTimer('operation');
 // ... do work ...
@@ -440,6 +466,7 @@ const duration = logger.endTimer('operation');
 ```
 
 **Context Propagation**:
+
 ```typescript
 const childLogger = logger.child({ requestId, userId });
 childLogger.info('Processing request');

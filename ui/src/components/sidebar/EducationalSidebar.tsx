@@ -8,7 +8,7 @@ export function EducationalSidebar({
   techStack,
   isCollapsed = false,
   onToggleCollapse,
-  children
+  children,
 }: EducationalSidebarProps & { children?: React.ReactNode }) {
   const sidebarRef = useRef<HTMLElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
@@ -52,7 +52,7 @@ export function EducationalSidebar({
 
       // Focus the first focusable element in the sidebar
       const firstFocusable = sidebarRef.current.querySelector<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
       if (firstFocusable) {
         firstFocusable.focus();
@@ -72,9 +72,10 @@ export function EducationalSidebar({
     const handleTabKey = (e: KeyboardEvent) => {
       if (e.key !== 'Tab' || !sidebarRef.current) return;
 
-      const focusableElements = sidebarRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
+      const focusableElements =
+        sidebarRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
 
@@ -181,7 +182,10 @@ export function EducationalSidebar({
 
         {/* Sidebar header (mobile only) */}
         <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 id="sidebar-title" className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+          <h2
+            id="sidebar-title"
+            className="text-lg font-semibold text-gray-800 dark:text-gray-100"
+          >
             Learn About RAG
           </h2>
           <button
@@ -206,7 +210,9 @@ export function EducationalSidebar({
         </div>
 
         {/* Scrollable content - hidden when collapsed on desktop */}
-        <div className={`flex-1 overflow-y-auto ${isCollapsed ? 'hidden lg:hidden' : ''}`}>
+        <div
+          className={`flex-1 overflow-y-auto ${isCollapsed ? 'hidden lg:hidden' : ''}`}
+        >
           {children}
         </div>
 

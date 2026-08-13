@@ -4,7 +4,9 @@ const THEME_KEY = 'theme';
 
 export function getSystemTheme(): Theme {
   if (typeof window === 'undefined') return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
 }
 
 export function getStoredTheme(): Theme | null {

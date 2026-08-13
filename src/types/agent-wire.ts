@@ -7,8 +7,8 @@ import type { DocumentSource } from './index';
 import type { TraceEvent } from './trace';
 
 export interface RAGAgentState {
-  traceEvents: TraceEvent[];
-  traceId?: string;
-  spanId?: string;
-  lastSources: DocumentSource[];
+	traceEvents: TraceEvent[];
+	traceId?: string;
+	spanId?: string;
+	lastSources: DocumentSource[];
 }

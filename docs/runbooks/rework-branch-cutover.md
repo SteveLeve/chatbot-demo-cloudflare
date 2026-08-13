@@ -1,4 +1,5 @@
 # Runbook: Agentic RAG Rework — Branch Cutover & Escape Hatch
+
 - **Last Updated**: 2026-08-08
 - **Owner**: Project Maintainer
 - **Prereqs**: PR #31 (docs pivot, `docs/agentic-rag-reimagine`) merged to `main`; familiarity with
@@ -47,16 +48,16 @@ process/qualitative signals — cross-referenced from a parallel strategy plan t
 on this same escalation shape, and worth keeping because they catch what the mechanical checks can't
 (agent confusion, whack-a-mole cleanup).
 
-| # | Criterion | How to check |
-|---|---|---|
-| 1 | Reuse-util signature break | `git diff --stat main...<phase-branch>` shows *removed/changed* (not only added) exports in any of `trace.ts`, `logger.ts`, `chat-logger.ts`, `privacy.ts`, `rate-limiter.ts`, `security.ts`, `validation.ts`, `metadata.ts` |
-| 2 | Destructive migration | New migration file contains `DROP TABLE` / `ALTER TABLE ... DROP COLUMN` touching tables `chat-logger.ts` depends on (from `migrations/0004_add_chat_logging.sql`), rather than being purely additive |
-| 3 | Time-box breach | No PR merged to `main` within 14 calendar days of `chore/30-rework-cutover` opening; or `feat/34-agent-do-trace` open >21 days without passing CI and a working demo route |
-| 4 | Reused test breakage | `npm test` requires *modifying* (not just adding alongside) any existing passing test under trace/logger/chat-logger/security/rate-limiter coverage |
-| 5 | UI structural coupling | Removing `basic-rag.ts`/`BasicChatPage.tsx` forces structural rewrites (not additive prop changes) to `SourcesCard`, `ChatInput`, `MessageBubble`, `DemoLayout`, or sidebar components |
-| 6 | Binding/plan conflict | A dry-run `wrangler deploy` shows binding errors combining existing D1/KV/Vectorize bindings with new `durable_objects`/`new_sqlite_classes` migrations |
-| 7 | Purge churn | A purge/cutover PR exceeds ~1 focused working session without reaching a clean gate pass (§ Validation) — whack-a-mole across skills/UI/docs instead of a bounded pass |
-| 8 | Repeated stale citations | An agent session (Claude, Cursor, Copilot, or a human contributor) cites a path or fact this audit marked `replace`/`delete`/`archive` as if it were still current, more than once after the relevant cutover/phase PR merged |
+| #   | Criterion                  | How to check                                                                                                                                                                                                                  |
+| --- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Reuse-util signature break | `git diff --stat main...<phase-branch>` shows _removed/changed_ (not only added) exports in any of `trace.ts`, `logger.ts`, `chat-logger.ts`, `privacy.ts`, `rate-limiter.ts`, `security.ts`, `validation.ts`, `metadata.ts`  |
+| 2   | Destructive migration      | New migration file contains `DROP TABLE` / `ALTER TABLE ... DROP COLUMN` touching tables `chat-logger.ts` depends on (from `migrations/0004_add_chat_logging.sql`), rather than being purely additive                         |
+| 3   | Time-box breach            | No PR merged to `main` within 14 calendar days of `chore/30-rework-cutover` opening; or `feat/34-agent-do-trace` open >21 days without passing CI and a working demo route                                                    |
+| 4   | Reused test breakage       | `npm test` requires _modifying_ (not just adding alongside) any existing passing test under trace/logger/chat-logger/security/rate-limiter coverage                                                                           |
+| 5   | UI structural coupling     | Removing `basic-rag.ts`/`BasicChatPage.tsx` forces structural rewrites (not additive prop changes) to `SourcesCard`, `ChatInput`, `MessageBubble`, `DemoLayout`, or sidebar components                                        |
+| 6   | Binding/plan conflict      | A dry-run `wrangler deploy` shows binding errors combining existing D1/KV/Vectorize bindings with new `durable_objects`/`new_sqlite_classes` migrations                                                                       |
+| 7   | Purge churn                | A purge/cutover PR exceeds ~1 focused working session without reaching a clean gate pass (§ Validation) — whack-a-mole across skills/UI/docs instead of a bounded pass                                                        |
+| 8   | Repeated stale citations   | An agent session (Claude, Cursor, Copilot, or a human contributor) cites a path or fact this audit marked `replace`/`delete`/`archive` as if it were still current, more than once after the relevant cutover/phase PR merged |
 
 ### 4. Tier 2 — Hybrid escape hatch (only if §3 trips)
 
@@ -74,7 +75,7 @@ on this same escalation shape, and worth keeping because they catch what the mec
 
 ### 5. Tier 3 — Nuclear: archive + rename + reclaim name (last resort, rare)
 
-Only if Tier 2 *also* feels contaminated — e.g. the sibling repo keeps needing ad hoc re-imports because
+Only if Tier 2 _also_ feels contaminated — e.g. the sibling repo keeps needing ad hoc re-imports because
 the port allowlist (§4.2) turns out to be incomplete, or dual-maintaining old and new demos side by side
 becomes untenable. Not expected to trigger; documented for transparency, not built out in detail here:
 
@@ -104,6 +105,7 @@ canonical; Tier 3 (§5) has no rollback once the rename/reclaim happens. Treat b
 and confirm with the user first.
 
 ## Notes
+
 - Companion audit table: [`../status/doc-audit-agentic-rag.md`](../status/doc-audit-agentic-rag.md)
 - Epic: https://github.com/SteveLeve/chatbot-demo-cloudflare/issues/30
 - Phase issues: #32, #33, #34, #35, #36

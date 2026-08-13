@@ -111,7 +111,7 @@ export function AgentChatPage() {
       } catch (error) {
         if (!cancelled) {
           setBootstrapError(
-            error instanceof Error ? error.message : 'Bootstrap failed'
+            error instanceof Error ? error.message : 'Bootstrap failed',
           );
         }
       } finally {
@@ -170,10 +170,14 @@ export function AgentChatPage() {
 
             {messages.length === 0 && bootstrapReady && (
               <div className="text-center text-gray-500 dark:text-gray-400 mt-16">
-                <p className="text-lg">Ask the agent about the curated corpus</p>
+                <p className="text-lg">
+                  Ask the agent about the curated corpus
+                </p>
                 <p className="text-sm mt-2 max-w-md mx-auto">
-                  The agent calls a <code className="text-xs">retrieve_from_corpus</code> tool,
-                  then generates a cited answer. Watch the trace panel for each step.
+                  The agent calls a{' '}
+                  <code className="text-xs">retrieve_from_corpus</code> tool,
+                  then generates a cited answer. Watch the trace panel for each
+                  step.
                 </p>
                 <p className="text-sm mt-2">
                   <Link
@@ -196,9 +200,13 @@ export function AgentChatPage() {
             {messages.map((message) => {
               const text = messageText(message.parts);
               const isUser = message.role === 'user';
-              const assistantMessages = messages.filter((m) => m.role === 'assistant');
-              const lastAssistantId = assistantMessages[assistantMessages.length - 1]?.id;
-              const isLatestAssistant = !isUser && message.id === lastAssistantId;
+              const assistantMessages = messages.filter(
+                (m) => m.role === 'assistant',
+              );
+              const lastAssistantId =
+                assistantMessages[assistantMessages.length - 1]?.id;
+              const isLatestAssistant =
+                !isUser && message.id === lastAssistantId;
 
               return (
                 <div
