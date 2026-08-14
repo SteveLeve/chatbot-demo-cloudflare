@@ -51,7 +51,7 @@
   "license": "MIT",
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.21.0",
-    "@eslint/js": "^9.18.0",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.57.0",
     "@types/node": "^26.2.0",
     "@vitest/coverage-v8": "^4.1.10",
