@@ -14,7 +14,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         className={`max-w-[80%] rounded-lg p-4 ${
           message.role === 'user'
             ? 'bg-blue-600 text-white'
-            : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 shadow-sm'
+            : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 shadow-xs'
         }`}
       >
         <div className="whitespace-pre-wrap">{message.content}</div>

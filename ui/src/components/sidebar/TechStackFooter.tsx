@@ -12,7 +12,7 @@ export function TechStackFooter({ stack }: TechStackFooterProps) {
             {stack.technologies.map((tech) => (
               <span
                 key={tech}
-                className="inline-block px-2 py-1 text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300"
+                className="inline-block px-2 py-1 text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-sm text-gray-700 dark:text-gray-300"
               >
                 {tech}
               </span>

@@ -63,7 +63,7 @@ export function TracePanel({ events, traceId, spanId }: TracePanelProps) {
           >
             <div className="flex items-center gap-2 mb-1">
               <span
-                className={`text-xs font-medium px-2 py-0.5 rounded ${TYPE_COLORS[event.type]}`}
+                className={`text-xs font-medium px-2 py-0.5 rounded-sm ${TYPE_COLORS[event.type]}`}
               >
                 {TYPE_LABELS[event.type]}
               </span>
