@@ -13,12 +13,14 @@ export default defineConfig({
       // them would dilute the threshold rather than measure anything real.
       include: ['src/utils/**', 'src/ai/**', 'src/eval/**', 'src/redteam/**'],
       // Floor, not a target: set a few points below the current measured
-      // baseline (~47/71/73/47 at the time this gate was added) so it catches
-      // regressions without blocking on coverage this pass didn't add.
+      // baseline (~43/45/49/44 after the vitest 3->4 bump, which changed how
+      // @vitest/coverage-v8 remaps branches/functions and dropped the
+      // reported numbers well below the old 47/71/73/47 baseline for the same
+      // tests and source — see PR resolving the Dependabot vitest alerts).
       thresholds: {
         statements: 40,
-        branches: 65,
-        functions: 65,
+        branches: 40,
+        functions: 44,
         lines: 40,
       },
     },
