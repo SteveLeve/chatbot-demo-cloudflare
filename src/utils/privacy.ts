@@ -37,7 +37,9 @@ export async function hashIpAddress(ip: string, salt: string): Promise<string> {
 			ipLength: ip.length,
 			saltLength: salt.length,
 		});
-		throw new Error(`[Privacy] IP hash computation failed: ${errorMsg}`);
+		throw new Error(`[Privacy] IP hash computation failed: ${errorMsg}`, {
+			cause: error,
+		});
 	}
 
 	// Convert buffer to hex string
@@ -51,7 +53,9 @@ export async function hashIpAddress(ip: string, salt: string): Promise<string> {
 			error: errorMsg,
 			bufferByteLength: hashBuffer.byteLength,
 		});
-		throw new Error(`[Privacy] Hash conversion to hex failed: ${errorMsg}`);
+		throw new Error(`[Privacy] Hash conversion to hex failed: ${errorMsg}`, {
+			cause: error,
+		});
 	}
 
 	// Validate hash result
@@ -90,6 +94,7 @@ export async function validateIpHashing(): Promise<void> {
 		});
 		throw new Error(
 			`[Privacy] Hash validation failed on first computation: ${errorMsg}`,
+			{ cause: error },
 		);
 	}
 
@@ -103,6 +108,7 @@ export async function validateIpHashing(): Promise<void> {
 		});
 		throw new Error(
 			`[Privacy] Hash validation failed on second computation: ${errorMsg}`,
+			{ cause: error },
 		);
 	}
 
