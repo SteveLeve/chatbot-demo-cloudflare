@@ -66,3 +66,4 @@ data/wikipedia/*.txt
 
 # Curated corpus is committed (Phase 2 / #33); only ignore scratch copies
 data/corpus/*.tmp
+ui/src/content/corpus-manifest.json
