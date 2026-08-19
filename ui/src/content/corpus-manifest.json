@@ -1,0 +1,265 @@
+{
+  "generatedAt": "2026-08-14T04:47:49.336Z",
+  "articleCount": 37,
+  "articles": [
+    {
+      "id": "alan-turing",
+      "title": "Alan Turing",
+      "charCount": 5105,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Alan%20Turing",
+      "chunkCount": 11
+    },
+    {
+      "id": "albert-einstein",
+      "title": "Albert Einstein",
+      "charCount": 26028,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Albert%20Einstein",
+      "chunkCount": 53
+    },
+    {
+      "id": "apple-inc",
+      "title": "Apple Inc.",
+      "charCount": 14522,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Apple%20Inc.",
+      "chunkCount": 30
+    },
+    {
+      "id": "archimedes",
+      "title": "Archimedes",
+      "charCount": 5022,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Archimedes",
+      "chunkCount": 11
+    },
+    {
+      "id": "artificial-intelligence",
+      "title": "Artificial intelligence",
+      "charCount": 5724,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Artificial%20intelligence",
+      "chunkCount": 12
+    },
+    {
+      "id": "atom",
+      "title": "Atom",
+      "charCount": 22639,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Atom",
+      "chunkCount": 46
+    },
+    {
+      "id": "biology",
+      "title": "Biology",
+      "charCount": 2174,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Biology",
+      "chunkCount": 5
+    },
+    {
+      "id": "charles-darwin",
+      "title": "Charles Darwin",
+      "charCount": 9063,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Charles%20Darwin",
+      "chunkCount": 19
+    },
+    {
+      "id": "chemistry",
+      "title": "Chemistry",
+      "charCount": 6715,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Chemistry",
+      "chunkCount": 14
+    },
+    {
+      "id": "climate",
+      "title": "Climate",
+      "charCount": 2034,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Climate",
+      "chunkCount": 5
+    },
+    {
+      "id": "computer",
+      "title": "Computer",
+      "charCount": 19543,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Computer",
+      "chunkCount": 40
+    },
+    {
+      "id": "dna",
+      "title": "DNA",
+      "charCount": 12711,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/DNA",
+      "chunkCount": 26
+    },
+    {
+      "id": "earth",
+      "title": "Earth",
+      "charCount": 15875,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Earth",
+      "chunkCount": 32
+    },
+    {
+      "id": "electricity",
+      "title": "Electricity",
+      "charCount": 11757,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Electricity",
+      "chunkCount": 24
+    },
+    {
+      "id": "enzyme",
+      "title": "Enzyme",
+      "charCount": 8685,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Enzyme",
+      "chunkCount": 18
+    },
+    {
+      "id": "freebsd",
+      "title": "FreeBSD",
+      "charCount": 1419,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/FreeBSD",
+      "chunkCount": 3
+    },
+    {
+      "id": "gene",
+      "title": "Gene",
+      "charCount": 3140,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Gene",
+      "chunkCount": 7
+    },
+    {
+      "id": "gravity",
+      "title": "Gravity",
+      "charCount": 8233,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Gravity",
+      "chunkCount": 17
+    },
+    {
+      "id": "html",
+      "title": "HTML",
+      "charCount": 2140,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/HTML",
+      "chunkCount": 5
+    },
+    {
+      "id": "internet",
+      "title": "Internet",
+      "charCount": 2959,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Internet",
+      "chunkCount": 6
+    },
+    {
+      "id": "isaac-newton",
+      "title": "Isaac Newton",
+      "charCount": 8175,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Isaac%20Newton",
+      "chunkCount": 17
+    },
+    {
+      "id": "linus-torvalds",
+      "title": "Linus Torvalds",
+      "charCount": 1131,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Linus%20Torvalds",
+      "chunkCount": 3
+    },
+    {
+      "id": "linux",
+      "title": "Linux",
+      "charCount": 10083,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Linux",
+      "chunkCount": 21
+    },
+    {
+      "id": "local-area-network",
+      "title": "Local area network",
+      "charCount": 2456,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Local%20area%20network",
+      "chunkCount": 5
+    },
+    {
+      "id": "mars",
+      "title": "Mars",
+      "charCount": 14600,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Mars",
+      "chunkCount": 30
+    },
+    {
+      "id": "mathematics",
+      "title": "Mathematics",
+      "charCount": 7209,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Mathematics",
+      "chunkCount": 15
+    },
+    {
+      "id": "open-source",
+      "title": "Open source",
+      "charCount": 1268,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Open%20source",
+      "chunkCount": 3
+    },
+    {
+      "id": "operating-system",
+      "title": "Operating system",
+      "charCount": 2651,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Operating%20system",
+      "chunkCount": 6
+    },
+    {
+      "id": "photosynthesis",
+      "title": "Photosynthesis",
+      "charCount": 6610,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Photosynthesis",
+      "chunkCount": 14
+    },
+    {
+      "id": "physics",
+      "title": "Physics",
+      "charCount": 15756,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Physics",
+      "chunkCount": 32
+    },
+    {
+      "id": "programming-language",
+      "title": "Programming language",
+      "charCount": 9977,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Programming%20language",
+      "chunkCount": 20
+    },
+    {
+      "id": "protein",
+      "title": "Protein",
+      "charCount": 4184,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Protein",
+      "chunkCount": 9
+    },
+    {
+      "id": "software-engineering",
+      "title": "Software engineering",
+      "charCount": 1980,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Software%20engineering",
+      "chunkCount": 4
+    },
+    {
+      "id": "solar-system",
+      "title": "Solar System",
+      "charCount": 8988,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Solar%20System",
+      "chunkCount": 18
+    },
+    {
+      "id": "virus",
+      "title": "Virus",
+      "charCount": 13135,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Virus",
+      "chunkCount": 27
+    },
+    {
+      "id": "water",
+      "title": "Water",
+      "charCount": 9757,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/Water",
+      "chunkCount": 20
+    },
+    {
+      "id": "world-wide-web",
+      "title": "World Wide Web",
+      "charCount": 768,
+      "sourceUrl": "https://simple.wikipedia.org/wiki/World%20Wide%20Web",
+      "chunkCount": 2
+    }
+  ]
+}
