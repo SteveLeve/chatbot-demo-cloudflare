@@ -14,7 +14,7 @@ export function SidebarSection({
     <div className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full text-left py-3 px-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset dark:focus:ring-blue-400"
+        className="flex items-center justify-between w-full text-left py-3 px-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors min-h-[44px] focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-inset dark:focus:ring-blue-400"
         aria-expanded={isOpen}
         aria-controls={contentId}
       >
