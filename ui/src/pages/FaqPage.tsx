@@ -43,7 +43,7 @@ function FaqQuestion({
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pr-4">
           {question}
         </h3>
-        <span className="text-gray-500 dark:text-gray-400 text-xl flex-shrink-0">
+        <span className="text-gray-500 dark:text-gray-400 text-xl shrink-0">
           {isOpen ? '−' : '+'}
         </span>
       </button>

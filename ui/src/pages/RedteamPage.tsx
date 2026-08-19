@@ -77,7 +77,7 @@ function ScenarioDetail({
           </h3>
         </div>
         <span
-          className={`text-xs font-medium px-2 py-1 rounded ${behaviorClass(scenario.observedOutcome.behavior)}`}
+          className={`text-xs font-medium px-2 py-1 rounded-sm ${behaviorClass(scenario.observedOutcome.behavior)}`}
         >
           Expected: {scenario.observedOutcome.behavior}
         </span>
@@ -150,7 +150,7 @@ function ScenarioDetail({
               Live answer
             </p>
             <span
-              className={`inline-block text-xs font-medium px-2 py-0.5 rounded mb-2 ${behaviorClass(liveResult.behavior)}`}
+              className={`inline-block text-xs font-medium px-2 py-0.5 rounded-sm mb-2 ${behaviorClass(liveResult.behavior)}`}
             >
               {liveResult.behavior}
             </span>
