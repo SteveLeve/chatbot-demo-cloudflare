@@ -7,7 +7,7 @@ export function SidebarToggleButton({
   return (
     <button
       onClick={onClick}
-      className="lg:hidden p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+      className="lg:hidden p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus:outline-hidden focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
       aria-label={isOpen ? 'Close sidebar' : 'Open sidebar'}
       aria-expanded={isOpen}
     >

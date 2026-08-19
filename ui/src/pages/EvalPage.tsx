@@ -82,7 +82,7 @@ function CaseRow({
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-1">
             <span
-              className={`text-xs font-semibold px-2 py-0.5 rounded ${passClass}`}
+              className={`text-xs font-semibold px-2 py-0.5 rounded-sm ${passClass}`}
             >
               {passLabel}
             </span>

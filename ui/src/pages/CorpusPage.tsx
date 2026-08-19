@@ -35,7 +35,7 @@ function CorpusList() {
         <Link
           key={article.id}
           to={`/docs/corpus/${article.id}`}
-          className="block p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-sm transition-all"
+          className="block p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-xs transition-all"
         >
           <div className="flex items-start justify-between gap-4">
             <div>

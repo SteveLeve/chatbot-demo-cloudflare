@@ -147,7 +147,7 @@ export function EducationalSidebar({
           <div className="hidden lg:flex items-center justify-center p-2 border-b border-gray-200 dark:border-gray-700">
             <button
               onClick={onToggleCollapse}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus:outline-hidden focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
@@ -190,7 +190,7 @@ export function EducationalSidebar({
           </h2>
           <button
             onClick={onClose}
-            className="p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+            className="p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus:outline-hidden focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             aria-label="Close sidebar"
           >
             <svg
