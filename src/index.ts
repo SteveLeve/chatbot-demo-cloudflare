@@ -55,6 +55,7 @@ import {
 	optOutOfLogging,
 	extractPrivacySessionId,
 } from './utils/privacy-data';
+import { runPragmaOptimize } from './utils/d1-maintenance';
 
 import type { AppEnv } from './types/app-env';
 
@@ -1156,8 +1157,8 @@ app.notFound((c) => {
 // ============================================================================
 
 /**
- * Cleanup expired chat sessions (runs daily at 2 AM UTC)
- * Marks sessions as inactive if they've expired
+ * Cleanup expired chat sessions and refresh D1 query-planner stats
+ * (runs daily at 2 AM UTC).
  */
 async function handleScheduled(_controller: ScheduledController, env: Env) {
 	const logger = createLogger({ event: 'scheduled-cleanup' }, env.LOG_LEVEL);
@@ -1181,6 +1182,13 @@ async function handleScheduled(_controller: ScheduledController, env: Env) {
 		logger.info('Cleanup completed', {
 			changedRows: (result as any).meta?.changes || 0,
 		});
+
+		try {
+			await runPragmaOptimize(env.DATABASE);
+			logger.info('PRAGMA optimize completed');
+		} catch (error) {
+			logger.warn('PRAGMA optimize failed (non-fatal)', { error });
+		}
 	} catch (error) {
 		logger.error('Scheduled cleanup failed', error);
 	}

@@ -75,12 +75,17 @@ The project uses **two separate dev servers** running in parallel:
    - Use cases: Query embedding, document chunk embedding
    - Performance: ~100-200ms per request
    - Cost: Free tier included
+   - Changing this model requires recreating the Vectorize index (#20)
 
 2. **Text Generation**: `@cf/meta/llama-4-scout-17b-16e-instruct`
    - Purpose: Generate natural language answers; supports function calling for Agents SDK
    - Context window: 131K tokens
    - Temperature: 0.0 (factual responses in basic RAG)
    - Performance: edge-hosted MoE (17B active / 16 experts)
+
+3. **Reranker**: `@cf/baai/bge-reranker-base`
+   - Purpose: Cross-encoder rerank of Vectorize candidates on the Agents SDK retrieve path (#21)
+   - Not used by frozen basic-rag, eval, or red-team `/try`
 
 ### 3. Vectorize (Vector Database)
 
@@ -160,6 +165,7 @@ CREATE VIRTUAL TABLE chunks_fts USING fts5(
 - `idx_documents_article_id` on `documents(article_id)`
 - `idx_chunks_document_id` on `chunks(document_id)`
 - `idx_chunks_document_index` on `chunks(document_id, chunk_index)`
+- `idx_chat_messages_session_created` on `chat_messages(session_id, created_at)` (#17)
 
 ### 5. R2 (Object Storage)
 
@@ -196,8 +202,8 @@ CREATE VIRTUAL TABLE chunks_fts USING fts5(
 **Namespaces**:
 
 1. **EMBEDDINGS_CACHE**: Cache query embeddings
-   - Key pattern: `embed:{sha256(text)}`
-   - TTL: 24 hours
+   - Key pattern: `emb:{EMBEDDING_MODEL}:{sha256(text)}` (model id prevents a later #20 swap from serving the wrong dimension)
+   - TTL: 7 days
    - Reduces duplicate embedding generation
 
 2. **RAG_CACHE**: Cache complete RAG results
@@ -536,14 +542,16 @@ The target architecture adds, on top of the pipeline documented above:
 Full detail: [`spec/spec-agentic-rag-portfolio.md`](spec/spec-agentic-rag-portfolio.md) ·
 phases and dependencies: [`roadmaps/agentic-rag.md`](roadmaps/agentic-rag.md).
 
-Reranking and hybrid search are not abandoned — they are retrieval-quality work that can become
-agent tools, tracked separately (#21) rather than as the project's headline direction.
+Reranking is implemented as a cross-encoder step **inside** `retrieve_from_corpus`
+(`@cf/baai/bge-reranker-base`, candidateK=10 / keep=`topK`). Hybrid search remains
+backlog. The frozen basic-rag path stays vector-only for comparison (#50 will remove it).
 
 ### Model status
 
 Generation uses `@cf/meta/llama-4-scout-17b-16e-instruct` (Phase 0 / #32): non-deprecated, function
 calling, 131k context. IDs live in `src/config/models.ts`. Embeddings remain
-`@cf/baai/bge-base-en-v1.5` (changing them requires recreating Vectorize — see #20).
+`@cf/baai/bge-base-en-v1.5` (changing them requires recreating Vectorize — see #20). Agent retrieve
+reranks with `@cf/baai/bge-reranker-base` (#21).
 
 ## Future Enhancements
 

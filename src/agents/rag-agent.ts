@@ -30,7 +30,7 @@ function buildAgentSystemPrompt(): string {
 
 WORKFLOW:
 1. Call retrieve_from_corpus with the user's question (or a focused sub-query).
-2. Answer using ONLY the returned chunks. Cite sources as [N] matching chunk numbers.
+2. Chunks are already reranked by a cross-encoder — answer using ONLY those chunks. Cite sources as [N] matching chunk numbers.
 3. If retrieval returns no relevant chunks, say you cannot answer from the corpus.
 
 RULES:
@@ -159,7 +159,17 @@ export class RAGAgent extends AIChatAgent<Cloudflare.Env, RAGAgentState> {
 						onRetrieveHit: (detail) => {
 							this.pushTrace({
 								type: 'retrieve',
-								summary: `Retrieved ${detail.chunkIds?.length ?? 0} chunk(s)`,
+								summary: `Retrieved ${detail.candidateCount ?? detail.chunkIds?.length ?? 0} candidate chunk(s)`,
+								detail,
+								timestamp: Date.now(),
+							});
+						},
+						onRerankComplete: (detail) => {
+							this.pushTrace({
+								type: 'retrieve',
+								summary: detail.fallback
+									? `Rerank failed; using Vectorize order (${detail.chunkIds?.length ?? 0} chunk(s))`
+									: `Reranked to ${detail.chunkIds?.length ?? 0} chunk(s)`,
 								detail,
 								timestamp: Date.now(),
 							});

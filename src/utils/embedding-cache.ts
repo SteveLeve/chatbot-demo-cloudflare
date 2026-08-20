@@ -1,4 +1,5 @@
 import type { Env } from '../types';
+import { EMBEDDING_MODEL } from '../config/models';
 import { createLogger } from './logger';
 
 const WEEK_IN_SECONDS = 7 * 24 * 60 * 60;
@@ -15,6 +16,14 @@ async function hashText(text: string): Promise<string> {
 	return base64;
 }
 
+/**
+ * KV key for a query embedding. Includes the model id so a later swap
+ * (see #20) cannot serve stale vectors of the wrong dimension.
+ */
+export async function embeddingCacheKey(text: string): Promise<string> {
+	return `emb:${EMBEDDING_MODEL}:${await hashText(text)}`;
+}
+
 export async function getCachedEmbedding(
 	text: string,
 	env: Env,
@@ -29,7 +38,7 @@ export async function getCachedEmbedding(
 		return null;
 	}
 
-	const cacheKey = `emb:${await hashText(text)}`;
+	const cacheKey = await embeddingCacheKey(text);
 	const start = Date.now();
 
 	try {
@@ -66,7 +75,7 @@ export async function cacheEmbedding(
 		return;
 	}
 
-	const cacheKey = `emb:${await hashText(text)}`;
+	const cacheKey = await embeddingCacheKey(text);
 	try {
 		await env.EMBEDDINGS_CACHE.put(cacheKey, JSON.stringify(embedding), {
 			expirationTtl: WEEK_IN_SECONDS,

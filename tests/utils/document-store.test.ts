@@ -51,6 +51,25 @@ function createMockDatabase() {
 							results: chunks.filter((c) => c.document_id === documentId),
 						};
 					}
+					if (sql.includes('JOIN documents') && sql.includes('c.id IN')) {
+						const idSet = new Set(args as string[]);
+						return {
+							results: chunks
+								.filter((c) => idSet.has(c.id))
+								.map((c) => {
+									const doc = documents.get(c.document_id);
+									return {
+										id: c.id,
+										document_id: c.document_id,
+										text: c.text,
+										chunk_index: c.chunk_index,
+										created_at: c.created_at,
+										title: doc?.title,
+										article_id: doc?.article_id,
+									};
+								}),
+						};
+					}
 					return { results: [] };
 				}),
 				run: vi.fn(async () => {
@@ -219,6 +238,38 @@ describe('DocumentStore', () => {
 
 			const fetched = await store.getDocumentByArticleId('article-2');
 			expect(fetched?.id).toBe('doc-article-2');
+		});
+	});
+
+	describe('getChunksWithMetadata', () => {
+		it('hydrates title and articleId without parsing JSON metadata blobs', async () => {
+			const store = createStore(db);
+			const now = Date.now();
+
+			db._documents.set('doc-1', {
+				id: 'doc-1',
+				article_id: 'artificial-intelligence',
+				title: 'Artificial intelligence',
+				metadata: JSON.stringify({ unused: true }),
+				created_at: now,
+				updated_at: now,
+			});
+			db._chunks.push({
+				id: 'chunk-1',
+				document_id: 'doc-1',
+				text: 'AI is intelligence demonstrated by machines.',
+				chunk_index: 0,
+				metadata: JSON.stringify({ title: 'unused' }),
+				created_at: now,
+			});
+
+			const chunks = await store.getChunksWithMetadata(['chunk-1']);
+
+			expect(chunks).toHaveLength(1);
+			expect(chunks[0]?.title).toBe('Artificial intelligence');
+			expect(chunks[0]?.articleId).toBe('artificial-intelligence');
+			expect(chunks[0]?.metadata).toEqual({});
+			expect(chunks[0]?.documentMetadata).toEqual({});
 		});
 	});
 

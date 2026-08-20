@@ -11,6 +11,12 @@ export interface RetrieveTraceDetail {
 	chunkIds?: string[];
 	query?: string;
 	matchCount?: number;
+	/** Vectorize candidate count before rerank (#21). */
+	candidateCount?: number;
+	/** Cross-encoder scores for the kept chunks, in rerank order. */
+	rerankScores?: number[];
+	/** True when rerank failed and Vectorize order was kept. */
+	fallback?: boolean;
 }
 
 export interface ToolTraceDetail {
