@@ -329,17 +329,17 @@ export class DocumentStore {
 
 		try {
 			const placeholders = chunkIds.map(() => '?').join(',');
+			// Retrieval never reads chunk/document JSON blobs (#17) — skip
+			// those columns so we do not JSON.parse in the hot path.
 			const query = `
         SELECT
           c.id,
           c.document_id,
           c.text,
           c.chunk_index,
-          c.metadata as chunk_metadata,
           c.created_at,
           d.title,
-          d.article_id,
-          d.metadata as document_metadata
+          d.article_id
         FROM chunks c
         JOIN documents d ON c.document_id = d.id
         WHERE c.id IN (${placeholders})
@@ -355,11 +355,11 @@ export class DocumentStore {
 				documentId: row.document_id,
 				text: row.text,
 				chunkIndex: row.chunk_index,
-				metadata: JSON.parse(row.chunk_metadata),
+				metadata: {},
 				createdAt: row.created_at,
 				title: row.title,
 				articleId: row.article_id,
-				documentMetadata: JSON.parse(row.document_metadata),
+				documentMetadata: {},
 			}));
 
 			this.logger.endTimer('getChunksWithMetadata', { found: chunks.length });

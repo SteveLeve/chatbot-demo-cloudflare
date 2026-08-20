@@ -97,6 +97,8 @@ describe('retrieveFromCorpus', () => {
 
 		expect(result.chunks).toHaveLength(1);
 		expect(result.sources[0]?.title).toBe('Artificial intelligence');
+		expect(result.sources[0]?.articleId).toBe('artificial-intelligence');
+		expect(result.sources[0]?.documentId).toBe('doc-1');
 		expect(result.contextText).toContain('Artificial intelligence');
 	});
 
@@ -135,6 +137,7 @@ describe('runRetrieveFromCorpusTool', () => {
 			onRetrieveStart: vi.fn(),
 			onRetrieveEmpty: vi.fn(),
 			onRetrieveHit: vi.fn(),
+			onRerankComplete: vi.fn(),
 		};
 
 		vi.spyOn(
@@ -160,6 +163,7 @@ describe('runRetrieveFromCorpusTool', () => {
 		expect(handlers.onRetrieveStart).toHaveBeenCalledOnce();
 		expect(handlers.onRetrieveEmpty).toHaveBeenCalledWith('unknown topic');
 		expect(handlers.onRetrieveHit).not.toHaveBeenCalled();
+		expect(handlers.onRerankComplete).not.toHaveBeenCalled();
 		expect(result.chunkCount).toBe(0);
 	});
 
@@ -169,6 +173,7 @@ describe('runRetrieveFromCorpusTool', () => {
 			onRetrieveStart: vi.fn(),
 			onRetrieveEmpty: vi.fn(),
 			onRetrieveHit: vi.fn(),
+			onRerankComplete: vi.fn(),
 		};
 
 		vi.spyOn(
@@ -204,8 +209,85 @@ describe('runRetrieveFromCorpusTool', () => {
 		);
 
 		expect(handlers.onRetrieveHit).toHaveBeenCalledOnce();
+		expect(handlers.onRerankComplete).toHaveBeenCalledOnce();
 		expect(handlers.onRetrieveEmpty).not.toHaveBeenCalled();
 		expect(result.chunkCount).toBe(1);
 		expect(result.sources).toHaveLength(1);
+	});
+
+	it('reranks Vectorize candidates and keeps topK in rerank order', async () => {
+		const env = createMockEnv();
+		env.AI.run = vi.fn().mockResolvedValue({
+			response: [
+				{ id: 1, score: 0.95 },
+				{ id: 0, score: 0.4 },
+			],
+		});
+		const handlers = {
+			onRetrieveStart: vi.fn(),
+			onRetrieveEmpty: vi.fn(),
+			onRetrieveHit: vi.fn(),
+			onRerankComplete: vi.fn(),
+		};
+
+		vi.spyOn(
+			await import('../../src/utils/embedding-cache'),
+			'getCachedEmbedding',
+		).mockResolvedValue([0.1]);
+
+		vi.spyOn(
+			await import('../../src/utils/document-store'),
+			'createDocumentStore',
+		).mockReturnValue({
+			queryVectors: vi.fn().mockResolvedValue([
+				{ id: 'c1', score: 0.9 },
+				{ id: 'c2', score: 0.8 },
+			]),
+			getChunksWithMetadata: vi.fn().mockResolvedValue([
+				{
+					id: 'c1',
+					documentId: 'd1',
+					text: 'Weaker match about history.',
+					chunkIndex: 0,
+					title: 'History',
+					articleId: 'history',
+					documentMetadata: {},
+					metadata: {},
+					createdAt: 0,
+				},
+				{
+					id: 'c2',
+					documentId: 'd2',
+					text: 'Stronger match about AI.',
+					chunkIndex: 1,
+					title: 'Artificial intelligence',
+					articleId: 'artificial-intelligence',
+					documentMetadata: {},
+					metadata: {},
+					createdAt: 0,
+				},
+			]),
+		} as unknown as DocumentStore);
+
+		const result = await runRetrieveFromCorpusTool(
+			'What is AI?',
+			1,
+			env,
+			handlers,
+		);
+
+		expect(result.chunkCount).toBe(1);
+		expect(result.sources[0]?.chunkId).toBe('c2');
+		expect(result.contextText).toMatch(/^\[1] Artificial intelligence:/);
+		expect(handlers.onRetrieveHit).toHaveBeenCalledWith(
+			expect.objectContaining({ candidateCount: 2, chunkIds: ['c1', 'c2'] }),
+		);
+		expect(handlers.onRerankComplete).toHaveBeenCalledWith(
+			expect.objectContaining({
+				chunkIds: ['c2'],
+				rerankScores: [0.95],
+				fallback: false,
+			}),
+		);
 	});
 });

@@ -87,7 +87,7 @@ async function evaluateCase(env: Env, caseId: string): Promise<CaseEvalResult> {
 		});
 
 		const retrievedArticleIds = [
-			...new Set(retrieval.sources.map((s) => s.documentId)),
+			...new Set(retrieval.sources.map((s) => s.articleId)),
 		];
 
 		const answer = await generateAnswer(

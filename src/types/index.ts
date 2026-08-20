@@ -120,6 +120,8 @@ export interface VectorMatch {
  */
 export interface DocumentSource {
 	documentId: string;
+	/** Corpus slug (e.g. `artificial-intelligence`), distinct from D1 `doc-*` id. */
+	articleId: string;
 	chunkId: string;
 	title: string;
 	chunkText: string;

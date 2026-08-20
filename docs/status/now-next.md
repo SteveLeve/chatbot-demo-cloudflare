@@ -1,47 +1,39 @@
 # Status: Now & Next
 
-- **Last Updated**: 2026-08-11
+- **Last Updated**: 2026-08-19
 - **Owner**: Project Maintainer
 
 ## Now
 
-- **Epic #30 (Cloudflare-first agentic RAG reimagine) complete** — all 5 phases merged to `main`.
-- Phase 5 red-team demo mode **merged** (PR #46 / #36): curated scenarios, `GET /api/v1/redteam/scenarios` + optional `POST /try` by id, ChatLogger skip gate, `/docs/redteam` page, Playwright coverage.
-- Phase 4 eval reporting **merged** (PR #45 / #35).
-- Phase 3 Agents SDK / trace UI **merged** (PR #41 / #34).
-- Code quality automation **complete** (#40): Phases 1–3 (PR #42), Node 24 CI pin (PR #43), `protect-main` requires `root` + `ui`; Phase 5 follow-up landed a coverage floor, root `--max-warnings 0`, `format:check` in CI, and a Dependency Review Action.
-- Dependency housekeeping: minor/patch bumps applied across root and `ui/` (closed all 13 `ui/` npm-audit findings via in-range `postcss`/`react-router-dom`/`vite` bumps); `.github/dependabot.yml` added for ongoing automation; major bumps (Vitest 4, ESLint 10, TypeScript 7, React 19, Vite 8, Tailwind 4) tracked in #54.
-- Prior hardening remains shipped: security (PRs #22/#23), perf (#28), observability phase 1 (#29); model refresh (#38), corpus (#39).
+- **#17 D1 query optimizations implemented** — skip unused JSON.parse on retrieval hydrate, `idx_chat_messages_session_created`, `PRAGMA optimize` in the daily cron, batched `message_chunks` inserts. Apply `migrations/0006_chat_messages_session_created.sql` remotely before deploy (`npm run db:migrate:remote`).
+- **#20 prep implemented (no index recreation)** — live eval Hit@K now scores corpus slugs (`articleId`) instead of D1 `doc-*` ids; KV embedding keys are `emb:{model}:{hash}` so a later BGE-Large swap cannot mix dimensions. Actual 1024-d cutover remains gated.
+- **#21 reranker implemented** — `@cf/baai/bge-reranker-base` runs inside `retrieve_from_corpus` (candidateK=10, keep=`topK`). Frozen basic-rag / eval / red-team `/try` stay vector-only.
 
 ## Next
 
-- **P3 backlog:** D1 query optimizations (#17).
-- **P4 backlog:** BGE-Large upgrade (#20) and reranking agent tool (#21) — deferred post-#32; see issue comments.
+- **#20 decision gate:** after deploy, run a live eval snapshot (article ids now match). Cut over to BGE-Large only if the educational story is “show an embedding-model migration”; otherwise leave #20 P4 / close as not justified at ~37-article demo scale. Do not build a long-lived dual-index A/B unless that follow-up is approved.
 - Publish privacy policy page and consent flow (follow-on to #19).
 - **#50** — remove legacy Basic RAG path, converge demo naming on "RAG Demo" (follow-up from PR #49 review).
-- **#54** — deferred major dependency bumps (Vitest 4 + `@cloudflare/vitest-pool-workers` 0.21, ESLint 10, TypeScript 7, React 19, Vite 8, Tailwind 4); `@cloudflare/vitest-pool-workers` is the priority (fixes 7 high-severity dev-tooling `npm audit` findings).
+- **#54** — remaining major dependency bumps if any; see issue.
 - Deprioritized vs reimagining: OTLP dashboards (#18).
 
 ## Recently closed
 
+- Epic #30 (Cloudflare-first agentic RAG reimagine) — all 5 phases merged to `main`.
+- Code quality automation (#40); dependency housekeeping (Dependabot + #54 for leftover majors).
 - #12, #13 — perf shipped in PR #28 (embedding cache, batch inserts).
-- #14, #15 — ingestion workflow timeouts + idempotent step IDs; PR #49 review closed two
-  follow-on gaps: legacy (pre-deterministic-id) documents re-ingesting under a mismatched id, and
-  chunk/vector count shrinkage leaving stale D1 rows/Vectorize vectors behind.
-- #19 — privacy export / delete / opt-out endpoints; PR #49 review closed two follow-on gaps: a
-  session id could be echoed to the client even when session creation failed (phantom id), and
-  multi-turn conversations minted a new session per turn so only the latest turn was
-  exportable/deletable — sessions are now reused within the existing 30-minute self-service window.
+- #14, #15 — ingestion workflow timeouts + idempotent step IDs.
+- #19 — privacy export / delete / opt-out endpoints.
 - #26, #27 — security test coverage gaps.
 
 ## Risks/Watch
 
 - Escape hatch: evaluate runbook criteria 1–8 at each phase start/merge (`docs/runbooks/rework-branch-cutover.md`). Cutover gate: **passed**.
 - Durable Objects configured in Phase 3 (#34) — `RAGAgent` SQLite-backed DO + trace panel.
-- Eval must stay labeled **demo-scale**; never overclaim on small gold set.
-- Red-team surface must stay curated + educational — no freeform attack tooling.
-- Scope creep into unbounded corpus or third-party agent orchestration frameworks — enforce #30 non-goals.
+- Eval must stay labeled **demo-scale**; never overclaim on small gold set. Live Hit@K is now internally consistent but still not a model leaderboard.
+- Red-team surface must stay curated + educational — no freeform attack tooling. Live `/try` does not use the reranker.
 - Rate limiting false positives during peak demo traffic — monitor logs.
+- Ingest rate limit is 10/min vs 37 corpus articles — any later #20 re-ingest must pace the client.
 
 ## References
 
@@ -51,6 +43,6 @@
 - Roadmap: `docs/roadmaps/agentic-rag.md`
 - Doc/code disposition audit: `docs/status/doc-audit-agentic-rag.md`
 - Rework cutover runbook: `docs/runbooks/rework-branch-cutover.md`
-- Prior issues: #18 (observability), #19 (compliance), #20/#21 (model & reranking — reconcile with #32), #6–#11 (security), #50 (basic-rag removal/rename), #54 (deferred major dependency bumps)
-- Code quality guide: `docs/guides/code-quality-automation.md` (Phase 5: format/lint strictness, coverage floor, dependency review)
+- Prior issues: #17 (D1), #18 (observability), #19 (compliance), #20/#21 (model & reranking), #6–#11 (security), #50 (basic-rag removal/rename), #54 (deferred major dependency bumps)
+- Code quality guide: `docs/guides/code-quality-automation.md`
 - Prior PRs: #22, #23, #28, #29, #31, #37, #38, #41, #45, #46, #49

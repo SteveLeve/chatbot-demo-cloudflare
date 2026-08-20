@@ -75,12 +75,13 @@ the Workflow and Durable Object classes: `export { IngestionWorkflow, RAGAgent }
 
 **Storage split:** R2 (`ARTICLES_BUCKET`) holds full curated articles; D1 (`DATABASE`) holds chunk/document
 metadata + FTS5; Vectorize (`VECTOR_INDEX`) holds embeddings (`@cf/baai/bge-base-en-v1.5`, 768-dim —
-changing the embedding model requires recreating the index, see issue #20). KV caches embeddings and query
-results. All of D1/Vectorize/R2 are `remote: true` in `wrangler.jsonc` — there is no local Vectorize mode,
-so `npm run dev` talks to real remote resources even in dev.
+changing the embedding model requires recreating the index, see issue #20). KV embedding keys include
+the model id (`emb:{model}:{hash}`). All of D1/Vectorize/R2 are `remote: true` in `wrangler.jsonc` —
+there is no local Vectorize mode, so `npm run dev` talks to real remote resources even in dev.
 
 **Generation model:** `@cf/meta/llama-4-scout-17b-16e-instruct` (function-calling capable, 131k context),
-pinned in `src/config/models.ts` — change model IDs there, not inline at call sites.
+pinned in `src/config/models.ts` — change model IDs there, not inline at call sites. Agent retrieve
+reranks with `@cf/baai/bge-reranker-base` (#21); do not add rerank to frozen `basic-rag.ts`.
 
 **Trace propagation:** `src/utils/trace.ts` implements W3C traceparent (`traceId`/`spanId`). Both the
 agentic trace panel and Workers logs read the same IDs — don't invent a second tracing scheme.
