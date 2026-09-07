@@ -319,7 +319,7 @@ After validating basic RAG works, the project moves toward Cloudflare-first agen
 3. Phase 3 (#34): Agents SDK Durable Object agent with a transparent step/trace panel
 4. Phase 4 (#35): eval reporting over a demo-scale gold set
 5. Phase 5 (#36): red-team / adversarial demo mode
-6. Retrieval quality (reranking, hybrid search) tracked separately in #21
+6. Retrieval quality: reranking shipped in #21 (agent retrieve path); hybrid search remains backlog. #20 BGE-Large closed as not planned.
 
 ## Resources
 

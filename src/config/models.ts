@@ -4,8 +4,8 @@
  * Generation: Llama 4 Scout — non-deprecated, function calling, 131k context
  * (Phase 0 / #32). Required before Agents SDK tool loop (Phase 3 / #34).
  *
- * Embeddings: BGE base remains current; changing it requires recreating the
- * Vectorize index (see #20 / #32 embedding notes).
+ * Embeddings: BGE base remains current (#20 BGE-Large closed as not planned).
+ * Changing it requires recreating the Vectorize index (#32 embedding notes).
  *
  * Reranker: BGE reranker-base is used only on the Agents SDK retrieve path
  * (#21) — not on frozen basic-rag / eval / red-team try.

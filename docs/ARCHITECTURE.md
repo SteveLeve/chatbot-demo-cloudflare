@@ -75,7 +75,7 @@ The project uses **two separate dev servers** running in parallel:
    - Use cases: Query embedding, document chunk embedding
    - Performance: ~100-200ms per request
    - Cost: Free tier included
-   - Changing this model requires recreating the Vectorize index (#20)
+   - Changing this model requires recreating the Vectorize index (closed #20 — stay on bge-base)
 
 2. **Text Generation**: `@cf/meta/llama-4-scout-17b-16e-instruct`
    - Purpose: Generate natural language answers; supports function calling for Agents SDK
@@ -202,7 +202,7 @@ CREATE VIRTUAL TABLE chunks_fts USING fts5(
 **Namespaces**:
 
 1. **EMBEDDINGS_CACHE**: Cache query embeddings
-   - Key pattern: `emb:{EMBEDDING_MODEL}:{sha256(text)}` (model id prevents a later #20 swap from serving the wrong dimension)
+   - Key pattern: `emb:{EMBEDDING_MODEL}:{sha256(text)}` (model id prevents mixing dimensions if the embedding model ever changes)
    - TTL: 7 days
    - Reduces duplicate embedding generation
 
@@ -550,7 +550,7 @@ backlog. The frozen basic-rag path stays vector-only for comparison (#50 will re
 
 Generation uses `@cf/meta/llama-4-scout-17b-16e-instruct` (Phase 0 / #32): non-deprecated, function
 calling, 131k context. IDs live in `src/config/models.ts`. Embeddings remain
-`@cf/baai/bge-base-en-v1.5` (changing them requires recreating Vectorize — see #20). Agent retrieve
+`@cf/baai/bge-base-en-v1.5` (changing them requires recreating Vectorize; #20 BGE-Large cutover was closed as not planned). Agent retrieve
 reranks with `@cf/baai/bge-reranker-base` (#21).
 
 ## Future Enhancements

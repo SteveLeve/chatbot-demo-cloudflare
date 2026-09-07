@@ -17,8 +17,8 @@ async function hashText(text: string): Promise<string> {
 }
 
 /**
- * KV key for a query embedding. Includes the model id so a later swap
- * (see #20) cannot serve stale vectors of the wrong dimension.
+ * KV key for a query embedding. Includes the model id so a later model
+ * swap cannot serve stale vectors of the wrong dimension.
  */
 export async function embeddingCacheKey(text: string): Promise<string> {
 	return `emb:${EMBEDDING_MODEL}:${await hashText(text)}`;

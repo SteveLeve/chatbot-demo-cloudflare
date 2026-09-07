@@ -10,6 +10,8 @@ import { createLogger } from '../utils/logger';
 import goldSetJson from '../../data/eval/gold-set.json';
 import {
 	DEFAULT_METRIC_EXPLAINER,
+	articleIdForEval,
+	extractModelText,
 	isRefusalAnswer,
 	judgeAnswer,
 	scoreBehavior,
@@ -26,6 +28,9 @@ import type {
 const goldSet = goldSetJson as EvalGoldSet;
 
 const CONCURRENCY = 2;
+
+/** Cases per child `/eval/run` invocation — stays under Workers Free 50-subrequest cap. */
+export const EVAL_BATCH_SIZE = 6;
 
 function buildGeneratePrompt(context: string): string {
 	return `You are a strict document retrieval system. You have ZERO knowledge beyond what appears in the context below.
@@ -61,7 +66,7 @@ async function generateAnswer(
 			: undefined,
 	)) as GenerationResponse;
 
-	return result.response || 'Unable to generate answer';
+	return extractModelText(result.response) || 'Unable to generate answer';
 }
 
 function average(scores: number[]): number {
@@ -73,35 +78,88 @@ function naMetric(rationale: string): MetricScore {
 	return { score: 0, rationale, passed: true };
 }
 
+function failedCase(options: {
+	caseId: string;
+	question: string;
+	expectedBehavior: CaseEvalResult['expectedBehavior'];
+	expectedArticleIds: string[];
+	error: string;
+	started: number;
+	notes?: string;
+}): CaseEvalResult {
+	return {
+		caseId: options.caseId,
+		question: options.question,
+		expectedBehavior: options.expectedBehavior,
+		expectedArticleIds: options.expectedArticleIds,
+		retrievedArticleIds: [],
+		answer: '',
+		refused: true,
+		retrievalRelevance: {
+			score: 0,
+			rationale: `Case failed: ${options.error}`,
+			passed: false,
+		},
+		faithfulness: {
+			score: 0,
+			rationale: `Case failed: ${options.error}`,
+			passed: false,
+		},
+		groundedness: {
+			score: 0,
+			rationale: `Case failed: ${options.error}`,
+			passed: false,
+		},
+		behaviorPass: false,
+		overallPass: false,
+		latencyMs: Date.now() - options.started,
+		notes: options.notes,
+		error: options.error,
+	};
+}
+
 async function evaluateCase(env: Env, caseId: string): Promise<CaseEvalResult> {
 	const goldCase = goldSet.cases.find((c) => c.id === caseId);
 	if (!goldCase) {
-		throw new Error(`Unknown gold case: ${caseId}`);
+		return failedCase({
+			caseId,
+			question: '',
+			expectedBehavior: 'answer',
+			expectedArticleIds: [],
+			error: `Unknown gold case: ${caseId}`,
+			started: Date.now(),
+		});
 	}
 
 	const started = Date.now();
+	let retrievedArticleIds: string[] = [];
+	let answer = '';
 
 	try {
 		const retrieval = await retrieveFromCorpus(goldCase.question, env, {
 			topK: goldSet.topK,
 		});
 
-		const retrievedArticleIds = [
-			...new Set(retrieval.sources.map((s) => s.articleId)),
+		retrievedArticleIds = [
+			...new Set(
+				retrieval.sources.map((s) =>
+					articleIdForEval({ articleId: s.articleId, title: s.title }),
+				),
+			),
 		];
-
-		const answer = await generateAnswer(
-			env,
-			goldCase.question,
-			retrieval.contextText,
-		);
-		const refused = isRefusalAnswer(answer);
 
 		const retrievalRelevance = scoreRetrievalRelevance({
 			expectedArticleIds: goldCase.expectedArticleIds,
 			retrievedArticleIds,
 			expectedBehavior: goldCase.expectedBehavior,
 		});
+
+		answer = await generateAnswer(
+			env,
+			goldCase.question,
+			retrieval.contextText,
+		);
+		const refused = isRefusalAnswer(answer);
 
 		const behavior = scoreBehavior({
 			expectedBehavior: goldCase.expectedBehavior,
@@ -167,34 +225,25 @@ async function evaluateCase(env: Env, caseId: string): Promise<CaseEvalResult> {
 		};
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Unknown error';
-		return {
-			caseId: goldCase.id,
-			question: goldCase.question,
-			expectedBehavior: goldCase.expectedBehavior,
+		const retrievalRelevance = scoreRetrievalRelevance({
 			expectedArticleIds: goldCase.expectedArticleIds,
-			retrievedArticleIds: [],
-			answer: '',
-			refused: true,
-			retrievalRelevance: {
-				score: 0,
-				rationale: `Case failed: ${message}`,
-				passed: false,
-			},
-			faithfulness: {
-				score: 0,
-				rationale: `Case failed: ${message}`,
-				passed: false,
-			},
-			groundedness: {
-				score: 0,
-				rationale: `Case failed: ${message}`,
-				passed: false,
-			},
-			behaviorPass: false,
-			overallPass: false,
-			latencyMs: Date.now() - started,
-			notes: goldCase.notes,
-			error: message,
+			retrievedArticleIds,
+			expectedBehavior: goldCase.expectedBehavior,
+		});
+		return {
+			...failedCase({
+				caseId: goldCase.id,
+				question: goldCase.question,
+				expectedBehavior: goldCase.expectedBehavior,
+				expectedArticleIds: goldCase.expectedArticleIds,
+				error: message,
+				started,
+				notes: goldCase.notes,
+			}),
+			retrievedArticleIds,
+			answer,
+			refused: isRefusalAnswer(answer),
+			retrievalRelevance,
 		};
 	}
 }
@@ -248,12 +297,78 @@ export function getGoldSet(): EvalGoldSet {
 	return goldSet;
 }
 
-export async function runEvalReport(env: Env): Promise<EvalReport> {
-	const logger = createLogger({ stage: 'eval-run' }, env.LOG_LEVEL);
-	logger.info('Starting demo-scale eval run', { cases: goldSet.cases.length });
+export function chunkCaseIds(ids: string[], size: number): string[][] {
+	const batches: string[][] = [];
+	for (let i = 0; i < ids.length; i += size) {
+		batches.push(ids.slice(i, i + size));
+	}
+	return batches;
+}
 
-	const cases = await mapPool(goldSet.cases, CONCURRENCY, (c) =>
-		evaluateCase(env, c.id),
+export function placeholderBatchReport(
+	caseIds: string[],
+	error: string,
+): EvalReport {
+	const started = Date.now();
+	const cases = caseIds.map((caseId) => {
+		const goldCase = goldSet.cases.find((c) => c.id === caseId);
+		return failedCase({
+			caseId,
+			question: goldCase?.question ?? '',
+			expectedBehavior: goldCase?.expectedBehavior ?? 'answer',
+			expectedArticleIds: goldCase?.expectedArticleIds ?? [],
+			error,
+			started,
+			notes: goldCase?.notes,
+		});
+	});
+	return {
+		demoScale: true,
+		generatedAt: new Date().toISOString(),
+		source: 'live',
+		scoredPath: 'basic-rag',
+		generationModel: GENERATION_MODEL,
+		goldSetVersion: goldSet.version,
+		methodologyLimits: goldSet.methodologyLimits,
+		aggregates: buildAggregates(cases),
+		cases,
+		metricExplainer: {
+			retrievalRelevance: { ...DEFAULT_METRIC_EXPLAINER.retrievalRelevance },
+			faithfulness: { ...DEFAULT_METRIC_EXPLAINER.faithfulness },
+			groundedness: { ...DEFAULT_METRIC_EXPLAINER.groundedness },
+		},
+	};
+}
+
+export function mergeEvalReports(reports: EvalReport[]): EvalReport {
+	const cases = reports.flatMap((report) => report.cases);
+	const latest = reports[reports.length - 1] ?? reports[0];
+	if (!latest) {
+		return placeholderBatchReport([], 'No eval batches returned');
+	}
+	return {
+		...latest,
+		generatedAt: new Date().toISOString(),
+		source: 'live',
+		aggregates: buildAggregates(cases),
+		cases,
+	};
+}
+
+export async function runEvalReport(
+	env: Env,
+	options?: { caseIds?: string[] },
+): Promise<EvalReport> {
+	const logger = createLogger({ stage: 'eval-run' }, env.LOG_LEVEL);
+	const caseIds =
+		options?.caseIds && options.caseIds.length > 0
+			? options.caseIds
+			: goldSet.cases.map((c) => c.id);
+
+	logger.info('Starting demo-scale eval run', { cases: caseIds.length });
+
+	const cases = await mapPool(caseIds, CONCURRENCY, (id) =>
+		evaluateCase(env, id),
 	);
 
 	const report: EvalReport = {

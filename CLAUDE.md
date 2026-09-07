@@ -75,7 +75,7 @@ the Workflow and Durable Object classes: `export { IngestionWorkflow, RAGAgent }
 
 **Storage split:** R2 (`ARTICLES_BUCKET`) holds full curated articles; D1 (`DATABASE`) holds chunk/document
 metadata + FTS5; Vectorize (`VECTOR_INDEX`) holds embeddings (`@cf/baai/bge-base-en-v1.5`, 768-dim —
-changing the embedding model requires recreating the index, see issue #20). KV embedding keys include
+changing the embedding model requires recreating the index; #20 BGE-Large was closed as not planned). KV embedding keys include
 the model id (`emb:{model}:{hash}`). All of D1/Vectorize/R2 are `remote: true` in `wrangler.jsonc` —
 there is no local Vectorize mode, so `npm run dev` talks to real remote resources even in dev.
 
@@ -93,10 +93,12 @@ export/delete/opt-out flows, session-ID authenticated with a short TTL), `securi
 
 **Eval and red-team are first-class demo surfaces**, not test-only tooling: `src/eval/` computes
 faithfulness/groundedness/retrieval-relevance metrics against a small gold set (keep it labeled
-demo-scale — never overclaim), surfaced at `/api/v1/eval/*` and `ui/src/pages/EvalPage.tsx`. `src/redteam/`
-holds curated adversarial scenarios (prompt injection, out-of-corpus, hallucination pressure) with expected
-defenses — deliberately not a freeform attack-tooling surface; scenario runs skip chat logging via the
-ChatLogger gate (`tests/redteam/logging-gate.test.ts`).
+demo-scale — never overclaim), surfaced at `/api/v1/eval/*` and `ui/src/pages/EvalPage.tsx`. Live
+`POST /api/v1/eval/run` fans the gold set into child batches so one invocation stays under the
+Workers Free 50-subrequest cap. `src/redteam/` holds curated adversarial scenarios (prompt injection,
+out-of-corpus, hallucination pressure) with expected defenses — deliberately not a freeform
+attack-tooling surface; scenario runs skip chat logging via the ChatLogger gate
+(`tests/redteam/logging-gate.test.ts`).
 
 ## Testing
 

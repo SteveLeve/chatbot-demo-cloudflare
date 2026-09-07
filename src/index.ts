@@ -37,7 +37,15 @@ import {
 	validateMetadata,
 } from './utils/validation';
 import { getStaticEvalReport } from './eval/report-static';
-import { runEvalReport } from './eval/runner';
+import {
+	EVAL_BATCH_SIZE,
+	chunkCaseIds,
+	getGoldSet,
+	mergeEvalReports,
+	placeholderBatchReport,
+	runEvalReport,
+} from './eval/runner';
+import type { EvalReport } from './eval/types';
 import { getStaticRedteamScenarios } from './redteam/scenarios-static';
 import {
 	tryRedteamScenario,
@@ -789,24 +797,106 @@ app.get('/api/v1/eval/report', (c) => {
 });
 
 /**
- * Live demo-scale eval run (rate-limited; ephemeral — does not persist)
+ * Live demo-scale eval run (rate-limited coordinator; ephemeral — does not persist).
+ * Fans the gold set into child POSTs so each invocation stays under the
+ * Workers Free 50-subrequest cap.
  * POST /api/v1/eval/run
  */
 app.post('/api/v1/eval/run', async (c) => {
 	const logger = createRequestLogger(c, { endpoint: 'eval-run' });
-	logger.info('Starting live demo-scale eval run');
+	const isChild = c.req.header('x-eval-child') === '1';
 
-	const rateLimitResponse = await checkRateLimit(c, c.env.INGEST_RATE_LIMITER, {
-		limit: 5,
-		window: 60,
-		keyPrefix: 'eval-run',
-	});
-	if (rateLimitResponse) {
-		return rateLimitResponse;
+	if (!isChild) {
+		const rateLimitResponse = await checkRateLimit(
+			c,
+			c.env.INGEST_RATE_LIMITER,
+			{
+				limit: 5,
+				window: 60,
+				keyPrefix: 'eval-run',
+			},
+		);
+		if (rateLimitResponse) {
+			return rateLimitResponse;
+		}
+	}
+
+	let caseIds: string[] | undefined;
+	const contentType = c.req.header('content-type') || '';
+	if (contentType.includes('application/json')) {
+		try {
+			const body = (await c.req.json()) as { caseIds?: unknown };
+			if (Array.isArray(body.caseIds)) {
+				caseIds = body.caseIds.filter(
+					(id): id is string => typeof id === 'string' && id.length > 0,
+				);
+			}
+		} catch {
+			caseIds = undefined;
+		}
 	}
 
 	try {
-		const report = await runEvalReport(c.env);
+		if (isChild || (caseIds && caseIds.length > 0)) {
+			logger.info('Running eval batch', {
+				child: isChild,
+				cases: caseIds?.length ?? getGoldSet().cases.length,
+			});
+			const report = await runEvalReport(c.env, { caseIds });
+			return c.json<ApiResponse>({
+				success: true,
+				data: report,
+				metadata: {
+					timestamp: new Date().toISOString(),
+					requestId: c.get('requestId') as string | undefined,
+				},
+			});
+		}
+
+		const batches = chunkCaseIds(
+			getGoldSet().cases.map((goldCase) => goldCase.id),
+			EVAL_BATCH_SIZE,
+		);
+		logger.info('Starting live demo-scale eval run', {
+			cases: getGoldSet().cases.length,
+			batches: batches.length,
+		});
+
+		const origin = new URL(c.req.url).origin;
+		const childReports = await Promise.all(
+			batches.map(async (batch) => {
+				try {
+					const response = await fetch(`${origin}/api/v1/eval/run`, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'x-eval-child': '1',
+						},
+						body: JSON.stringify({ caseIds: batch }),
+					});
+					const payload = (await response.json()) as ApiResponse<EvalReport>;
+					if (!response.ok || !payload.success || !payload.data) {
+						const message =
+							payload.error?.message ||
+							`Eval child batch failed (${response.status})`;
+						logger.warn('Eval child batch failed', {
+							caseIds: batch,
+							status: response.status,
+							message,
+						});
+						return placeholderBatchReport(batch, message);
+					}
+					return payload.data;
+				} catch (error) {
+					const message =
+						error instanceof Error ? error.message : 'Eval child fetch failed';
+					logger.warn('Eval child fetch failed', { caseIds: batch, error });
+					return placeholderBatchReport(batch, message);
+				}
+			}),
+		);
+
+		const report = mergeEvalReports(childReports);
 		return c.json<ApiResponse>({
 			success: true,
 			data: report,
@@ -1076,7 +1166,7 @@ app.get('/api/v1/docs', (c) => {
 			run: {
 				endpoint: '/api/v1/eval/run',
 				method: 'POST',
-				note: 'Optional live re-run against the gold set; rate-limited; ephemeral (does not write to disk)',
+				note: 'Optional live re-run; rate-limited coordinator fans out child batches (Workers Free 50-subrequest cap); ephemeral (does not write to disk)',
 			},
 		},
 		redteam: {
