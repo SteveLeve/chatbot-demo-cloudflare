@@ -364,8 +364,10 @@ Once the basic RAG system is working, you can explore:
    - Phase 3 (#34): Agents SDK Durable Object agent with a step/trace panel
    - Phase 4 (#35): eval reporting · Phase 5 (#36): red-team mode
 
-2. **Retrieval quality** (tracked in #21, now framed as future agent tools):
-   - Reranking, and hybrid search combining vector similarity with D1 FTS5
+2. **Retrieval quality**:
+   - Reranking shipped as a cross-encoder inside the agent retrieve tool (#21)
+   - Hybrid search (vector + D1 FTS5) remains backlog
+   - BGE-Large embedding upgrade (#20) closed as not planned — stay on `bge-base`
 
 3. **Performance Tuning**:
    - Enable caching

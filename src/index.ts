@@ -37,7 +37,15 @@ import {
 	validateMetadata,
 } from './utils/validation';
 import { getStaticEvalReport } from './eval/report-static';
-import { runEvalReport } from './eval/runner';
+import {
+	EVAL_BATCH_SIZE,
+	chunkCaseIds,
+	getGoldSet,
+	mergeEvalReports,
+	placeholderBatchReport,
+	runEvalReport,
+} from './eval/runner';
+import { fetchEvalChildBatch, parseEvalChildResponse } from './eval/fan-out';
 import { getStaticRedteamScenarios } from './redteam/scenarios-static';
 import {
 	tryRedteamScenario,
@@ -55,6 +63,7 @@ import {
 	optOutOfLogging,
 	extractPrivacySessionId,
 } from './utils/privacy-data';
+import { runPragmaOptimize } from './utils/d1-maintenance';
 
 import type { AppEnv } from './types/app-env';
 
@@ -788,24 +797,94 @@ app.get('/api/v1/eval/report', (c) => {
 });
 
 /**
- * Live demo-scale eval run (rate-limited; ephemeral — does not persist)
+ * Live demo-scale eval run (rate-limited coordinator; ephemeral — does not persist).
+ * Fans the gold set into child POSTs so each invocation stays under the
+ * Workers Free 50-subrequest cap.
  * POST /api/v1/eval/run
  */
 app.post('/api/v1/eval/run', async (c) => {
 	const logger = createRequestLogger(c, { endpoint: 'eval-run' });
-	logger.info('Starting live demo-scale eval run');
+	const isChild = c.req.header('x-eval-child') === '1';
 
-	const rateLimitResponse = await checkRateLimit(c, c.env.INGEST_RATE_LIMITER, {
-		limit: 5,
-		window: 60,
-		keyPrefix: 'eval-run',
-	});
-	if (rateLimitResponse) {
-		return rateLimitResponse;
+	if (!isChild) {
+		const rateLimitResponse = await checkRateLimit(
+			c,
+			c.env.INGEST_RATE_LIMITER,
+			{
+				limit: 5,
+				window: 60,
+				keyPrefix: 'eval-run',
+			},
+		);
+		if (rateLimitResponse) {
+			return rateLimitResponse;
+		}
+	}
+
+	let caseIds: string[] | undefined;
+	const contentType = c.req.header('content-type') || '';
+	if (contentType.includes('application/json')) {
+		try {
+			const body = (await c.req.json()) as { caseIds?: unknown };
+			if (Array.isArray(body.caseIds)) {
+				caseIds = body.caseIds.filter(
+					(id): id is string => typeof id === 'string' && id.length > 0,
+				);
+			}
+		} catch {
+			caseIds = undefined;
+		}
 	}
 
 	try {
-		const report = await runEvalReport(c.env);
+		if (isChild || (caseIds && caseIds.length > 0)) {
+			logger.info('Running eval batch', {
+				child: isChild,
+				cases: caseIds?.length ?? getGoldSet().cases.length,
+			});
+			const report = await runEvalReport(c.env, { caseIds });
+			return c.json<ApiResponse>({
+				success: true,
+				data: report,
+				metadata: {
+					timestamp: new Date().toISOString(),
+					requestId: c.get('requestId') as string | undefined,
+				},
+			});
+		}
+
+		const batches = chunkCaseIds(
+			getGoldSet().cases.map((goldCase) => goldCase.id),
+			EVAL_BATCH_SIZE,
+		);
+		logger.info('Starting live demo-scale eval run', {
+			cases: getGoldSet().cases.length,
+			batches: batches.length,
+		});
+
+		const childReports = await Promise.all(
+			batches.map(async (batch) => {
+				try {
+					const response = await fetchEvalChildBatch(c.env, batch);
+					const result = await parseEvalChildResponse(response);
+					if (!result.ok) {
+						logger.warn('Eval child batch failed', {
+							caseIds: batch,
+							message: result.error,
+						});
+						return placeholderBatchReport(batch, result.error);
+					}
+					return result.report;
+				} catch (error) {
+					const message =
+						error instanceof Error ? error.message : 'Eval child fetch failed';
+					logger.warn('Eval child fetch failed', { caseIds: batch, error });
+					return placeholderBatchReport(batch, message);
+				}
+			}),
+		);
+
+		const report = mergeEvalReports(childReports);
 		return c.json<ApiResponse>({
 			success: true,
 			data: report,
@@ -1075,7 +1154,7 @@ app.get('/api/v1/docs', (c) => {
 			run: {
 				endpoint: '/api/v1/eval/run',
 				method: 'POST',
-				note: 'Optional live re-run against the gold set; rate-limited; ephemeral (does not write to disk)',
+				note: 'Optional live re-run; rate-limited coordinator fans out child batches (Workers Free 50-subrequest cap); ephemeral (does not write to disk)',
 			},
 		},
 		redteam: {
@@ -1156,8 +1235,8 @@ app.notFound((c) => {
 // ============================================================================
 
 /**
- * Cleanup expired chat sessions (runs daily at 2 AM UTC)
- * Marks sessions as inactive if they've expired
+ * Cleanup expired chat sessions and refresh D1 query-planner stats
+ * (runs daily at 2 AM UTC).
  */
 async function handleScheduled(_controller: ScheduledController, env: Env) {
 	const logger = createLogger({ event: 'scheduled-cleanup' }, env.LOG_LEVEL);
@@ -1181,6 +1260,13 @@ async function handleScheduled(_controller: ScheduledController, env: Env) {
 		logger.info('Cleanup completed', {
 			changedRows: (result as any).meta?.changes || 0,
 		});
+
+		try {
+			await runPragmaOptimize(env.DATABASE);
+			logger.info('PRAGMA optimize completed');
+		} catch (error) {
+			logger.warn('PRAGMA optimize failed (non-fatal)', { error });
+		}
 	} catch (error) {
 		logger.error('Scheduled cleanup failed', error);
 	}

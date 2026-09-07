@@ -96,6 +96,7 @@ export async function retrieveFromCorpus(
 		const match = vectorMatches.find((m) => m.id === chunk.id);
 		return {
 			documentId: chunk.documentId,
+			articleId: chunk.articleId,
 			chunkId: chunk.id,
 			title: chunk.title,
 			chunkText: chunk.text,
@@ -103,10 +104,6 @@ export async function retrieveFromCorpus(
 			similarity: match?.score ?? 0,
 		};
 	});
-
-	const contextText = chunks
-		.map((chunk, idx) => `[${idx + 1}] ${chunk.title}: ${chunk.text}`)
-		.join('\n\n');
 
 	return {
 		chunks: chunks.map((chunk) => {
@@ -119,6 +116,17 @@ export async function retrieveFromCorpus(
 			};
 		}),
 		sources,
-		contextText,
+		contextText: formatContextText(
+			chunks.map((chunk) => ({ title: chunk.title, text: chunk.text })),
+		),
 	};
+}
+
+/** Numbered `[N] title: text` block the generator/agent cites. */
+export function formatContextText(
+	chunks: Array<{ title: string; text: string }>,
+): string {
+	return chunks
+		.map((chunk, idx) => `[${idx + 1}] ${chunk.title}: ${chunk.text}`)
+		.join('\n\n');
 }

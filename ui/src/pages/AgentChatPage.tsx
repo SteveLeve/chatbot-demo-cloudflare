@@ -67,7 +67,7 @@ export function AgentChatPage() {
   const sessionName = useMemo(() => getOrCreateSessionId(), []);
 
   const agent = useAgent<RAGAgentState>({
-    agent: 'RAGAgent',
+    agent: 'rag-agent',
     name: sessionName,
     onStateUpdate: (state) => {
       if (state.traceId) {

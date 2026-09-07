@@ -25,12 +25,32 @@ import { createLogger } from '../utils/logger';
 const MAX_TRACE_EVENTS = 100;
 const MAX_PERSISTED_MESSAGES = 50;
 
+function lastUserMessageText(
+	messages: readonly { role: string; parts?: unknown }[],
+): string {
+	for (let i = messages.length - 1; i >= 0; i--) {
+		const message = messages[i];
+		if (message?.role !== 'user' || !Array.isArray(message.parts)) continue;
+		const text = message.parts
+			.filter(
+				(part): part is { type: 'text'; text: string } =>
+					typeof part === 'object' &&
+					part !== null &&
+					(part as { type?: unknown }).type === 'text',
+			)
+			.map((part) => part.text)
+			.join('');
+		if (text) return text;
+	}
+	return '';
+}
+
 function buildAgentSystemPrompt(): string {
 	return `You are a retrieval-augmented assistant for a curated demo corpus (~37 Wikipedia articles).
 
 WORKFLOW:
 1. Call retrieve_from_corpus with the user's question (or a focused sub-query).
-2. Answer using ONLY the returned chunks. Cite sources as [N] matching chunk numbers.
+2. Chunks are already reranked by a cross-encoder — answer using ONLY those chunks. Cite sources as [N] matching chunk numbers.
 3. If retrieval returns no relevant chunks, say you cannot answer from the corpus.
 
 RULES:
@@ -159,7 +179,17 @@ export class RAGAgent extends AIChatAgent<Cloudflare.Env, RAGAgentState> {
 						onRetrieveHit: (detail) => {
 							this.pushTrace({
 								type: 'retrieve',
-								summary: `Retrieved ${detail.chunkIds?.length ?? 0} chunk(s)`,
+								summary: `Retrieved ${detail.candidateCount ?? detail.chunkIds?.length ?? 0} candidate chunk(s)`,
+								detail,
+								timestamp: Date.now(),
+							});
+						},
+						onRerankComplete: (detail) => {
+							this.pushTrace({
+								type: 'retrieve',
+								summary: detail.fallback
+									? `Rerank failed; using Vectorize order (${detail.chunkIds?.length ?? 0} chunk(s))`
+									: `Reranked to ${detail.chunkIds?.length ?? 0} chunk(s)`,
 								detail,
 								timestamp: Date.now(),
 							});
@@ -195,6 +225,27 @@ export class RAGAgent extends AIChatAgent<Cloudflare.Env, RAGAgentState> {
 			temperature: 0,
 			maxOutputTokens: 1024,
 			abortSignal: options?.abortSignal,
+			// Llama 4 Scout on Workers AI sometimes streams malformed/double-nested
+			// JSON tool arguments (e.g. `{"query": "{\"query\": ...}", "topK": 10}`)
+			// that fail schema parsing and would otherwise be silently dropped —
+			// fall back to the raw user question rather than losing the turn.
+			repairToolCall: async ({ toolCall }) => {
+				const query = lastUserMessageText(this.messages).slice(
+					0,
+					maxQueryLength,
+				);
+				if (!query) return null;
+				this.pushTrace({
+					type: 'guard',
+					summary: 'Repaired malformed tool call arguments from user question',
+					detail: { toolName: toolCall.toolName },
+					timestamp: Date.now(),
+				});
+				return {
+					...toolCall,
+					input: JSON.stringify({ query }),
+				};
+			},
 			onStepFinish: (step) => {
 				if (step.toolCalls?.length) {
 					for (const call of step.toolCalls) {

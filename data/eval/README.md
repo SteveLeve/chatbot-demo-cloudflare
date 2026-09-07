@@ -16,7 +16,9 @@ Against a running Worker with ingested corpus:
 
 ```bash
 # Optional: trigger live run (rate-limited; ephemeral — does not write this file)
-curl -X POST http://localhost:8787/api/v1/eval/run
+# Production takes ~1–2 min; Workers Free has a 50-subrequest cap so the
+# handler fans the gold set out into child POSTs. Use a long client timeout.
+curl -m 180 -X POST http://localhost:8787/api/v1/eval/run
 ```
 
 To refresh the committed snapshot for demos, paste a successful POST body into

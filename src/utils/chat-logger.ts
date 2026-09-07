@@ -349,9 +349,9 @@ export class ChatLogger {
 	}
 
 	/**
-	 * Log RAG chunks associated with a message
-	 * Handles failures per-chunk and logs detailed information about which chunks failed
-	 * Throws error if all chunks fail, to allow caller to handle critical failures
+	 * Log RAG chunks associated with a message.
+	 * Validates scores, then inserts via D1 batch (#17).
+	 * Throws if every chunk fails so the caller can log a critical warning.
 	 */
 	private async logMessageChunks(
 		messageId: string,
@@ -360,52 +360,63 @@ export class ChatLogger {
 		const failedChunks: { index: number; error: string; chunkId?: string }[] =
 			[];
 		const successfulChunks: number[] = [];
+		const statements: D1PreparedStatement[] = [];
+		const statementIndexes: number[] = [];
+		const now = new Date().getTime();
 
-		// Insert each chunk individually (D1 doesn't support batch inserts easily)
 		for (let i = 0; i < sources.length; i++) {
 			const source = sources[i];
 			if (!source) {
 				continue;
 			}
 
-			try {
-				// Validate similarity score is in valid range
-				if (
-					source.similarity < 0 ||
-					source.similarity > 1 ||
-					!isFinite(source.similarity)
-				) {
-					throw new Error(
-						`Invalid similarity score: ${source.similarity} (must be between 0 and 1)`,
-					);
-				}
+			if (
+				source.similarity < 0 ||
+				source.similarity > 1 ||
+				!isFinite(source.similarity)
+			) {
+				failedChunks.push({
+					index: i,
+					error: `Invalid similarity score: ${source.similarity} (must be between 0 and 1)`,
+					chunkId: source.chunkId,
+				});
+				continue;
+			}
 
-				await this.env.DATABASE.prepare(
+			statements.push(
+				this.env.DATABASE.prepare(
 					`INSERT INTO message_chunks (
             id, message_id, document_id, chunk_id, chunk_text,
             similarity_score, rank_position, document_title, created_at
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-				)
-					.bind(
-						crypto.randomUUID(), // id
-						messageId, // message_id
-						source.documentId || null, // document_id
-						source.chunkId, // chunk_id
-						source.chunkText, // chunk_text
-						source.similarity, // similarity_score (stored as REAL/numeric)
-						i + 1, // rank_position
-						source.title || null, // document_title
-						new Date().getTime(), // created_at
-					)
-					.run();
+				).bind(
+					crypto.randomUUID(),
+					messageId,
+					source.documentId || null,
+					source.chunkId,
+					source.chunkText,
+					source.similarity,
+					i + 1,
+					source.title || null,
+					now,
+				),
+			);
+			statementIndexes.push(i);
+		}
 
-				successfulChunks.push(i);
+		if (statements.length > 0) {
+			try {
+				await this.env.DATABASE.batch(statements);
+				successfulChunks.push(...statementIndexes);
 			} catch (error) {
-				failedChunks.push({
-					index: i,
-					error: error instanceof Error ? error.message : String(error),
-					chunkId: source.chunkId,
-				});
+				const message = error instanceof Error ? error.message : String(error);
+				for (const index of statementIndexes) {
+					failedChunks.push({
+						index,
+						error: message,
+						chunkId: sources[index]?.chunkId,
+					});
+				}
 			}
 		}
 

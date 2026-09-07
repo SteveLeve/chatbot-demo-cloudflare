@@ -16,6 +16,8 @@ export interface Env {
 	RAG_CACHE: KVNamespace;
 	INGESTION_WORKFLOW: Workflow;
 	RAG_AGENT: DurableObjectNamespace<import('../agents/rag-agent').RAGAgent>;
+	/** Same-worker service binding for eval batch fan-out (avoids custom-domain 522). */
+	SELF: Fetcher;
 	ASSETS: Fetcher;
 	QUERY_RATE_LIMITER: RateLimit;
 	INGEST_RATE_LIMITER: RateLimit;
@@ -120,6 +122,8 @@ export interface VectorMatch {
  */
 export interface DocumentSource {
 	documentId: string;
+	/** Corpus slug (e.g. `artificial-intelligence`), distinct from D1 `doc-*` id. */
+	articleId: string;
 	chunkId: string;
 	title: string;
 	chunkText: string;

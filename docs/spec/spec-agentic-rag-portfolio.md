@@ -52,7 +52,7 @@ The demo's current models predate this reimagining and one of them is end-of-lif
 | Concern    | Current                                                            | Status                                                                                                                   |
 | ---------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
 | Generation | `@cf/meta/llama-4-scout-17b-16e-instruct` (`src/config/models.ts`) | **Selected (Phase 0 / #32).** Function calling, 131k context, not deprecated. Replaces `@cf/meta/llama-3.1-8b-instruct`. |
-| Embeddings | `@cf/baai/bge-base-en-v1.5`, 768-dim (`src/config/models.ts`)      | **Verified current.** Keep; changing requires recreating Vectorize (see #20).                                            |
+| Embeddings | `@cf/baai/bge-base-en-v1.5`, 768-dim (`src/config/models.ts`)      | **Keep.** #20 BGE-Large cutover closed as not planned (2026-08-20). Changing still requires recreating Vectorize.        |
 
 **Requirements for the replacement generation model**
 
@@ -62,7 +62,7 @@ The demo's current models predate this reimagining and one of them is end-of-lif
 
 **Candidates** (current catalog, to be evaluated on latency/cost/quality): Llama 3.3 70B FP8-Fast, Llama 4 Scout 17B, GPT-OSS 20B / 120B, Qwen 3 30B, Mistral Small 3.1 24B.
 
-**Embedding-change cost.** Changing the embedding model is not a config edit: it requires re-embedding the entire corpus and **recreating the Vectorize index**, which is provisioned with `--preset @cf/baai/bge-base-en-v1.5` (`package.json` → `vectorize:create`) and bound as `wikipedia-vectors`. Dimensions must match the preset. If the embedding model stays, this cost is avoided entirely — evaluate it separately from the generation-model swap. Note this also overlaps issue #20 (BGE-Large upgrade); reconcile rather than duplicating.
+**Embedding-change cost.** Changing the embedding model is not a config edit: it requires re-embedding the entire corpus and **recreating the Vectorize index**, which is provisioned with `--preset @cf/baai/bge-base-en-v1.5` (`package.json` → `vectorize:create`) and bound as `wikipedia-vectors`. Dimensions must match the preset. Issue #20 (BGE-Large) was closed as not planned — stay on bge-base unless a future educational migration is explicitly revived.
 
 ## Design / Flow
 

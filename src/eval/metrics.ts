@@ -124,38 +124,79 @@ function metricFromJudge(
 	};
 }
 
+const UUID_RE =
+	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Gold-set ids are corpus slugs (`artificial-intelligence`), not D1 UUIDs. */
+export function slugifyTitle(title: string): string {
+	return title
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '');
+}
+
 /**
- * Parse LLM judge JSON. Tolerates fenced markdown and minor prose wrapping.
+ * Map a retrieved document to a gold-set article id.
+ * Prefer a non-UUID `articleId` (curated ingest). Fall back to slugifying
+ * `title` when production D1 still stores Wikipedia UUIDs.
  */
-export function parseJudgeResponse(raw: string): JudgeScores {
-	const cleaned = raw
-		.trim()
-		.replace(/^```(?:json)?\s*/i, '')
-		.replace(/\s*```$/i, '')
-		.trim();
-
-	let parsed: Record<string, unknown>;
-	try {
-		parsed = JSON.parse(cleaned) as Record<string, unknown>;
-	} catch {
-		const match = cleaned.match(/\{[\s\S]*\}/);
-		if (!match) {
-			return {
-				faithfulness: {
-					score: 0,
-					rationale: 'Judge response was not valid JSON.',
-					passed: false,
-				},
-				groundedness: {
-					score: 0,
-					rationale: 'Judge response was not valid JSON.',
-					passed: false,
-				},
-			};
-		}
-		parsed = JSON.parse(match[0]) as Record<string, unknown>;
+export function articleIdForEval(source: {
+	articleId: string;
+	title: string;
+}): string {
+	const id = source.articleId?.trim() ?? '';
+	if (id && !UUID_RE.test(id) && !id.startsWith('doc-')) {
+		return id;
 	}
+	if (id.startsWith('doc-')) {
+		return id.slice(4);
+	}
+	const fromTitle = slugifyTitle(source.title);
+	return fromTitle || id;
+}
 
+/**
+ * Coerce Workers AI / AI Gateway `response` into text.
+ * Llama 4 Scout sometimes returns a parsed JSON object when asked for JSON
+ * (`raw.trim is not a function` on live `/eval/run`).
+ */
+export function extractModelText(response: unknown): string {
+	if (typeof response === 'string') return response;
+	if (typeof response === 'number' || typeof response === 'boolean') {
+		return String(response);
+	}
+	if (Array.isArray(response)) {
+		return response.map(extractModelText).filter(Boolean).join('\n');
+	}
+	if (response && typeof response === 'object') {
+		const obj = response as Record<string, unknown>;
+		if (typeof obj['response'] === 'string') return obj['response'];
+		if (typeof obj['text'] === 'string') return obj['text'];
+		if (typeof obj['content'] === 'string') return obj['content'];
+		if (Array.isArray(obj['content'])) {
+			return extractModelText(obj['content']);
+		}
+		return JSON.stringify(obj);
+	}
+	return '';
+}
+
+function invalidJudgeJson(): JudgeScores {
+	return {
+		faithfulness: {
+			score: 0,
+			rationale: 'Judge response was not valid JSON.',
+			passed: false,
+		},
+		groundedness: {
+			score: 0,
+			rationale: 'Judge response was not valid JSON.',
+			passed: false,
+		},
+	};
+}
+
+function scoresFromParsedJudge(parsed: Record<string, unknown>): JudgeScores {
 	const faithfulnessRaw = parsed['faithfulness'];
 	const groundednessRaw = parsed['groundedness'];
 
@@ -180,6 +221,43 @@ export function parseJudgeResponse(raw: string): JudgeScores {
 			'No groundedness rationale from judge.',
 		),
 	};
+}
+
+/**
+ * Parse LLM judge JSON. Tolerates fenced markdown, prose wrapping, and
+ * already-parsed objects from Workers AI JSON mode.
+ */
+export function parseJudgeResponse(raw: unknown): JudgeScores {
+	if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+		const obj = raw as Record<string, unknown>;
+		if ('faithfulness' in obj || 'groundedness' in obj) {
+			return scoresFromParsedJudge(obj);
+		}
+	}
+
+	const text = extractModelText(raw);
+	if (!text) {
+		return invalidJudgeJson();
+	}
+
+	const cleaned = text
+		.trim()
+		.replace(/^```(?:json)?\s*/i, '')
+		.replace(/\s*```$/i, '')
+		.trim();
+
+	let parsed: Record<string, unknown>;
+	try {
+		parsed = JSON.parse(cleaned) as Record<string, unknown>;
+	} catch {
+		const match = cleaned.match(/\{[\s\S]*\}/);
+		if (!match) {
+			return invalidJudgeJson();
+		}
+		parsed = JSON.parse(match[0]) as Record<string, unknown>;
+	}
+
+	return scoresFromParsedJudge(parsed);
 }
 
 function buildJudgePrompt(options: {
@@ -240,8 +318,7 @@ export async function judgeAnswer(
 			: undefined,
 	)) as GenerationResponse;
 
-	const raw = result.response || '';
-	return parseJudgeResponse(raw);
+	return parseJudgeResponse(result.response);
 }
 
 export const DEFAULT_METRIC_EXPLAINER = {
