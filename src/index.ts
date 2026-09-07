@@ -45,7 +45,7 @@ import {
 	placeholderBatchReport,
 	runEvalReport,
 } from './eval/runner';
-import type { EvalReport } from './eval/types';
+import { fetchEvalChildBatch, parseEvalChildResponse } from './eval/fan-out';
 import { getStaticRedteamScenarios } from './redteam/scenarios-static';
 import {
 	tryRedteamScenario,
@@ -862,31 +862,19 @@ app.post('/api/v1/eval/run', async (c) => {
 			batches: batches.length,
 		});
 
-		const origin = new URL(c.req.url).origin;
 		const childReports = await Promise.all(
 			batches.map(async (batch) => {
 				try {
-					const response = await fetch(`${origin}/api/v1/eval/run`, {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							'x-eval-child': '1',
-						},
-						body: JSON.stringify({ caseIds: batch }),
-					});
-					const payload = (await response.json()) as ApiResponse<EvalReport>;
-					if (!response.ok || !payload.success || !payload.data) {
-						const message =
-							payload.error?.message ||
-							`Eval child batch failed (${response.status})`;
+					const response = await fetchEvalChildBatch(c.env, batch);
+					const result = await parseEvalChildResponse(response);
+					if (!result.ok) {
 						logger.warn('Eval child batch failed', {
 							caseIds: batch,
-							status: response.status,
-							message,
+							message: result.error,
 						});
-						return placeholderBatchReport(batch, message);
+						return placeholderBatchReport(batch, result.error);
 					}
-					return payload.data;
+					return result.report;
 				} catch (error) {
 					const message =
 						error instanceof Error ? error.message : 'Eval child fetch failed';
