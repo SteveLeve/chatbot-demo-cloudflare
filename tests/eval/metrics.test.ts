@@ -5,6 +5,8 @@ import {
 	scoreBehavior,
 	scoreRetrievalRelevance,
 	DEMO_PASS_THRESHOLD,
+	articleIdForEval,
+	extractModelText,
 } from '../../src/eval/metrics';
 
 describe('scoreRetrievalRelevance', () => {
@@ -81,6 +83,17 @@ describe('parseJudgeResponse', () => {
 		expect(parsed.groundedness.passed).toBe(DEMO_PASS_THRESHOLD <= 0.8);
 	});
 
+	it('parses already-parsed JSON objects from Workers AI', () => {
+		const parsed = parseJudgeResponse({
+			faithfulness: { score: 0.7, rationale: 'Mostly supported' },
+			groundedness: { score: 0.65, rationale: 'Tied to context' },
+		});
+
+		expect(parsed.faithfulness.score).toBe(0.7);
+		expect(parsed.groundedness.score).toBe(0.65);
+		expect(parsed.faithfulness.passed).toBe(true);
+	});
+
 	it('parses fenced JSON and clamps scores', () => {
 		const parsed = parseJudgeResponse(`\`\`\`json
 {"faithfulness":{"score":1.5,"rationale":"too high"},"groundedness":{"score":-0.2,"rationale":"too low"}}
@@ -95,5 +108,40 @@ describe('parseJudgeResponse', () => {
 		expect(parsed.faithfulness.score).toBe(0);
 		expect(parsed.faithfulness.passed).toBe(false);
 		expect(parsed.groundedness.rationale).toContain('not valid JSON');
+	});
+});
+
+describe('extractModelText', () => {
+	it('returns strings unchanged and stringifies judge objects', () => {
+		expect(extractModelText('hello')).toBe('hello');
+		expect(
+			extractModelText({
+				faithfulness: { score: 1, rationale: 'ok' },
+			}),
+		).toContain('faithfulness');
+		expect(extractModelText({ response: 'nested' })).toBe('nested');
+	});
+});
+
+describe('articleIdForEval', () => {
+	it('keeps corpus slugs and maps UUID rows via title', () => {
+		expect(
+			articleIdForEval({
+				articleId: 'artificial-intelligence',
+				title: 'Artificial intelligence',
+			}),
+		).toBe('artificial-intelligence');
+		expect(
+			articleIdForEval({
+				articleId: '38205323-b5cf-461a-8359-06e5563e9ac3',
+				title: 'Artificial intelligence',
+			}),
+		).toBe('artificial-intelligence');
+		expect(
+			articleIdForEval({
+				articleId: 'doc-linux',
+				title: 'Linux',
+			}),
+		).toBe('linux');
 	});
 });

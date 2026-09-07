@@ -11,6 +11,7 @@ export interface RAGQueryResponse {
 
 export interface DocumentSource {
   documentId: string;
+  articleId: string;
   chunkId: string;
   title: string;
   chunkText: string;

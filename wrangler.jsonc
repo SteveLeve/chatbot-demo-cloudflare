@@ -124,6 +124,14 @@
     "enabled": true,
   },
 
+  // Self-invocation for eval fan-out (avoids custom-domain self-fetch 522)
+  "services": [
+    {
+      "binding": "SELF",
+      "service": "cloudflare-rag-portfolio",
+    },
+  ],
+
   // Rate limiting
   "ratelimits": [
     {

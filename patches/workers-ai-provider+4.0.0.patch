@@ -1,0 +1,50 @@
+diff --git a/node_modules/workers-ai-provider/dist/index.mjs b/node_modules/workers-ai-provider/dist/index.mjs
+index 764cbf5..343cf84 100644
+--- a/node_modules/workers-ai-provider/dist/index.mjs
++++ b/node_modules/workers-ai-provider/dist/index.mjs
+@@ -703,8 +703,10 @@ function getMappedStream(response, salvageContext) {
+ 			if (choiceFinishReason != null) finishReason = mapWorkersAIFinishReason(choiceFinishReason);
+ 			else if (directFinishReason != null) finishReason = mapWorkersAIFinishReason(directFinishReason);
+ 			const nativeResponse = chunk.response;
++			let handledContentNatively = false;
+ 			if (nativeResponse != null && nativeResponse !== "") {
+ 				const responseText = String(nativeResponse);
++				handledContentNatively = true;
+ 				if (responseText.length > 0) if (bufferContentForSalvage) contentBuffer += responseText;
+ 				else {
+ 					if (reasoningId) {
+@@ -728,7 +730,9 @@ function getMappedStream(response, salvageContext) {
+ 					});
+ 				}
+ 			}
++			let handledToolCallsNatively = false;
+ 			if (Array.isArray(chunk.tool_calls)) {
++				handledToolCallsNatively = true;
+ 				if (reasoningId) {
+ 					controller.enqueue({
+ 						type: "reasoning-end",
+@@ -755,9 +759,13 @@ function getMappedStream(response, salvageContext) {
+ 						delta: reasoningDelta
+ 					});
+ 				}
++				// Workers AI mirrors `chunk.response` / `chunk.tool_calls` into this
++				// OpenAI-compat `choices[0].delta` shape on the SAME event — only
++				// consume this branch when the native fields above didn't already
++				// handle it, or every token/tool-call arrives duplicated.
+ 				const textDelta = delta.content;
+-				if (textDelta && textDelta.length > 0) if (bufferContentForSalvage) contentBuffer += textDelta;
+-				else {
++				if (!handledContentNatively && textDelta && textDelta.length > 0) if (bufferContentForSalvage) contentBuffer += textDelta;
++				else if (!handledContentNatively) {
+ 					if (reasoningId) {
+ 						controller.enqueue({
+ 							type: "reasoning-end",
+@@ -779,7 +787,7 @@ function getMappedStream(response, salvageContext) {
+ 					});
+ 				}
+ 				const deltaToolCalls = delta.tool_calls;
+-				if (Array.isArray(deltaToolCalls)) {
++				if (!handledToolCallsNatively && Array.isArray(deltaToolCalls)) {
+ 					if (reasoningId) {
+ 						controller.enqueue({
+ 							type: "reasoning-end",
