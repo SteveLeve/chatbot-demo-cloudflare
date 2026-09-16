@@ -53,28 +53,28 @@
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.22.0",
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.57.0",
-    "@types/node": "^26.4.1",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.5.1",
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.10.0",
     "globals": "^17.12.0",
     "husky": "^9.1.7",
-    "lint-staged": "^17.4.1",
+    "lint-staged": "^17.5.1",
     "patch-package": "^8.0.1",
     "prettier": "^3.4.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.69.0",
+    "typescript-eslint": "^8.70.0",
     "vitest": "^4.1.10",
-    "wrangler": "^4.121.0"
+    "wrangler": "^4.131.1"
   },
   "dependencies": {
-    "@cloudflare/ai-chat": "^0.11.0",
+    "@cloudflare/ai-chat": "^0.12.0",
     "@langchain/textsplitters": "^1.0.1",
-    "agents": "^0.22.0",
-    "ai": "^7.0.93",
+    "agents": "^0.23.0",
+    "ai": "^7.0.99",
     "hono": "^4.13.7",
     "workers-ai-provider": "^4.0.0",
-    "zod": "^4.5.4"
+    "zod": "^4.6.4"
   }
 }
